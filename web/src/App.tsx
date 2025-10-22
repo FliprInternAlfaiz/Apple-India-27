@@ -7,19 +7,19 @@ import { Provider } from "react-redux";
 import { Notifications } from "@mantine/notifications";
 import { store } from "./store/store";
 import { appRouter } from "./routes/appRoutes";
-import { AuthProvider } from "./context/AuthContext";
+import QueryProvider from "./lib/QueryProvider";
 
 function App() {
   return (
     <Provider store={store}>
-       <AuthProvider>
-      <MantineProvider>
-        <Notifications position="top-right" />
-        <ModalsProvider>
-          <RouterProvider router={appRouter} />
-        </ModalsProvider>
-      </MantineProvider>
-      </AuthProvider>
+      <QueryProvider>
+        <MantineProvider>
+          <Notifications position="top-right" />
+          <ModalsProvider>
+            <RouterProvider router={appRouter} />
+          </ModalsProvider>
+        </MantineProvider>
+      </QueryProvider>
     </Provider>
   );
 }

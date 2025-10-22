@@ -28,10 +28,7 @@ const menuItems = [
   { icon: <FaIdCard />, title: "Identity Authentication" },
 ];
 
-const ads = [
-  IMAGES.ad1,
-  IMAGES.ad2
-];
+const ads = [IMAGES.ad1, IMAGES.ad2];
 
 const Home: React.FC = () => {
   return (

@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { Box, TextInput, PasswordInput, Button, Text, Flex } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 
 const Login: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleSubmit = async () => {
-    await login(phone, password);
     navigate("/");
   };
 

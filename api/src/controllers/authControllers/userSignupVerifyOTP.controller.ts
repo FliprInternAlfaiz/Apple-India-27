@@ -1,68 +1,60 @@
-import { Request, Response } from 'express';
-import { ObjectId } from 'mongodb';
-import commonsUtils from '../../utils';
-import models from '../../models';
-import { jwtConfig } from '../../services';
-import CONSTANTS from '../../constants/CONSTANTS';
-import encryptPassword from '../../utils/encryptPassword';
+import { Request, Response } from "express";
+import commonsUtils from "../../utils";
+import models from "../../models";
 
 const { JsonResponse } = commonsUtils;
 
 export default async (req: Request, res: Response) => {
-  const { email, password, name,otp } = req.body;
-  const validPassword = encryptPassword(password);
+  const { name, email, phone, resend = false } = req.body;
 
-  const storedOtp = await models.Otp.getOtp({
-    otp,
-    email: email,
-  });
-
-  if (storedOtp?.otp !== otp)
+  if (!name || !email || !phone) {
     return JsonResponse(res, {
-      status: 'error',
+      status: "error",
       statusCode: 400,
-      message: 'invalid otp',
-      title: 'user authentication',
-    });
-
-  const newUser = await models.User.createUser({
-    name,
-    email,
-    password: validPassword,
-  });
-
-  if (!newUser) {
-    return JsonResponse(res, {
-      status: 'error',
-      statusCode: 500,
-      message: 'Unable to create user. Please try again.',
-      title: 'Internal Server Error',
+      message: "Name, email, and phone are required.",
+      title: "User Authentication",
     });
   }
 
-  await models.Otp.deleteOne({ email });
+  const existingUser = await models.User.findOne({ $or: [{ email }, { phone }] });
+  if (existingUser) {
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 400,
+      message: "User with this email or phone already exists. Please login.",
+      title: "User Authentication",
+    });
+  }
 
-  const token = jwtConfig.jwtService.generateJWT({
-    email: newUser.email,
-    id: newUser.id!,
-  });
+  if (resend) {
+    const otpDoc = await models.Otp.findOne({ phone });
+    if (otpDoc) {
+      const generatedOtp = commonsUtils.otp.generateSecureOTP();
+      otpDoc.otp = generatedOtp;
+      await otpDoc.save();
 
-  const authToken = await models.token.createToken({
-    userId: new ObjectId(newUser.id as string),
-    token: token,
-  });
+      // Replace with your SMS provider API
+      console.log(`Resent OTP for phone ${phone}: ${generatedOtp}`);
 
-  res.cookie(CONSTANTS.userTokenKey, authToken.token, {
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true,
-  });
+      return JsonResponse(res, {
+        status: "success",
+        statusCode: 200,
+        message: "OTP resent successfully.",
+        title: "OTP Verification",
+      });
+    }
+  }
+
+  const generatedOtp = commonsUtils.otp.generateSecureOTP();
+  await models.Otp.generateOtp({ phone, otp: generatedOtp });
+
+  // Replace with your SMS provider API
+  console.log(`OTP sent to ${phone}: ${generatedOtp}`);
 
   return JsonResponse(res, {
-    status: 'success',
+    status: "success",
     statusCode: 200,
-    message: 'User signup successful.',
-    title: 'User Authentication',
-    data: newUser,
+    message: "OTP sent to your phone. Please verify to complete signup.",
+    title: "OTP Verification",
   });
 };

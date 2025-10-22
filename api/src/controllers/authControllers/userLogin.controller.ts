@@ -1,72 +1,72 @@
-import bcrypt from 'bcrypt';
-import { NextFunction, Request, Response } from 'express';
-import { ObjectId } from 'mongodb';
-import commonsUtils from '../../utils';
-import models from '../../models';
-import { jwtConfig } from '../../services';
-import CONSTANTS from '../../constants/CONSTANTS';
-
+import bcrypt from "bcrypt";
+import { Request, Response, NextFunction } from "express";
+import { ObjectId } from "mongodb";
+import commonsUtils from "../../utils";
+import models from "../../models";
+import { jwtConfig } from "../../services";
+import CONSTANTS from "../../constants/CONSTANTS";
 
 const { JsonResponse } = commonsUtils;
 
 export default async (req: Request, res: Response, __: NextFunction) => {
-  const { email, password } = req.body;
+  const { phone, password } = req.body;
 
-  const user = await models.User.findByEmail(email);
+  const user = await models.User.findOne({ phone });
 
   if (!user) {
     return JsonResponse(res, {
-      status: 'error',
+      status: "error",
       statusCode: 401,
-      message: 'cannot find account associated with this email',
-      title: 'user authentication',
+      message: "No account found with this phone number.",
+      title: "User Authentication",
     });
   }
 
-  if (user.isSSO === true) {
+  if (user.isSSO) {
     return JsonResponse(res, {
-      status: 'error',
+      status: "error",
       statusCode: 401,
-      message: 'This account uses has SSO',
-      title: 'User Authentication',
-      data: user,
+      message: "This account uses SSO.",
+      title: "User Authentication",
     });
   }
 
   const isValidPassword = bcrypt.compareSync(password, user.password);
-
   if (!isValidPassword) {
     return JsonResponse(res, {
-      status: 'error',
+      status: "error",
       statusCode: 400,
-      message: 'invalid password',
-      title: 'user authentication',
+      message: "Invalid password.",
+      title: "User Authentication",
     });
   }
 
   user.lastActiveDate = new Date();
   await user.save();
 
-  const token = jwtConfig.jwtService.generateJWT({ email: user.email, id: user.id! });
+  const token = jwtConfig.jwtService.generateJWT({
+    phone: user.phone,
+    id: user.id!,
+  });
 
   const authToken = await models.token.createToken({
     userId: new ObjectId(user.id as string),
-    token: token,
+    token,
   });
 
   res.cookie(CONSTANTS.userTokenKey, authToken.token, {
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: "none",
     secure: true,
   });
 
   const { password: _, ...userData } = user.toObject();
 
   return JsonResponse(res, {
-    status: 'success',
+    status: "success",
     statusCode: 200,
-    title: 'user authentication',
-    message: 'user login successful',
+    title: "User Authentication",
+    message: "User login successful.",
     data: userData,
   });
 };

@@ -29,7 +29,12 @@ const TheLayout = () => {
         },
       }}
     >
-            <Header mobileOpened={mobileOpened} toggleMobile={() => setMobileOpened(!mobileOpened)} />
+      {showHeader && (
+        <Header
+          mobileOpened={mobileOpened}
+          toggleMobile={() => setMobileOpened(!mobileOpened)}
+        />
+      )}
 
       <Box style={{ flex: 1, width: "100%" }}>
         <Outlet />

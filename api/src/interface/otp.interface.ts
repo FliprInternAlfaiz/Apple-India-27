@@ -1,17 +1,33 @@
-import { ObjectId} from 'mongodb';
-import { Model, Query} from 'mongoose';
+import { ObjectId } from "mongodb";
+import { Document, Model } from "mongoose";
 
 export interface IOtp extends Document {
   userId?: ObjectId;
-  email?:string;
+  email?: string;
+  phone?: string;   // added for phone-based OTP
   otp: string;
-  _id?: ObjectId;
+  createdAt?: Date;
+  expiresAt?: Date;
 }
 
-type TQueryType = Query<IOtp, IOtp>;
-
 export interface IOtpModel extends Model<IOtp> {
-  generateOtp({ otp, userId, email}: Pick<IOtp, 'otp' | 'userId' | 'email'>): TQueryType;
-  getOtp({ otp, userId, email }: Pick<IOtp, 'otp' | 'userId' | 'email'>): TQueryType;
-  deleteOtp({ userId, email }: { userId?: ObjectId; email?: string }): TQueryType;
+  generateOtp(params: {
+    otp: string;
+    userId?: ObjectId;
+    email?: string;
+    phone?: string;
+  }): Promise<IOtp>;
+
+  getOtp(params: {
+    otp: string;
+    userId?: ObjectId;
+    email?: string;
+    phone?: string;
+  }): Promise<IOtp | null>;
+
+  deleteOtp(params: {
+    userId?: ObjectId;
+    email?: string;
+    phone?: string;
+  }): Promise<{ deletedCount?: number }>;
 }

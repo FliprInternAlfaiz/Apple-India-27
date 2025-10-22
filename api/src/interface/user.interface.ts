@@ -5,6 +5,7 @@ export interface IUser extends Document {
   password: string;
   id: string;
   name:string;
+  phone:string;
   lastActiveDate?: Date | null;
   picture?: string; 
   isSSO?: boolean;
