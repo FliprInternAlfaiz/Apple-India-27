@@ -1,0 +1,7 @@
+{
+  "execMap": {
+    "ts": "node -r ts-node/register --env-file=.env ./src/app.ts"
+  },
+  "watch": ["src"],
+  "ext": "js, json, ts, proto"
+}

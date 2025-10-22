@@ -1,0 +1,17 @@
+{
+  "importOrder": [
+    "^(fs|path|http|https|os|util|crypto)$",
+    "^@?\\w", 
+    "^@/lib/(.*)$",
+    "^@/.*\\.service$", 
+    "^@/.*\\.models$", 
+    "^@/.*\\.utils$", 
+    "^\\.\\./", 
+    "^\\./"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all"
+}

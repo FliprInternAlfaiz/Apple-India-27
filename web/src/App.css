@@ -1,0 +1,12 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  padding: 0px;
+  margin: 0px;
+  background-color: #f6f6f6;
+  font-family: "Inter", sans-serif !important;
+}
+a {
+  text-decoration: none;
+}
