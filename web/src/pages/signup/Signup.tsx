@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import {
-  Box,
   TextInput,
   PasswordInput,
   Button,
   Text,
   Flex,
+  Paper,
+  Title,
+  PinInput,
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { useSignupMutation } from "../../hooks/mutations/useSignup.mutation";
 import { useVerifyOtpMutation } from "../../hooks/mutations/useVerifyOtp.mutation";
+import classes from "./Signup.module.scss";
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
-
   const [step, setStep] = useState<"form" | "otp">("form");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,7 +37,6 @@ const Signup: React.FC = () => {
       });
       return;
     }
-
     sendOtp(
       { name, email, phone, password },
       {
@@ -55,13 +56,12 @@ const Signup: React.FC = () => {
             });
           }
         },
-        onError: (error: any) => {
+        onError: (err: any) =>
           showNotification({
             title: "Error",
-            message: error?.message || "Failed to send OTP",
+            message: err?.message || "Failed to send OTP",
             color: "red",
-          });
-        },
+          }),
       }
     );
   };
@@ -75,7 +75,6 @@ const Signup: React.FC = () => {
       });
       return;
     }
-
     verifyOtp(
       { email, name, password, phone, otp },
       {
@@ -95,60 +94,60 @@ const Signup: React.FC = () => {
             });
           }
         },
-        onError: (error: any) => {
+        onError: (err: any) =>
           showNotification({
             title: "Error",
-            message: error?.message || "OTP verification failed",
+            message: err?.message || "OTP verification failed",
             color: "red",
-          });
-        },
+          }),
       }
     );
   };
 
   return (
-    <Flex
-      justify="center"
-      align="center"
-      style={{ height: "100vh", background: "#f5f5f5" }}
-    >
-      <Box p="xl" style={{ background: "white", borderRadius: 12, width: 400 }}>
-        <Text fw={700} ta="center" size="xl" mb="lg">
+    <Flex justify="center" align="center" className={classes.container}>
+      <Paper radius="md" p="xl" shadow="xl" className={classes.paper}>
+        <Title order={2} mb="lg" className={classes.title}>
           Sign Up
-        </Text>
+        </Title>
 
         {step === "form" ? (
           <>
             <TextInput
               label="Name"
               placeholder="Enter your name"
+              mb="sm"
               value={name}
               onChange={(e) => setName(e.currentTarget.value)}
-              mb="sm"
+              classNames={{ label: classes.label, input: classes.input }}
             />
             <TextInput
               label="Email"
               placeholder="Enter your email"
+              mb="sm"
               value={email}
               onChange={(e) => setEmail(e.currentTarget.value)}
-              mb="sm"
+              classNames={{ label: classes.label, input: classes.input }}
             />
             <TextInput
               label="Phone Number"
               placeholder="Enter your phone"
+              mb="sm"
               value={phone}
               onChange={(e) => setPhone(e.currentTarget.value)}
-              mb="sm"
+              classNames={{ label: classes.label, input: classes.input }}
             />
             <PasswordInput
               label="Password"
               placeholder="Enter your password"
+              mb="lg"
               value={password}
               onChange={(e) => setPassword(e.currentTarget.value)}
-              mb="md"
+              classNames={{ label: classes.label, input: classes.input }}
             />
             <Button
               fullWidth
+              color="yellow"
               loading={isSendOtpPending}
               onClick={handleSendOtp}
             >
@@ -157,17 +156,24 @@ const Signup: React.FC = () => {
           </>
         ) : (
           <>
-            <TextInput
-              label="OTP"
-              placeholder="Enter OTP"
+            <PinInput
+              autoFocus
+              placeholder=""
+              type="number"
+              length={6}
               value={otp}
-              onChange={(e) => setOtp(e.currentTarget.value)}
-              mb="sm"
+              onChange={setOtp}
+              classNames={{
+                input: classes.pininput,
+                root: classes.pinroot,
+              }}
             />
             <Button
               fullWidth
+              color="yellow"
               loading={isVerifyOtpPending}
               onClick={handleVerifyOtp}
+              mt="md"
             >
               Verify OTP & Sign Up
             </Button>
@@ -175,15 +181,14 @@ const Signup: React.FC = () => {
         )}
 
         <Text
-          ta="center"
-          mt="sm"
+          mt="md"
           size="sm"
-          style={{ cursor: "pointer" }}
+          className={classes.link}
           onClick={() => navigate("/login")}
         >
           Already have an account? Login
         </Text>
-      </Box>
+      </Paper>
     </Flex>
   );
 };

@@ -1,9 +1,18 @@
 import React, { useState } from "react";
-import { Box, TextInput, PasswordInput, Button, Text, Flex } from "@mantine/core";
+import {
+  TextInput,
+  PasswordInput,
+  Button,
+  Text,
+  Flex,
+  Paper,
+  Title,
+} from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { useLoginMutation } from "../../hooks/mutations/useLogin.mutation";
 import { ROUTES } from "../../enum/routes";
+import classes from "./Login.module.scss";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -52,17 +61,18 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Flex justify="center" align="center" style={{ height: "100vh", background: "#f5f5f5" }}>
-      <Box p="xl" style={{ background: "white", borderRadius: 12, width: 400 }}>
-        <Text fw={700} ta="center" size="xl" mb="lg">
+    <Flex justify="center" align="center" className={classes.container}>
+      <Paper radius="md" p="xl" shadow="xl" className={classes.paper}>
+        <Title order={2} mb="lg" className={classes.title}>
           Login
-        </Text>
+        </Title>
         <TextInput
           label="Phone Number"
-          
+          type="number"
           placeholder="Enter your phone"
           value={phone}
           onChange={(e) => setPhone(e.currentTarget.value)}
+           classNames={{ label: classes.label, input: classes.input }}
           mb="sm"
         />
         <PasswordInput
@@ -70,21 +80,26 @@ const Login: React.FC = () => {
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.currentTarget.value)}
-          mb="md"
+           classNames={{ label: classes.label, input: classes.input }}
+          mb="lg"
         />
-        <Button fullWidth loading={isPending} onClick={handleSubmit}>
+        <Button
+          fullWidth
+          loading={isPending}
+          onClick={handleSubmit}
+          color="yellow"
+        >
           Login
         </Button>
         <Text
-          ta="center"
-          mt="sm"
+          mt="md"
           size="sm"
-          style={{ cursor: "pointer" }}
+          className={classes.link}
           onClick={() => navigate("/signup")}
         >
           Don't have an account? Sign up
         </Text>
-      </Box>
+      </Paper>
     </Flex>
   );
 };

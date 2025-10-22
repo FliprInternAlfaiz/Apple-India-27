@@ -52,7 +52,7 @@ const Home: React.FC = () => {
       </Box>
 
       <Box p="md">
-        <SimpleGrid cols={3} spacing="lg" style={{ alignItems: "stretch" }}>
+        <SimpleGrid cols={3} spacing="sm" style={{ alignItems: "stretch" }}>
           {menuItems.map((item) => (
             <Flex
               key={item.title}
