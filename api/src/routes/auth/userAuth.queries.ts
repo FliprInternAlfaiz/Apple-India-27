@@ -9,11 +9,11 @@ const { userSignup, userLogin, getUserProfile, userLogout } = authController;
 export default (router: Router) => {
   router.post('/user/login', userLogin);
   router.post(
-    '/user/signup',
+    "/user/signup",
     commonsMiddleware.yupValidationMiddleware(Validators.userSignup),
-    userSignup,
+    userSignup
   );
-  router.post('/user/profile', commonsMiddleware.checkUserAuth, getUserProfile);
+  router.get('/user/profile', commonsMiddleware.checkUserAuth, getUserProfile);
   router.post('/user/logout', commonsMiddleware.checkUserAuth, userLogout);
   router.post('/user/otp/verify', authController.userSignupVerifyOtp);
 };

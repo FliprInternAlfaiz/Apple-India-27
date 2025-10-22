@@ -1,60 +1,58 @@
 import { Request, Response } from "express";
-import commonsUtils from "../../utils";
 import models from "../../models";
+import encryptPassword from "../../utils/encryptPassword";
+import commonsUtils from "../../utils";
+import { jwtConfig } from "../../services";
+import CONSTANTS from "../../constants/CONSTANTS";
 
 const { JsonResponse } = commonsUtils;
 
 export default async (req: Request, res: Response) => {
-  const { name, email, phone, resend = false } = req.body;
+  const { name, email, phone, password, otp } = req.body;
 
-  if (!name || !email || !phone) {
+  if (!phone || !otp || !password || !name || !email) {
     return JsonResponse(res, {
       status: "error",
       statusCode: 400,
-      message: "Name, email, and phone are required.",
-      title: "User Authentication",
+      title:"Required Fields",
+      message: "All fields are required.",
     });
   }
 
-  const existingUser = await models.User.findOne({ $or: [{ email }, { phone }] });
-  if (existingUser) {
+  const storedOtp = await models.Otp.findOne({ phone });
+  if (!storedOtp || storedOtp.otp !== otp) {
     return JsonResponse(res, {
       status: "error",
       statusCode: 400,
-      message: "User with this email or phone already exists. Please login.",
-      title: "User Authentication",
+      title:"Required OTP",
+      message: "Invalid OTP.",
     });
   }
 
-  if (resend) {
-    const otpDoc = await models.Otp.findOne({ phone });
-    if (otpDoc) {
-      const generatedOtp = commonsUtils.otp.generateSecureOTP();
-      otpDoc.otp = generatedOtp;
-      await otpDoc.save();
+  const hashedPassword = encryptPassword(password);
 
-      // Replace with your SMS provider API
-      console.log(`Resent OTP for phone ${phone}: ${generatedOtp}`);
+  const newUser = await models.User.create({
+    name,
+    email,
+    phone,
+    password: hashedPassword,
+  });
 
-      return JsonResponse(res, {
-        status: "success",
-        statusCode: 200,
-        message: "OTP resent successfully.",
-        title: "OTP Verification",
-      });
-    }
-  }
+  await models.Otp.deleteOne({ phone });
 
-  const generatedOtp = commonsUtils.otp.generateSecureOTP();
-  await models.Otp.generateOtp({ phone, otp: generatedOtp });
+  const token = jwtConfig.jwtService.generateJWT({ email: newUser.email, id: newUser.id! });
 
-  // Replace with your SMS provider API
-  console.log(`OTP sent to ${phone}: ${generatedOtp}`);
+  res.cookie(CONSTANTS.userTokenKey, token, {
+    httpOnly: true,
+    sameSite: "none",
+     secure: process.env.NODE_ENV === "production",
+  });
 
   return JsonResponse(res, {
     status: "success",
     statusCode: 200,
-    message: "OTP sent to your phone. Please verify to complete signup.",
-    title: "OTP Verification",
+    title:"Sign Success",
+    message: "User signup successful",
+    data: newUser,
   });
 };

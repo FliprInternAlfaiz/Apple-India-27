@@ -1,4 +1,4 @@
-import userSignUpValidation from './userSignUp.validation';
+import { userSignUpValidation } from "./userSignUp.validation";
 
 export const Validators = {
   userSignup: userSignUpValidation,

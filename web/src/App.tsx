@@ -14,7 +14,7 @@ function App() {
     <Provider store={store}>
       <QueryProvider>
         <MantineProvider>
-          <Notifications position="top-right" />
+          <Notifications position="bottom-right" />
           <ModalsProvider>
             <RouterProvider router={appRouter} />
           </ModalsProvider>

@@ -1,37 +1,41 @@
 import { IOtp, IOtpModel } from "../../interface/otp.interface";
 
 export default {
-  generateOtp: function (
+  async generateOtp(
     this: IOtpModel,
-    { otp, userId, email }: Pick<IOtp, 'otp' | 'userId' | 'email'>
+    { otp, userId, email, phone }: Pick<IOtp, "otp" | "userId" | "email" | "phone">
   ) {
-    if (userId) {
-      return this.create({ otp, userId });
+    if (!userId && !email && !phone) {
+      throw new Error("Either userId, email, or phone must be provided.");
     }
-    if (email) {
-      return this.create({ otp, email });
-    }
-    throw new Error("Either userId or email must be provided.");
+
+    await this.deleteMany({ $or: [{ userId }, { email }, { phone }] });
+
+    return this.create({ otp, userId, email, phone });
   },
 
-  getOtp(this: IOtpModel, { otp, userId, email }: Pick<IOtp, 'userId' | 'email' | 'otp'>) {
-    const query: any = { otp };
-    if (userId) {
-      query.userId = userId;
-    }
-    if (email) {
-      query.email = email;
-    }
-    return this.findOne(query);
+  async getOtp(
+    this: IOtpModel,
+    { otp, userId, email, phone }: Pick<IOtp, "otp" | "userId" | "email" | "phone">
+  ) {
+    if (!otp) throw new Error("OTP is required.");
+
+    return this.findOne({
+      otp,
+      $or: [{ userId }, { email }, { phone }],
+    });
   },
 
-  deleteOtp(this: IOtpModel, { userId, email }: { userId?: string; email?: string }) {
-    if (userId) {
-      return this.deleteOne({ userId });
+  async deleteOtp(
+    this: IOtpModel,
+    { userId, email, phone }: { userId?: string; email?: string; phone?: string }
+  ) {
+    if (!userId && !email && !phone) {
+      throw new Error("Either userId, email, or phone must be provided.");
     }
-    if (email) {
-      return this.deleteOne({ email });
-    }
-    throw new Error("Either userId or email must be provided.");
+
+    return this.deleteMany({
+      $or: [{ userId }, { email }, { phone }],
+    });
   },
 };

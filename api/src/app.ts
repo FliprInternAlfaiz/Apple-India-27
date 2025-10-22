@@ -4,11 +4,13 @@ import express from 'express';
 import ExpressConfig from './config/expressConfig';
 import Config from './config/serverConfig';
 import { cronInit } from './crons';
+import cookieParser from 'cookie-parser';
 
 if (process.env.NODE_ENV === 'test') config({ path: '.env.test' });
 
 const PORT = process.env.PORT ?? 4000;
 const app = express();
+app.use(cookieParser());
 
 const serverConfig = new Config();
 const experssApp = new ExpressConfig(app, PORT);

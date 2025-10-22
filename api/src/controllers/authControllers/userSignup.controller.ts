@@ -1,67 +1,40 @@
 import { Request, Response } from "express";
-import { ObjectId } from "mongodb";
 import commonsUtils from "../../utils";
 import models from "../../models";
-import { jwtConfig } from "../../services";
-import CONSTANTS from "../../constants/CONSTANTS";
-import encryptPassword from "../../utils/encryptPassword";
 
 const { JsonResponse } = commonsUtils;
 
 export default async (req: Request, res: Response) => {
-  const { name, email, phone, password, otp } = req.body;
+  const { name, email, phone } = req.body;
 
-  if (!otp || !phone) {
+  if (!name || !email || !phone) {
     return JsonResponse(res, {
       status: "error",
       statusCode: 400,
-      message: "OTP and phone number are required.",
-      title: "User Authentication",
+      title:"Missing Values",
+      message: "Name, email, and phone are required.",
     });
   }
 
-  const storedOtp = await models.Otp.findOne({ phone });
-  if (!storedOtp || storedOtp.otp !== otp) {
+  const existingUser = await models.User.findOne({ $or: [{ email }, { phone }] });
+  if (existingUser) {
     return JsonResponse(res, {
       status: "error",
       statusCode: 400,
-      message: "Invalid OTP.",
-      title: "User Authentication",
+      title:"User Exist",
+      message: "User already exists. Please login.",
     });
   }
 
-  const hashedPassword = encryptPassword(password);
+  const generatedOtp = commonsUtils.otp.generateSecureOTP();
+  await models.Otp.generateOtp({ phone, otp: generatedOtp });
 
-  const newUser = await models.User.create({
-    name,
-    email,
-    phone,
-    password: hashedPassword,
-  });
-
-  await models.Otp.deleteOne({ phone });
-
-  const token = jwtConfig.jwtService.generateJWT({
-    email: newUser.email,
-    id: newUser.id!,
-  });
-
-  const authToken = await models.token.createToken({
-    userId: new ObjectId(newUser.id as string),
-    token,
-  });
-
-  res.cookie(CONSTANTS.userTokenKey, authToken.token, {
-    httpOnly: true,
-    sameSite: "none",
-    secure: true,
-  });
+  console.log(`OTP sent to ${phone}: ${generatedOtp}`); 
 
   return JsonResponse(res, {
     status: "success",
     statusCode: 200,
-    message: "User signup successful.",
-    title: "User Authentication",
-    data: newUser,
+    title:"OTP Sent",
+    message: "OTP sent successfully",
   });
 };

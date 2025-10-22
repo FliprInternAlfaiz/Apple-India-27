@@ -1,23 +1,58 @@
-import { NextFunction, Request, Response } from 'express';
-
+// routes/auth/verify.ts
+import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
-import models from '../../models';
-
+import models from "../../models";
+import { jwtConfig } from "../../services";
 
 const { JsonResponse } = commonsUtils;
 
-export default async (_: Request, res: Response, __: NextFunction) => {
-  const userId = res.locals.userId;
+export default async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.cookies?.userAuth;
+    if (!token) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 401,
+        title: "Unauthorized",
+        message: "No token provided",
+      });
+    }
 
-  const user = await models.User.getById(userId);
+    const decoded = jwtConfig.jwtService.verifyJWT(token);
+    if (!decoded?.id) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 401,
+        title: "Unauthorized",
+        message: "Invalid token",
+      });
+    }
 
-  const { password, ...userData } = user.toObject();
+    const user = await models.User.findById(decoded.id).select("-password");
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        title: "Not Found",
+        message: "User not found",
+      });
+    }
 
-  return JsonResponse(res, {
-    status: 'success',
-    statusCode: 200,
-    message: 'user profile fetched successfully',
-    title: 'user authenticatio',
-    data: userData,
-  });
+    res.locals.userId = user._id;
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "User Authenticated",
+      message: "User is authenticated",
+      data: user,
+    });
+  } catch (err) {
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to verify user"
+    });
+  }
 };
