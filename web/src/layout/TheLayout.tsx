@@ -13,11 +13,7 @@ const TheLayout = () => {
     <AppShell
       padding={0}
       styles={{
-        root: {
-          height: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        },
+        root: { height: "100vh", display: "flex", flexDirection: "column" },
         main: {
           flex: 1,
           display: "flex",
@@ -40,7 +36,6 @@ const TheLayout = () => {
         <Outlet />
       </Box>
 
-      {/* Footer always at bottom */}
       <BottomNavigator />
     </AppShell>
   );

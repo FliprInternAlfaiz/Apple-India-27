@@ -57,7 +57,7 @@ export default async (req: Request, res: Response, __: NextFunction) => {
   res.cookie(CONSTANTS.userTokenKey, authToken.token, {
     httpOnly: true,
     sameSite: "none",
-     secure: process.env.NODE_ENV === "production",
+     secure: true,
   });
 
   const { password: _, ...userData } = user.toObject();

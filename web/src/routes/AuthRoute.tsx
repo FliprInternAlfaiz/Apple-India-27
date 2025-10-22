@@ -3,6 +3,7 @@ import { useLocation, Navigate, Outlet } from "react-router-dom";
 import { useVerifyUserQuery } from "../hooks/query/useGetVerifyUser.query";
 import { ROUTES } from "../enum/routes";
 import { Center, Loader } from "@mantine/core";
+import classes from "./index.module.scss";
 
 const AuthRoute = () => {
   const { pathname } = useLocation();
@@ -14,7 +15,7 @@ const AuthRoute = () => {
 
   if (isLoading) {
     return (
-      <Center>
+      <Center style={{ height: "100vh" }}>
         <Loader />
       </Center>
     );
@@ -24,7 +25,12 @@ const AuthRoute = () => {
     return <Navigate to={ROUTES.HOMEPAGE} replace />;
   }
 
-  return <Outlet />;
+  return (
+    <div className={classes.root}>
+      {" "}
+      <Outlet />{" "}
+    </div>
+  );
 };
 
 export default AuthRoute;
