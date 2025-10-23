@@ -8,25 +8,25 @@ const Task: React.FC = () => {
     {
       id: 1,
       thumbnail: "https://picsum.photos/id/1/200/300",
-      level: "LG4",
+      level: "Apple4",
       reward: "Rs +185.00",
     },
     {
       id: 2,
       thumbnail: "https://picsum.photos/id/10/200/300",
-      level: "LG4",
+      level: "Apple4",
       reward: "Rs +185.00",
     },
     {
       id: 3,
       thumbnail: "https://picsum.photos/id/12/200/300",
-      level: "LG4",
+      level: "Apple4",
       reward: "Rs +185.00",
     },
     {
       id: 4,
       thumbnail: "https://picsum.photos/id/14/200/300",
-      level: "LG4",
+      level: "Apple4",
       reward: "Rs +185.00",
     },
   ];
@@ -34,7 +34,7 @@ const Task: React.FC = () => {
   return (
     <Flex className={classes.taskContainer} direction="column">
       <Flex className={classes.taskInfoBox} direction="column" >
-        <Text size="xl" fw={700} mb="md">LG4</Text>
+        <Text size="xl" fw={700} mb="md">Apple4</Text>
         <Text size="md" fw={500} mb="xs">Tasks remaining today: 0</Text>
         <Text size="md" fw={500}>Tasks completed today: 20</Text>
       </Flex>

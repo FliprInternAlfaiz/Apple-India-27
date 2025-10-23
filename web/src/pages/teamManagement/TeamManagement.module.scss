@@ -1,0 +1,86 @@
+.teamContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 50%, #1a1a3e 100%);
+}
+
+.teamInfoSection {
+  padding: 2rem 1rem;
+}
+
+.totalTeamCard {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+}
+
+.levelCard {
+  flex: 1;
+  min-width: 120px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd89b 0%, #f9d77e 100%);
+
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  }
+
+  .levelIcon {
+    font-size: 2.2rem;
+    display: block;
+  }
+}
+
+.managementSection {
+  background: #fff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 1.5rem 0;
+  margin-top: 2rem;
+  min-height: 50vh;
+}
+
+.managementTitle {
+  color: #333;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.managementItem {
+  cursor: pointer;
+  transition: transform 0.2s;
+  padding: 0.25rem 0.5rem;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .managementIcon {
+    font-size: 20px;
+    color: #fff; 
+    background: linear-gradient(135deg, #fff4e0 0%, #f5cd68 100%);
+    border-radius: 8px;
+    padding: 8px 16px;
+  }
+
+  text {
+    font-size: 0.9rem;
+    color: #333;
+  }
+}
+
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .levelCard {
+    min-width: 100px;
+  }
+  .managementCard {
+    min-width: calc(50% - 0.5rem);
+  }
+}

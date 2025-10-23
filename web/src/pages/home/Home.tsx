@@ -14,25 +14,29 @@ import {
 } from "react-icons/fa";
 import { IMAGES } from "../../assets";
 import { HEADER_HEIGHT } from "../../ui/Header/Header";
+import { useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { icon: <FaBuilding />, title: "Company Introduction" },
-  { icon: <FaGift />, title: "Company Activities" },
-  { icon: <FaNewspaper />, title: "Conference News" },
-  { icon: <FaCrown />, title: "Member Benefits" },
-  { icon: <FaEnvelope />, title: "Management Positions" },
-  { icon: <FaUsers />, title: "Team Expansion" },
-  { icon: <FaTicketAlt />, title: "Lucky Draw" },
-  { icon: <FaMoneyBillWave />, title: "Financial Management Fund" },
-  { icon: <FaUniversity />, title: "Recharge" },
-  { icon: <FaIdCard />, title: "Identity Authentication" },
+  { icon: <FaBuilding />, title: "Company Introduction", path: "/company-intro" },
+  { icon: <FaGift />, title: "Company Activities", path: "/company-activities" },
+  { icon: <FaNewspaper />, title: "Conference News", path: "/conference-news" },
+  { icon: <FaCrown />, title: "Member Benefits", path: "/member-benefits" },
+  { icon: <FaEnvelope />, title: "Management Positions", path: "/management-positions" },
+  { icon: <FaUsers />, title: "Team Expansion", path: "/team-expansion" },
+  { icon: <FaTicketAlt />, title: "Lucky Draw", path: "/lucky-draw" },
+  { icon: <FaMoneyBillWave />, title: "Financial Management Fund", path: "/finance-fund" },
+  { icon: <FaUniversity />, title: "Recharge", path: "/recharge" },
+  { icon: <FaIdCard />, title: "Identity Authentication", path: "/identity-auth" },
 ];
 
 const ads = [IMAGES.ad1, IMAGES.ad2];
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <>
+      {/* Header Section */}
       <Box
         style={{
           background: `url(${IMAGES.Home_Page}) center/cover no-repeat`,
@@ -51,19 +55,18 @@ const Home: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Menu Items */}
       <Box p="md">
-        <SimpleGrid cols={3} spacing="sm" style={{ alignItems: "stretch" }}>
+        <SimpleGrid cols={3} spacing="md" px={20}>
           {menuItems.map((item) => (
             <Flex
               key={item.title}
               direction="column"
               align="center"
-              justify="flex-start"
+              onClick={() => navigate(item.path)}
               style={{
-                padding: "12px",
-                borderRadius: "10px",
-                color: "#000",
-                minHeight: 150,
+                cursor: "pointer",
+                transition: "0.3s",
               }}
             >
               <Box
@@ -71,26 +74,26 @@ const Home: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 50,
-                  height: 50,
+                  width: 60,
+                  height: 60,
                   borderRadius: "50%",
                   border: "2px solid #d4a017",
                   color: "#d4a017",
                   fontSize: 30,
                   background: "rgba(255, 255, 255, 0.1)",
-                  marginBottom: 8,
+                  marginBottom: 10,
                 }}
               >
                 {item.icon}
               </Box>
-
-              <Text ta="center" size="sm" mt="xs" fw={500}>
+              <Text ta="center" size="sm" fw={500}>
                 {item.title}
               </Text>
             </Flex>
           ))}
         </SimpleGrid>
 
+        {/* Advertisement Section */}
         <Box mt="lg" p="sm" style={{ borderRadius: 8, background: "#fff" }}>
           <Text fw={700} ta="center" bg="black" c="white" pt={10} pb={10}>
             Advertisement Display Area

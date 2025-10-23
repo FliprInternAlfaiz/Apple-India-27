@@ -8,6 +8,7 @@ import { Notifications } from "@mantine/notifications";
 import { store } from "./store/store";
 import { appRouter } from "./routes/appRoutes";
 import QueryProvider from "./lib/QueryProvider";
+import '@mantine/carousel/styles.css';
 
 function App() {
   return (

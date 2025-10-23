@@ -43,58 +43,57 @@ const Profile: React.FC = () => {
           minHeight: 120,
         }}
       >
-       <Box p={20}>
-  <Flex align="center" gap="16px">
-    <Box
-      style={{
-        width: 60,
-        height: 60,
-        borderRadius: "50%",
-        background: "#d4a017",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 24,
-        fontWeight: 700,
-        color: "#fff",
-        border: "3px solid #fff",
-      }}
-    >
-      LG
-    </Box>
+        <Box p={20}>
+          <Flex align="center" gap="16px">
+            <Box
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: "#d4a017",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 24,
+                fontWeight: 700,
+                color: "#fff",
+                border: "3px solid #fff",
+              }}
+            >
+              Apple
+            </Box>
 
-    <Flex direction="column">
-      <Text size="sm" c="#fff" fw={500}>
-        +91 98765 43210
-      </Text>
-      <Box
-        mt={10}
-        px={16}
-        py={6}
-        style={{
-          background: "#d4a017",
-          borderRadius: 12,
-          color: "#fff",
-          fontSize: 14,
-          fontWeight: 600,
-          alignSelf: "flex-start",
-        }}
-      >
-        LG3
-      </Box>
-    </Flex>
-  </Flex>
-</Box>
-
+            <Flex direction="column">
+              <Text size="sm" c="#fff" fw={500}>
+                +91 98765 43210
+              </Text>
+              <Box
+                mt={10}
+                px={10}
+                style={{
+                  background: "#d4a017",
+                  borderRadius: 4,
+                  color: "black",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  alignSelf: "flex-start",
+                }}
+              >
+                Apple3
+              </Box>
+            </Flex>
+          </Flex>
+        </Box>
       </Box>
 
-      <Box px="md" mt={-20}>
+      <Box px="md" mt={-20} bg="#fff">
         <Box
           p="lg"
           style={{
             background: "#fff",
             borderRadius: 16,
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            zIndex:"100"
           }}
         >
           <StatItem label="Today's mission income" value="12625.30" />
