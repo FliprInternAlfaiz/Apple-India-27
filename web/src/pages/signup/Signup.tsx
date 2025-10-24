@@ -14,6 +14,8 @@ import { showNotification } from "@mantine/notifications";
 import { useSignupMutation } from "../../hooks/mutations/useSignup.mutation";
 import { useVerifyOtpMutation } from "../../hooks/mutations/useVerifyOtp.mutation";
 import classes from "./Signup.module.scss";
+import { useAppDispatch } from "../../store/hooks";
+import { login } from "../../store/reducer/authSlice";
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const Signup: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-
+  const dispatch = useAppDispatch();
   const { mutate: sendOtp, isPending: isSendOtpPending } = useSignupMutation();
   const { mutate: verifyOtp, isPending: isVerifyOtpPending } =
     useVerifyOtpMutation();
@@ -80,6 +82,7 @@ const Signup: React.FC = () => {
       {
         onSuccess: (res: any) => {
           if (res?.status === "success") {
+                      dispatch(login(res.data));
             showNotification({
               title: "Signup Successful",
               message: "Account created successfully",

@@ -1,5 +1,7 @@
 const authPrefix = "/auth/user";
 
+const taskPrefix = "/task";
+
 export const authUrls = {
   LOGIN: authPrefix + "/login",
   VERIFYSIGNUPOTP: authPrefix + "/otp/verify",
@@ -7,3 +9,7 @@ export const authUrls = {
   VERIFYUSER:authPrefix + "/profile"
 };
 
+export const taskUrls = {
+  CREATE_TASK: taskPrefix + "/create-task",
+  GET_USER_TASKS: taskPrefix + "/get-task",
+};

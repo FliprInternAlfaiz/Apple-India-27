@@ -8,30 +8,32 @@ const BottomNavigator = () => {
   const { pathname } = useLocation();
 
   const tabs = [
-    { icon: <FaHome size={20} />, path: "/", label: "Home" },
-    { icon: <FaTasks size={20} />, path: "/task", label: "Task" },
-    { icon: <FaUsers size={20} />, path: "/team", label: "Team" },
-    { icon: <FaCrown size={20} />, path: "/level", label: "Level" },
-    { icon: <FaUser size={20} />, path: "/Profile", label: "My" },
+    { icon: FaHome, path: "/", label: "Home" },
+    { icon: FaTasks, path: "/task", label: "Task" },
+    { icon: FaUsers, path: "/team", label: "Team" },
+    { icon: FaCrown, path: "/level", label: "Level" },
+    { icon: FaUser, path: "/profile", label: "My" },
   ];
 
   return (
     <div className={styles.footerWrapper}>
       <Flex justify="space-around" align="center" className={styles.footer}>
-        {tabs.map((tab) => (
-          <Flex
-            key={tab.path}
-            direction="column"
-            align="center"
-            className={`${styles.tab} ${
-              pathname === tab.path ? styles.active : ""
-            }`}
-            onClick={() => navigate(tab.path)}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </Flex>
-        ))}
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = pathname === tab.path;
+          return (
+            <Flex
+              key={tab.path}
+              direction="column"
+              align="center"
+              className={`${styles.tab} ${isActive ? styles.active : ""}`}
+              onClick={() => navigate(tab.path)}
+            >
+              <Icon className={styles.icon} />
+              <span className={styles.label}>{tab.label}</span>
+            </Flex>
+          );
+        })}
       </Flex>
     </div>
   );

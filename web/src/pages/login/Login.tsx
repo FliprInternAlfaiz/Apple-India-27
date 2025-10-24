@@ -13,12 +13,15 @@ import { showNotification } from "@mantine/notifications";
 import { useLoginMutation } from "../../hooks/mutations/useLogin.mutation";
 import { ROUTES } from "../../enum/routes";
 import classes from "./Login.module.scss";
+import { useAppDispatch } from "../../store/hooks";
+import { login } from "../../store/reducer/authSlice";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const { mutate, isPending } = useLoginMutation();
+  const dispatch = useAppDispatch();
 
   const handleSubmit = () => {
     if (!phone || !password) {
@@ -34,6 +37,7 @@ const Login: React.FC = () => {
       { phone, password },
       {
         onSuccess: (res: any) => {
+           dispatch(login(res.data));
           if (res?.status === "success") {
             showNotification({
               title: "Login Successful",
@@ -69,7 +73,7 @@ const Login: React.FC = () => {
         <TextInput
           label="Phone Number"
           type="number"
-          placeholder="Enter your phone"
+          placeholder="Eg., 7804064484"
           value={phone}
           onChange={(e) => setPhone(e.currentTarget.value)}
            classNames={{ label: classes.label, input: classes.input }}

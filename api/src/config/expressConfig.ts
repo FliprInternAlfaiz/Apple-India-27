@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { AuthRoutes } from '../routes/auth/auth.routes';
+import { TaskRoutes } from '../routes/token/task.routes';
 
 class ExpressConfig {
   app: express.Application;
@@ -18,6 +19,7 @@ class ExpressConfig {
     this.staticServe();
     const routes = [
       new AuthRoutes(this.app),
+      new TaskRoutes(this.app),
     ];
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);
     return this.app;
