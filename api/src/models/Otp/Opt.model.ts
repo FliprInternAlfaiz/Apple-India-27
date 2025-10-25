@@ -4,6 +4,7 @@ import commonsUtils from '../../utils';
 import { IOtp, IOtpModel  } from '../../interface/otp.interface';
 const otpSchema = new Schema<IOtp>(
   {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     email: { type: String, default: null },
     phone: { type: String, default: null },
     otp: { type: String, required: true },

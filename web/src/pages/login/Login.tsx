@@ -47,8 +47,8 @@ const Login: React.FC = () => {
             navigate(ROUTES.HOMEPAGE);
           } else {
             showNotification({
-              title: "Login Failed",
-              message: res?.message || "Invalid credentials",
+              title: res?.data?.title || "Login Failed",
+              message: res?.data?.message || "Invalid credentials",
               color: "red",
             });
           }
@@ -76,7 +76,7 @@ const Login: React.FC = () => {
           placeholder="Eg., 7804064484"
           value={phone}
           onChange={(e) => setPhone(e.currentTarget.value)}
-           classNames={{ label: classes.label, input: classes.input }}
+              classNames={{ label: classes.label, input: classes.input }}
           mb="sm"
         />
         <PasswordInput
@@ -84,7 +84,7 @@ const Login: React.FC = () => {
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.currentTarget.value)}
-           classNames={{ label: classes.label, input: classes.input }}
+          classNames={{ label: classes.label, input: classes.input }}
           mb="lg"
         />
         <Button

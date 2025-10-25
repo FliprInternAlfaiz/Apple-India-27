@@ -3,61 +3,104 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #d4a017 0%, #f5f5f5 100%);
-  padding: 1rem;
+  background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 50%, #1a1a3e 100%);
+  padding: 1.5rem;
+  box-sizing: border-box;
 }
 
 .paper {
   width: 100%;
-  max-width: 370px;
-  box-sizing: border-box;
-  @media (max-width: 500px) {
-    padding: 1rem;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  color: #fff;
+
+  @media (max-width: 600px) {
+    padding: 1.2rem;
+    max-width: 90%;
   }
+}
+
+.title {
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .label {
   display: flex;
-  margin-bottom: 8px;
-  color: #555;
-font-size: 14px;
+  margin-bottom: 6px;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.input {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.pinroot {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 1rem 0;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .pininput {
-  font-size: 22px;
-  color: #4776e6;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
   width: 48px;
   height: 48px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
   text-align: center;
+  flex: 1 1 40px; /* allows shrinking on smaller screens */
+  min-width: 40px;
 
   &:focus {
-    border-color: #d4a017;
-    box-shadow: 0 0 0 2px rgba(212, 160, 23, 0.2);
+    border-color: #f0c93d;
+    box-shadow: 0 0 0 2px rgba(240, 201, 61, 0.3);
+  }
+
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
   }
 }
 
-.pinroot {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-
-.title {
-  color: #d4a017;
-  text-align: center;
-}
 
 .link {
   cursor: pointer;
-  color: #555;
+  color: #fff;
   text-align: center;
+  display: block;
+  margin-top: 1rem;
+  font-size: 14px;
+
   &:hover {
     text-decoration: underline;
+  }
+}
+
+button {
+  font-weight: 600;
+  background-color: #1a1a3e !important;
+  color: #fff !important;
+  border-radius: 10px;
+  transition: 0.2s ease;
+
+  &:hover {
+    background-color: #1a1a3e !important;
   }
 }

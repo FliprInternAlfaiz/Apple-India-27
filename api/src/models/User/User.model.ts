@@ -142,7 +142,6 @@ schema.index({ lastActiveDate: 1 });
 commonsUtils.dbUtils.registerDaos(schema, dao);
 commonsUtils.dbUtils.handleDuplicates(schema, "email");
 commonsUtils.dbUtils.handleDuplicates(schema, "phone");
-commonsUtils.dbUtils.handleDuplicates(schema, "username");
 
 const userModel: IUserMethods = model<IUser, IUserMethods>("user", schema);
 export default userModel;

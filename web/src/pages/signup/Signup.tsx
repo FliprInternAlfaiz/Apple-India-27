@@ -52,8 +52,8 @@ const Signup: React.FC = () => {
             setStep("otp");
           } else {
             showNotification({
-              title: "Failed to send OTP",
-              message: res?.message || "Something went wrong",
+              title: res?.data?.title || "Failed to send OTP",
+              message: res?.data?.message || "Something went wrong",
               color: "red",
             });
           }
@@ -91,8 +91,8 @@ const Signup: React.FC = () => {
             navigate("/login");
           } else {
             showNotification({
-              title: "OTP Verification Failed",
-              message: res?.message || "Invalid OTP",
+              title: res?.data?.title || "OTP Verification failedP",
+              message: res?.data?.message || "Something went wrong",
               color: "red",
             });
           }
