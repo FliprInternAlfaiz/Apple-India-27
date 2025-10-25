@@ -1,20 +1,66 @@
+// hooks/useVerifyUserQuery.ts
 import { useQuery } from "@tanstack/react-query";
 import { authUrls } from "../api-urls/api.url";
 import { request } from "../../lib/axios.config";
 
-export const verifyUser = async () => {
-   const response: TServerResponse = await request({
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  username: string;
+  picture?: string;
+  mainWallet: number;
+  commissionWallet: number;
+  todayIncome: number;
+  monthlyIncome: number;
+  totalRevenue: number;
+  totalWithdrawals: number;
+  totalProfit: number;
+  totalTasksCompleted: number;
+  todayTasksCompleted: number;
+  userLevel: number;
+  levelName: string;
+  isActive: boolean;
+  isVerified: boolean;
+  referralCode?: string;
+  totalReferrals: number;
+}
+
+interface TServerResponse {
+  status: "success" | "error";
+  statusCode: number;
+  title: string;
+  message: string;
+  data?: {
+    user: UserResponse;
+    stats: {
+      todayIncome: number;
+      monthlyIncome: number;
+      totalRevenue: number;
+      totalWithdrawals: number;
+      mainWallet: number;
+      commissionWallet: number;
+      profit: number;
+    };
+  };
+}
+
+export const verifyUser = async (): Promise<TServerResponse> => {
+  const response: TServerResponse = await request({
     url: authUrls.VERIFYUSER,
     method: "GET",
   });
-    return response;
 
+  return response;
 };
 
 export const useVerifyUserQuery = () => {
   return useQuery({
     queryKey: ["verifyUser"],
     queryFn: () => verifyUser(),
-    retry: false, 
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
   });
 };

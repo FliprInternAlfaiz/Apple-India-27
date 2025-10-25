@@ -27,7 +27,7 @@ export default async (req: Request, res: Response) => {
   }
 
   const generatedOtp = commonsUtils.otp.generateSecureOTP();
-  await models.Otp.generateOtp({ phone, otp: generatedOtp });
+  await models.Otp.generateOtp({ email,phone, otp: generatedOtp });
 
   console.log(`OTP sent to ${phone}: ${generatedOtp}`); 
 
