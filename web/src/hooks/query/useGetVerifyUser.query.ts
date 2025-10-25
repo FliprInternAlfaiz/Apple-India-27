@@ -60,7 +60,7 @@ export const useVerifyUserQuery = () => {
     queryKey: ["verifyUser"],
     queryFn: () => verifyUser(),
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, 
     refetchOnWindowFocus: true,
   });
 };

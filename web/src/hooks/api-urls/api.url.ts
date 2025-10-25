@@ -12,4 +12,6 @@ export const authUrls = {
 export const taskUrls = {
   CREATE_TASK: taskPrefix + "/create-task",
   GET_USER_TASKS: taskPrefix + "/get-task",
+  COMPLETE_TASK: taskPrefix + "/complete-tasks",
+  GET_TASK_BY_ID: taskPrefix + "/get-single-tasks",
 };

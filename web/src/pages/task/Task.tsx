@@ -1,10 +1,12 @@
 import React, { useRef, useCallback } from "react";
 import { Flex, Text, Loader } from "@mantine/core";
+import { useNavigate } from "react-router-dom";
 import classes from "./Task.module.scss";
 import TaskItem from "../../components/TaskItem/TaskItem";
 import { useInfiniteTasksQuery } from "../../hooks/query/useGetTask.query";
 
 const Task: React.FC = () => {
+  const navigate = useNavigate();
   const {
     data,
     fetchNextPage,
@@ -31,6 +33,12 @@ const Task: React.FC = () => {
     [isFetchingNextPage, fetchNextPage, hasNextPage]
   );
 
+  const handleTaskClick = (taskId: string, isCompleted: boolean) => {
+    if (!isCompleted) {
+      navigate(`/task/${taskId}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <Flex justify="center" align="center" h="100vh">
@@ -48,6 +56,7 @@ const Task: React.FC = () => {
   }
 
   const allTasks = data?.pages.flatMap((page) => page.tasks) || [];
+  const stats = data?.pages[0]?.stats;
   const totalTasks = data?.pages[0]?.pagination?.totalTasks || 0;
 
   return (
@@ -57,39 +66,39 @@ const Task: React.FC = () => {
           Apple4
         </Text>
         <Text size="md" fw={500} mb="xs">
-          Tasks remaining today: {totalTasks}
+          Tasks remaining today: {totalTasks - (stats?.todayCompleted || 0)}
         </Text>
         <Text size="md" fw={500}>
-          Tasks completed today: 0
+          Tasks completed today: {stats?.todayCompleted || 0}
         </Text>
       </Flex>
 
       <Flex direction="column" className={classes.taskItemContainer}>
         {allTasks.length === 0 ? (
           <Flex justify="center" align="center" flex={1}>
-            <Text color="gray">No tasks available</Text>
+            <Text c="gray">No tasks available</Text>
           </Flex>
         ) : (
           allTasks.map((task: any, index: number) => {
-            if (index === allTasks.length - 1) {
-              return (
-                <div ref={lastTaskRef} key={task._id}>
-                  <TaskItem
-                    thumbnail={task.thumbnail}
-                    level={task.level}
-                    reward={`Rs +${task.rewardPrice}`}
-                  />
-                </div>
-              );
-            }
-            return (
+            const taskElement = (
               <TaskItem
                 key={task._id}
                 thumbnail={task.thumbnail}
                 level={task.level}
                 reward={`Rs +${task.rewardPrice}`}
+                isCompleted={task.isCompleted}
+                onClick={() => handleTaskClick(task._id, task.isCompleted)}
               />
             );
+
+            if (index === allTasks.length - 1) {
+              return (
+                <div ref={lastTaskRef} key={task._id}>
+                  {taskElement}
+                </div>
+              );
+            }
+            return taskElement;
           })
         )}
         {isFetchingNextPage && (

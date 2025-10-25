@@ -20,6 +20,7 @@ import FinanceFund from "../pages/company/FinanceFund";
 import Recharge from "../pages/company/Recharge";
 import IdentityAuth from "../pages/company/IdentityAuth";
 import LevelTasksScreen from "../pages/LevelTasksScreen/LevelTaskScreen";
+import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
 
 
 
@@ -33,11 +34,12 @@ export const appRouter = createBrowserRouter([
         children: [
           { path: "/", element: <Home /> },
           { path: "/task", element: <Task /> },
+          { path: "/task/:taskId", element: <VideoPlayerScreen /> },
           { path: "/team", element: <TeamManagement /> },
           { path: "/team-level-task", element: <LevelTasksScreen /> },
           { path: "/level", element: <Level /> },
           { path: "/profile", element: <Profile /> },
-           { path: "/company-intro", element: <CompanyIntro /> },
+          { path: "/company-intro", element: <CompanyIntro /> },
           { path: "/company-activities", element: <CompanyActivities /> },
           { path: "/conference-news", element: <ConferenceNews /> },
           { path: "/member-benefits", element: <MemberBenefits /> },

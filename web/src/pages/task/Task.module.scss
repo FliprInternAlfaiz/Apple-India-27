@@ -15,15 +15,13 @@
 
 
 .taskItemContainer {
-  flex: 1;                       
+  flex: 1;
   background-color: white;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   padding-top: 10px;
   display: flex;
   flex-direction: column;
-  min-height: 0;                
-  overflow-y: auto;             
 }
 
 

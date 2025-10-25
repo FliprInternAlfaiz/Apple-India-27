@@ -3,7 +3,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { AuthRoutes } from '../routes/auth/auth.routes';
-import { TaskRoutes } from '../routes/token/task.routes';
+import { TaskRoutes } from '../routes/task/task.routes';
 
 class ExpressConfig {
   app: express.Application;
