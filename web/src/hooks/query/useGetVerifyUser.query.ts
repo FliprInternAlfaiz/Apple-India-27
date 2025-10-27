@@ -59,8 +59,6 @@ export const useVerifyUserQuery = () => {
   return useQuery({
     queryKey: ["verifyUser"],
     queryFn: () => verifyUser(),
-    retry: false,
-    staleTime: 5 * 60 * 1000, 
-    refetchOnWindowFocus: true,
+    retry: false
   });
 };

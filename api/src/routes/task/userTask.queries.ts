@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { commonsMiddleware } from '../../middleware';
 import { Validators } from '../../validators';
 import taskController from '../../controllers/taskControllers/task.controller';
+import { handleMulterError, uploadSingleVideo } from '../../middleware/upload.middleware';
 
 const { getTasks, getTaskById, completeTask, createTask } = taskController;
 
@@ -20,7 +21,9 @@ export default (router: Router) => {
 
   router.post(
     '/create-tasks',
+    uploadSingleVideo,
+    handleMulterError,
     commonsMiddleware.yupValidationMiddleware(Validators.userTask.createTask),
-    createTask,
+    createTask
   );
 };

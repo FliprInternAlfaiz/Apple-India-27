@@ -1,8 +1,8 @@
-import React from 'react'
+import LevelTasksScreen from '../LevelTasksScreen/LevelTaskScreen'
 
 const Level = () => {
   return (
-    <div>Level</div>
+    <LevelTasksScreen/>
   )
 }
 

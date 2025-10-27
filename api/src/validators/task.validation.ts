@@ -1,10 +1,6 @@
 import * as yup from "yup";
 
 export const createTask = yup.object().shape({
-  videoUrl: yup
-    .string()
-    .required("Video URL is required")
-    .url("Invalid video URL format"),
   thumbnail: yup
     .string()
     .required("Thumbnail URL is required")

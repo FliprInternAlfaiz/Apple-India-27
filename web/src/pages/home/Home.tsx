@@ -57,7 +57,7 @@ const Home: React.FC = () => {
 
       {/* Menu Items */}
       <Box p="md">
-        <SimpleGrid cols={3} spacing="md" px={20}>
+        <SimpleGrid cols={3} spacing="md" >
           {menuItems.map((item) => (
             <Flex
               key={item.title}

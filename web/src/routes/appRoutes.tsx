@@ -36,7 +36,6 @@ export const appRouter = createBrowserRouter([
           { path: "/task", element: <Task /> },
           { path: "/task/:taskId", element: <VideoPlayerScreen /> },
           { path: "/team", element: <TeamManagement /> },
-          { path: "/team-level-task", element: <LevelTasksScreen /> },
           { path: "/level", element: <Level /> },
           { path: "/profile", element: <Profile /> },
           { path: "/company-intro", element: <CompanyIntro /> },

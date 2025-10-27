@@ -44,8 +44,8 @@ export default async (req: Request, res: Response) => {
 
   res.cookie(CONSTANTS.userTokenKey, token, {
     httpOnly: true,
-    sameSite: "none",
-     secure: true,
+   sameSite: "lax",
+     secure: false,
   });
 
   return JsonResponse(res, {

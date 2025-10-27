@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-   "scripts": {
+  "scripts": {
     "dev": "nodemon ./src/app.ts",
     "start": "node dist/app.js",
     "build": "tsc",
     "test": "jest --silent --maxWorkers=1"
   },
-   "devDependencies": {
+  "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
@@ -48,7 +48,7 @@
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
     "mongoose": "^8.8.3",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.0.2",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "yup": "^1.4.0"

@@ -14,7 +14,7 @@ app.use(cookieParser());
 
 const serverConfig = new Config();
 const experssApp = new ExpressConfig(app, PORT);
-cronInit();
+//cronInit();
 serverConfig.start();
 const serverApp = experssApp.start();
 export default serverApp;

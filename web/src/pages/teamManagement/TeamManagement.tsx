@@ -8,7 +8,7 @@ import { IoTrophyOutline } from "react-icons/io5";
 const TeamManagementScreen = () => {
   const navigate = useNavigate();
    const teamLevels = [
-    { level: "Level A", people: 8, icon: <FaCrown color="#d6d01eff"/>,  route: "/team-level-task" }, // Gold
+    { level: "Level A", people: 8, icon: <FaCrown color="#d6d01eff"/>,}, 
     { level: "Level B", people: 2, icon: <FaMedal color="#C0C0C0"/>,  }, 
     { level: "Level C", people: 0, icon: <FaCrown color="#CD7F32"/>,  }, 
   ];
@@ -50,7 +50,7 @@ const TeamManagementScreen = () => {
                 direction="column"
                 align="center"
                 className={`${classes.levelCard} ${classes["level" + lvl.level.split(" ")[1]]}`}
-                onClick={() => lvl.route && navigate(lvl.route)}
+                onClick={() => {}}
               >
                 <Box className={classes.levelIcon}>{lvl.icon}</Box>
                 <Text size="sm" fw={600} mt="xs">
