@@ -51,6 +51,9 @@ export interface IUser extends Document {
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
+
+  //withdrawalPassword
+  withdrawalPassword:string;
 }
 
 type TQueryType = Query<IUser, IUser>;

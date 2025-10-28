@@ -1,8 +1,8 @@
-import React from 'react'
+import WithdrawalScreen from '../withdrawalScreen/WithdrawalScreen'
 
 const Recharge = () => {
   return (
-    <div>Recharge</div>
+    <WithdrawalScreen/>
   )
 }
 

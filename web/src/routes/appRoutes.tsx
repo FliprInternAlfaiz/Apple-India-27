@@ -19,7 +19,6 @@ import LuckyDraw from "../pages/company/LuckyDraw";
 import FinanceFund from "../pages/company/FinanceFund";
 import Recharge from "../pages/company/Recharge";
 import IdentityAuth from "../pages/company/IdentityAuth";
-import LevelTasksScreen from "../pages/LevelTasksScreen/LevelTaskScreen";
 import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
 
 

@@ -59,6 +59,7 @@ export const useVerifyUserQuery = () => {
   return useQuery({
     queryKey: ["verifyUser"],
     queryFn: () => verifyUser(),
-    retry: false
+    retry: false,
+    staleTime: 5 * 60 * 1000
   });
 };

@@ -5,6 +5,7 @@ import { notifications } from "@mantine/notifications";
 import {
   useTaskQuery,
   useCompleteTaskMutation,
+  type TCompleteTaskResponse,
 } from "../../hooks/query/useGetTask.query";
 import classes from "./VideoPlayerScreen.module.scss";
 import { FiX, FiArrowLeft, FiAlertCircle } from "react-icons/fi";
@@ -15,70 +16,103 @@ const VideoPlayerScreen: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
-
+  
+  // State management
   const [videoWatched, setVideoWatched] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [watchProgress, setWatchProgress] = useState(0);
   const [isProcessingReward, setIsProcessingReward] = useState(false);
   const [hasStartedWatching, setHasStartedWatching] = useState(false);
+  const [rewardData, setRewardData] = useState<TCompleteTaskResponse | null>(null);
+  
+  // Refs to track state
   const watchedSegmentsRef = useRef<Set<number>>(new Set());
   const hasAutoRewardedRef = useRef(false);
+  const lastTimeRef = useRef(0);
 
   const { data, isLoading, isError, error } = useTaskQuery(taskId!);
   const completeMutation = useCompleteTaskMutation();
-
   const task = data?.task;
 
   const handleAutoReward = useCallback(async () => {
-    if (!taskId || videoWatched || isProcessingReward) {
-      return;
+  if (!taskId || videoWatched || isProcessingReward || hasAutoRewardedRef.current) {
+    return;
+  }
+
+  hasAutoRewardedRef.current = true;
+  setIsProcessingReward(true);
+
+  try {
+    const result = await completeMutation.mutateAsync(taskId);
+    console.log("Reward API result:", result);
+
+    // The API returns only data (no .status), so just treat any successful response as success
+    if (result && typeof result.rewardAmount !== "undefined") {
+      // ✅ Reward successfully granted or already claimed
+      setRewardData(result);
+      setVideoWatched(true);
+      setWatchProgress(100);
+
+      // Slight delay before modal for smooth UX
+      setTimeout(() => {
+        setShowRewardModal(true);
+      }, 100);
+
+      notifications.show({
+        title: "🎉 Congratulations!",
+        message: `You've earned Rs ${result.rewardAmount}`,
+        color: "green",
+        icon: <BsCheckCircleFill size={18} />,
+        autoClose: 4000,
+      });
+    } else {
+      throw new Error("Unexpected reward response");
     }
+  } catch (err: any) {
+    console.error("❌ Error claiming reward:", err);
 
-    setIsProcessingReward(true);
-    setVideoWatched(true);
+    // Handle already completed gracefully
+    const alreadyCompleted =
+      err?.response?.status === 400 &&
+      err?.response?.data?.message?.toLowerCase()?.includes("already completed");
 
-    try {
-      const result = await completeMutation.mutateAsync(taskId);
+    if (alreadyCompleted) {
+      setVideoWatched(true);
+      setShowRewardModal(true);
 
-      if (result.status === "success") {
-        setTimeout(() => {
-          setShowRewardModal(true);
-        }, 500);
-
-        notifications.show({
-          title: "🎉 Congratulations!",
-          message: `You've earned Rs ${result.rewardAmount}`,
-          color: "green",
-          icon: <BsCheckCircleFill size={18} />,
-          autoClose: 5000,
-        });
-      }
-    } catch (err: any) {
-      console.error("Error claiming reward:", err);
+      notifications.show({
+        title: "✅ Task Already Completed",
+        message: "You've already earned this reward earlier.",
+        color: "blue",
+        icon: <BsCheckCircleFill size={18} />,
+        autoClose: 4000,
+      });
+    } else {
+      // Other errors
       setVideoWatched(false);
       setIsProcessingReward(false);
       hasAutoRewardedRef.current = false;
 
       notifications.show({
         title: "Error",
-        message: err.message || "Failed to process reward",
+        message: err?.message || "Failed to process reward",
         color: "red",
         icon: <FiX size={18} />,
       });
     }
-  }, [taskId, videoWatched, isProcessingReward, completeMutation]);
+  } finally {
+    setIsProcessingReward(false);
+  }
+}, [taskId, videoWatched, isProcessingReward, completeMutation]);
 
+  // Video event handlers
   useEffect(() => {
     const video = videoRef.current;
-
     if (!video) {
       return;
     }
 
-    let lastTime = 0;
-
     const handleLoadedMetadata = () => {
-      console.log("Video metadata loaded - Duration:", video.duration);
     };
 
     const handleTimeUpdate = () => {
@@ -89,32 +123,33 @@ const VideoPlayerScreen: React.FC = () => {
         return;
       }
 
+      // Track watched segments (5-second chunks)
       const segmentIndex = Math.floor(currentTime / 5);
       watchedSegmentsRef.current.add(segmentIndex);
 
+      // Calculate progress based on watched segments
       const totalSegments = Math.ceil(duration / 5);
       const watchedCount = watchedSegmentsRef.current.size;
       const watchedPercentage = (watchedCount / totalSegments) * 100;
 
       setWatchProgress(Math.min(watchedPercentage, 100));
-      lastTime = currentTime;
+      lastTimeRef.current = currentTime;
 
-      if (watchedPercentage >= 5 && !hasAutoRewardedRef.current) {
-        hasAutoRewardedRef.current = true;
+      // Trigger reward at 5% progress
+      if (watchedPercentage >= 5 && !hasAutoRewardedRef.current && !isProcessingReward) {
         handleAutoReward();
       }
     };
 
     const handleEnded = () => {
-      if (!hasAutoRewardedRef.current) {
-        hasAutoRewardedRef.current = true;
+      if (!hasAutoRewardedRef.current && !isProcessingReward) {
         handleAutoReward();
       }
     };
 
     const handleSeeking = () => {
-      if (video.currentTime > lastTime + 1.5) {
-        video.currentTime = lastTime;
+      if (video.currentTime > lastTimeRef.current + 1.5) {
+        video.currentTime = lastTimeRef.current;
         notifications.show({
           title: "Cannot Skip Forward",
           message: "Please watch the video without skipping",
@@ -127,11 +162,10 @@ const VideoPlayerScreen: React.FC = () => {
 
     const handlePlay = () => {
       setHasStartedWatching(true);
-      lastTime = video.currentTime;
+      lastTimeRef.current = video.currentTime;
     };
 
     const handlePause = () => {
-      console.log("⏸️ Video paused");
     };
 
     const handleRateChange = () => {
@@ -147,6 +181,7 @@ const VideoPlayerScreen: React.FC = () => {
       }
     };
 
+    // Add event listeners
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
     video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("ended", handleEnded);
@@ -164,8 +199,9 @@ const VideoPlayerScreen: React.FC = () => {
       video.removeEventListener("pause", handlePause);
       video.removeEventListener("ratechange", handleRateChange);
     };
-  }, [handleAutoReward]);
+  }, [handleAutoReward, isProcessingReward]);
 
+  // Handle tab visibility
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && videoRef.current && !videoRef.current.paused) {
@@ -191,6 +227,7 @@ const VideoPlayerScreen: React.FC = () => {
     navigate("/task");
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <Flex
@@ -208,6 +245,7 @@ const VideoPlayerScreen: React.FC = () => {
     );
   }
 
+  // Error state
   if (isError || !task) {
     return (
       <Flex
@@ -239,12 +277,8 @@ const VideoPlayerScreen: React.FC = () => {
     );
   }
 
-  if (
-    task.isCompleted &&
-    !showRewardModal &&
-    !videoWatched &&
-    !hasAutoRewardedRef.current
-  ) {
+  // Already completed state
+  if (task.isCompleted && !showRewardModal && !videoWatched) {
     return (
       <Flex
         justify="center"
@@ -276,11 +310,11 @@ const VideoPlayerScreen: React.FC = () => {
     );
   }
 
-  const rewardData = completeMutation.data;
   const progressPercentage = Math.round(watchProgress);
 
   return (
     <div className={classes.videoPlayerContainer}>
+      {/* Header */}
       <div className={classes.header}>
         <Button
           variant="subtle"
@@ -301,6 +335,7 @@ const VideoPlayerScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Video Section */}
       <div className={classes.videoSection}>
         <div className={classes.videoWrapper}>
           {task?.videoUrl && (
@@ -320,6 +355,7 @@ const VideoPlayerScreen: React.FC = () => {
           )}
         </div>
 
+        {/* Progress Overlay */}
         <div className={classes.progressOverlay}>
           <div className={classes.progressCard}>
             <Flex justify="space-between" align="center" mb="md">
@@ -362,7 +398,7 @@ const VideoPlayerScreen: React.FC = () => {
               >
                 <BsCheckCircleFill size={16} />
                 <Text size="sm" fw={500}>
-                  Processing your reward automatically...
+                  Reward processed successfully!
                 </Text>
               </Flex>
             ) : (
@@ -374,6 +410,7 @@ const VideoPlayerScreen: React.FC = () => {
         </div>
       </div>
 
+      {/* Instructions Card */}
       {!hasStartedWatching && (
         <div className={classes.instructionsCard}>
           <Text size="lg" fw={700} mb="md" ta="center">
@@ -382,7 +419,7 @@ const VideoPlayerScreen: React.FC = () => {
           <Flex direction="column" gap="sm">
             <Flex align="center" gap="md">
               <div className={classes.stepNumber}>1</div>
-              <Text size="sm">Watch the entire video without skipping</Text>
+              <Text size="sm">Watch at least 5% of the video</Text>
             </Flex>
             <Flex align="center" gap="md">
               <div className={classes.stepNumber}>2</div>
@@ -396,6 +433,7 @@ const VideoPlayerScreen: React.FC = () => {
         </div>
       )}
 
+      {/* Reward Modal */}
       <Modal
         opened={showRewardModal}
         onClose={handleCloseRewardModal}
@@ -407,7 +445,6 @@ const VideoPlayerScreen: React.FC = () => {
       >
         <div className={classes.modalContent}>
           <div className={classes.confettiBackground} />
-
           <div className={classes.successIconWrapper}>
             <div className={classes.successIcon}>
               <BsCheckCircleFill size={60} />
@@ -431,7 +468,7 @@ const VideoPlayerScreen: React.FC = () => {
             <Flex align="center" justify="center" gap="xs">
               <FaCoins size={32} color="#FFD700" />
               <Text size="3rem" fw={700} className={classes.amountText}>
-                ₹{rewardData?.rewardAmount}
+                ₹{rewardData?.rewardAmount || task.rewardPrice}
               </Text>
             </Flex>
           </div>
@@ -446,7 +483,7 @@ const VideoPlayerScreen: React.FC = () => {
                 New Balance
               </Text>
               <Text size="xl" fw={700} c="blue">
-                ₹{rewardData?.newBalance}
+                ₹{rewardData?.newBalance || 0}
               </Text>
             </div>
             <div className={classes.statCard}>
@@ -454,7 +491,7 @@ const VideoPlayerScreen: React.FC = () => {
                 Today's Tasks
               </Text>
               <Text size="xl" fw={700} c="violet">
-                {rewardData?.todayTasksCompleted}
+                {rewardData?.todayTasksCompleted || 0}
               </Text>
             </div>
             <div className={classes.statCard}>
@@ -462,7 +499,7 @@ const VideoPlayerScreen: React.FC = () => {
                 Total Completed
               </Text>
               <Text size="xl" fw={700} c="green">
-                {rewardData?.totalTasksCompleted}
+                {rewardData?.totalTasksCompleted || 0}
               </Text>
             </div>
           </div>

@@ -1,7 +1,7 @@
-import { Schema, model } from "mongoose";
-import commonsUtils from "../../utils";
-import dao from "../../dao/User";
-import { IUser, IUserMethods } from "../../interface/user.interface";
+import { Schema, model } from 'mongoose';
+import commonsUtils from '../../utils';
+import dao from '../../dao/User';
+import { IUser, IUserMethods } from '../../interface/user.interface';
 
 const schema = new Schema<IUser>(
   {
@@ -29,7 +29,7 @@ const schema = new Schema<IUser>(
       type: String,
       required: false,
     },
-    
+
     // Wallet System
     mainWallet: {
       type: Number,
@@ -41,7 +41,7 @@ const schema = new Schema<IUser>(
       default: 0,
       min: 0,
     },
-    
+
     // Statistics
     todayIncome: {
       type: Number,
@@ -63,7 +63,7 @@ const schema = new Schema<IUser>(
       type: Number,
       default: 0,
     },
-    
+
     // Task Tracking
     totalTasksCompleted: {
       type: Number,
@@ -77,7 +77,13 @@ const schema = new Schema<IUser>(
       type: Date,
       default: null,
     },
-    
+
+    withdrawalPassword: {
+      type: String,
+      required: false,
+      select: false, // Don't include in normal queries
+    },
+
     // User Level/Tier
     userLevel: {
       type: Number,
@@ -86,9 +92,9 @@ const schema = new Schema<IUser>(
     },
     levelName: {
       type: String,
-      default: "Bronze",
+      default: 'Bronze',
     },
-    
+
     isActive: {
       type: Boolean,
       default: true,
@@ -101,7 +107,7 @@ const schema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
-    
+
     lastActiveDate: {
       type: Date,
       default: null,
@@ -114,7 +120,7 @@ const schema = new Schema<IUser>(
       type: Date,
       default: Date.now,
     },
-    
+
     referralCode: {
       type: String,
       unique: true,
@@ -122,7 +128,7 @@ const schema = new Schema<IUser>(
     },
     referredBy: {
       type: Schema.Types.ObjectId,
-      ref: "user",
+      ref: 'user',
       default: null,
     },
     totalReferrals: {
@@ -130,7 +136,7 @@ const schema = new Schema<IUser>(
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 schema.index({ phone: 1 });
@@ -140,8 +146,8 @@ schema.index({ referralCode: 1 });
 schema.index({ lastActiveDate: 1 });
 
 commonsUtils.dbUtils.registerDaos(schema, dao);
-commonsUtils.dbUtils.handleDuplicates(schema, "email");
-commonsUtils.dbUtils.handleDuplicates(schema, "phone");
+commonsUtils.dbUtils.handleDuplicates(schema, 'email');
+commonsUtils.dbUtils.handleDuplicates(schema, 'phone');
 
-const userModel: IUserMethods = model<IUser, IUserMethods>("user", schema);
+const userModel: IUserMethods = model<IUser, IUserMethods>('user', schema);
 export default userModel;

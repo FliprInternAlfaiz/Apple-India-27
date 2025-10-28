@@ -11,7 +11,7 @@ const middleware: RequestHandler = async (req, res, next) => {
   try {
     const cookie = req.cookies[CONSTANTS.userTokenKey];
     if (!cookie) throw new Error('unauthorized access');
-
+    
     const token = await models.token.getToken(cookie);
 
     if (!token) throw new Error('unauthorized access');

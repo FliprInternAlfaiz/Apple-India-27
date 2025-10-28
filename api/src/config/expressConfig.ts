@@ -4,6 +4,7 @@ import cors from 'cors';
 import express from 'express';
 import { AuthRoutes } from '../routes/auth/auth.routes';
 import { TaskRoutes } from '../routes/task/task.routes';
+import { WithdrawalRoutes } from '../routes/withdrawal/withdrawal.route';
 
 class ExpressConfig {
   app: express.Application;
@@ -20,6 +21,7 @@ class ExpressConfig {
     const routes = [
       new AuthRoutes(this.app),
       new TaskRoutes(this.app),
+      new WithdrawalRoutes(this.app)
     ];
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);
     return this.app;

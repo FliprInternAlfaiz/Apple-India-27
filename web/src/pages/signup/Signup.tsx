@@ -13,86 +13,109 @@ import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { useSignupMutation } from "../../hooks/mutations/useSignup.mutation";
 import { useVerifyOtpMutation } from "../../hooks/mutations/useVerifyOtp.mutation";
-import classes from "./Signup.module.scss";
 import { useAppDispatch } from "../../store/hooks";
 import { login } from "../../store/reducer/authSlice";
+import classes from "./Signup.module.scss";
+import { ROUTES } from "../../enum/routes";
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<"form" | "otp">("form");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
   const dispatch = useAppDispatch();
-  const { mutate: sendOtp, isPending: isSendOtpPending } = useSignupMutation();
-  const { mutate: verifyOtp, isPending: isVerifyOtpPending } =
-    useVerifyOtpMutation();
+  const [step, setStep] = useState<"form" | "otp">("form");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
+  const [otp, setOtp] = useState("");
 
-  const handleSendOtp = () => {
+  const { mutate: sendOtp, isPending: sendingOtp } = useSignupMutation();
+  const { mutate: verifyOtp, isPending: verifyingOtp } = useVerifyOtpMutation();
+
+  const validateForm = () => {
+    const { name, email, phone, password } = formData;
     if (!name || !email || !phone || !password) {
       showNotification({
         title: "Validation Error",
-        message: "All fields are required",
+        message: "All fields are required.",
         color: "red",
       });
-      return;
+      return false;
     }
-    sendOtp(
-      { name, email, phone, password },
-      {
-        onSuccess: (res: any) => {
-          if (res?.status === "success") {
-            showNotification({
-              title: "OTP Sent",
-              message: `OTP sent to ${phone}`,
-              color: "green",
-            });
-            setStep("otp");
-          } else {
-            showNotification({
-              title: res?.data?.title || "Failed to send OTP",
-              message: res?.data?.message || "Something went wrong",
-              color: "red",
-            });
-          }
-        },
-        onError: (err: any) =>
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showNotification({
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+        color: "red",
+      });
+      return false;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      showNotification({
+        title: "Invalid Phone",
+        message: "Please enter a valid 10-digit phone number.",
+        color: "red",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSendOtp = () => {
+    if (!validateForm()) return;
+    sendOtp(formData, {
+      onSuccess: (res: any) => {
+        if (res?.status === "success") {
           showNotification({
-            title: "Error",
-            message: err?.message || "Failed to send OTP",
+            title: "OTP Sent",
+            message: `OTP sent to ${formData.phone}`,
+            color: "green",
+          });
+          setStep("otp");
+        } else {
+          showNotification({
+            title: res?.title || "Failed to Send OTP",
+            message: res?.message || "Something went wrong",
             color: "red",
-          }),
-      }
-    );
+          });
+        }
+      },
+      onError: (err: any) =>
+        showNotification({
+          title: "Error",
+          message: err?.message || "Failed to send OTP",
+          color: "red",
+        }),
+    });
   };
 
   const handleVerifyOtp = () => {
     if (!otp) {
       showNotification({
         title: "Validation Error",
-        message: "OTP is required",
+        message: "OTP is required.",
         color: "red",
       });
       return;
     }
+
     verifyOtp(
-      { email, name, password, phone, otp },
+      { ...formData, otp },
       {
         onSuccess: (res: any) => {
           if (res?.status === "success") {
-                      dispatch(login(res.data));
+            dispatch(login(res.data));
             showNotification({
               title: "Signup Successful",
-              message: "Account created successfully",
+              message: "Account created successfully.",
               color: "green",
             });
-            navigate("/login");
+            navigate(ROUTES.HOMEPAGE);
           } else {
             showNotification({
-              title: res?.data?.title || "OTP Verification failedP",
-              message: res?.data?.message || "Something went wrong",
+              title: res?.title || "Verification Failed",
+              message: res?.message || "Something went wrong.",
               color: "red",
             });
           }
@@ -100,7 +123,7 @@ const Signup: React.FC = () => {
         onError: (err: any) =>
           showNotification({
             title: "Error",
-            message: err?.message || "OTP verification failed",
+            message: err?.message || "OTP verification failed.",
             color: "red",
           }),
       }
@@ -116,42 +139,41 @@ const Signup: React.FC = () => {
 
         {step === "form" ? (
           <>
-            <TextInput
-              label="Name"
-              placeholder="Enter your name"
-              mb="sm"
-              value={name}
-              onChange={(e) => setName(e.currentTarget.value)}
-              classNames={{ label: classes.label, input: classes.input }}
-            />
-            <TextInput
-              label="Email"
-              placeholder="Enter your email"
-              mb="sm"
-              value={email}
-              onChange={(e) => setEmail(e.currentTarget.value)}
-              classNames={{ label: classes.label, input: classes.input }}
-            />
-            <TextInput
-              label="Phone Number"
-              placeholder="Enter your phone"
-              mb="sm"
-              value={phone}
-              onChange={(e) => setPhone(e.currentTarget.value)}
-              classNames={{ label: classes.label, input: classes.input }}
-            />
+            {["name", "email", "phone"].map((field) => (
+              <TextInput
+                key={field}
+                label={field[0].toUpperCase() + field.slice(1)}
+                placeholder={`Enter your ${field}`}
+                mb="sm"
+                value={(formData as any)[field]}
+                onChange={(e) =>
+                  setFormData({ ...formData, [field]: e.currentTarget.value })
+                }
+                classNames={{ label: classes.label, input: classes.input }}
+              />
+            ))}
             <PasswordInput
               label="Password"
               placeholder="Enter your password"
               mb="lg"
-              value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.currentTarget.value })
+              }
               classNames={{ label: classes.label, input: classes.input }}
             />
+            <Text
+              my="md"
+              size="sm"
+              className={classes.link}
+              onClick={() => navigate("/login")}
+            >
+              Already have an account? Login
+            </Text>
             <Button
               fullWidth
               color="yellow"
-              loading={isSendOtpPending}
+              loading={sendingOtp}
               onClick={handleSendOtp}
             >
               Send OTP
@@ -174,7 +196,7 @@ const Signup: React.FC = () => {
             <Button
               fullWidth
               color="yellow"
-              loading={isVerifyOtpPending}
+              loading={verifyingOtp}
               onClick={handleVerifyOtp}
               mt="md"
             >
@@ -182,15 +204,6 @@ const Signup: React.FC = () => {
             </Button>
           </>
         )}
-
-        <Text
-          mt="md"
-          size="sm"
-          className={classes.link}
-          onClick={() => navigate("/login")}
-        >
-          Already have an account? Login
-        </Text>
       </Paper>
     </Flex>
   );
