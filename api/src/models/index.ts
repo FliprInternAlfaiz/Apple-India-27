@@ -5,6 +5,8 @@ import taskModel from "./Task/Task.model";
 import taskCompletionModel from "./TaskCompletion/TaskCompletion.model";
 import BankAccountModel from "./Recharge/BankAccount.model";
 import WithdrawalModel from "./Recharge/Withdrawal.model";
+import PaymentMethodModel from "./UserRecharge/PaymentMethod.model";
+import RechargeModel from "./UserRecharge/Recharge.model";
 const models = {
   User: UserModel,
   Otp: OtpModel,
@@ -13,6 +15,8 @@ const models = {
   taskCompletion:taskCompletionModel,
   bankAccount:BankAccountModel,
   withdrawal:WithdrawalModel,
+  paymentMethod:PaymentMethodModel,
+  recharge:RechargeModel,
   
 };
 

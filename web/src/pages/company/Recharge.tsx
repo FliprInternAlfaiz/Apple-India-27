@@ -1,8 +1,8 @@
-import WithdrawalScreen from '../withdrawalScreen/WithdrawalScreen'
+import RechargeScreen from '../RechargeScreen/RechargeScreen'
 
 const Recharge = () => {
   return (
-    <WithdrawalScreen/>
+    <RechargeScreen/>
   )
 }
 

@@ -20,6 +20,7 @@ import FinanceFund from "../pages/company/FinanceFund";
 import Recharge from "../pages/company/Recharge";
 import IdentityAuth from "../pages/company/IdentityAuth";
 import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
+import WithdrawalScreen from "../pages/withdrawalScreen/WithdrawalScreen";
 
 
 
@@ -46,6 +47,7 @@ export const appRouter = createBrowserRouter([
           { path: "/lucky-draw", element: <LuckyDraw /> },
           { path: "/finance-fund", element: <FinanceFund /> },
           { path: "/recharge", element: <Recharge /> },
+          {path:"/withdrawal",element: <WithdrawalScreen/>},
           { path: "/identity-auth", element: <IdentityAuth /> },
         ],
       },

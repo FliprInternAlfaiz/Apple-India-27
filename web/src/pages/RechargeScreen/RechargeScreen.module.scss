@@ -1,0 +1,64 @@
+// RechargeScreen.module.scss
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  text-align: center;
+  color: #1a1a1a;
+
+  @media (max-width: 768px) {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+}
+
+.card {
+  background: white;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+.amountBtn {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.paymentCard {
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.activeCard {
+  background: linear-gradient(135deg, #e7f5ff 0%, #d0ebff 100%);
+  border-color: #228be6 !important;
+  border-width: 2px !important;
+}

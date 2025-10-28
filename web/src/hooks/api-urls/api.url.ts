@@ -4,6 +4,8 @@ const taskPrefix = "/task";
 
 const withdrawalPrefix = "/withdrawal";
 
+const rechargePrefix = "/recharge"
+
 export const authUrls = {
   LOGIN: authPrefix + "/login",
   VERIFYSIGNUPOTP: authPrefix + "/otp/verify",
@@ -25,4 +27,14 @@ export const withdrawalUrls = {
   CREATE_WITHDRAWAL: withdrawalPrefix + "/create",
   WITHDRAWAL_HISTORY: withdrawalPrefix + "/history",
   SET_PASSWORD: withdrawalPrefix + "/set-password",
+};
+
+export const rechargeUrls = {
+  WALLET_INFO: rechargePrefix + "/wallet-info",
+  PAYMENT_METHODS: rechargePrefix +  "/payment-methods",
+  CREATE_ORDER: rechargePrefix + "/create-order",
+  VERIFY_PAYMENT: rechargePrefix + "/verify-payment",
+  HISTORY: rechargePrefix + "/history",
+  APPROVE: (orderId: string) => rechargePrefix + `/admin/approve/${orderId}`,
+  REJECT: (orderId: string) => rechargePrefix + `/admin/reject/${orderId}`,
 };

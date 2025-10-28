@@ -46,6 +46,7 @@ export const videoUpload = multer({
 });
 
 export const uploadSingleVideo = videoUpload.single('video');
+export const paymentProof = videoUpload.single('paymentProof')
 
 export const handleMulterError = (err: any, req: any, res: any, next: any) => {
   if (err instanceof multer.MulterError) {
