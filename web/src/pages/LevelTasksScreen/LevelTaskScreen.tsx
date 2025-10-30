@@ -130,7 +130,7 @@ const LevelTasksScreen: React.FC = () => {
           onSlideChange={setActiveLevelIndex}
           emblaOptions={{ loop: true, align: "start" }}
         >
-          {levels.map((level, idx) => {
+          {levels.map((level) => {
             const slideProgress =
               level.dailyTaskLimit > 0
                 ? (level.completed / level.dailyTaskLimit) * 100
