@@ -6,7 +6,6 @@ import { IoTrophyOutline } from "react-icons/io5";
 
 
 const TeamManagementScreen = () => {
-  const navigate = useNavigate();
    const teamLevels = [
     { level: "Level A", people: 8, icon: <FaCrown color="#d6d01eff"/>,}, 
     { level: "Level B", people: 2, icon: <FaMedal color="#C0C0C0"/>,  }, 

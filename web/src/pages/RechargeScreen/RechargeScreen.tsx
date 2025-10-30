@@ -3,11 +3,9 @@ import {
   Flex,
   Text,
   Button,
-  Modal,
   TextInput,
   NumberInput,
   Card,
-  Badge,
   Loader,
   Radio,
   Group,
@@ -172,7 +170,7 @@ const RechargeScreen: React.FC = () => {
       <Card shadow="sm" p="md" radius="md" mb="lg">
         <Progress value={progress} color="blue" size="sm" mb="xs" />
         <Flex justify="space-between">
-          {steps.map((s, index) => (
+          {steps.map((s) => (
             <Text
               key={s.step}
               size="xs"

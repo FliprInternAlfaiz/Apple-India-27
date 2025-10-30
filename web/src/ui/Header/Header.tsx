@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export const HEADER_HEIGHT = 64;
 
-const Header: React.FC<HeaderProps> = ({ mobileOpened, toggleMobile }) => {
+const Header: React.FC<HeaderProps> = ({ toggleMobile }) => {
   return (
     <Flex
       align="center"
