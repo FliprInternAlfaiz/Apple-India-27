@@ -84,6 +84,27 @@ const schema = new Schema<IUser>(
       select: false, // Don't include in normal queries
     },
 
+     currentLevel: {
+      type: String,
+      default: 'Apple1',
+      index: true,
+    },
+    currentLevelNumber: {
+      type: Number,
+      default: 1,
+      min: 1,
+      index: true,
+    },
+    investmentAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    levelUpgradedAt: {
+      type: Date,
+      default: null,
+    },
+
     // User Level/Tier
     userLevel: {
       type: Number,

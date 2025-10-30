@@ -1,3 +1,4 @@
+// controllers/task.controller.ts (Updated with Level Integration)
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
@@ -14,15 +15,62 @@ export const getTasks = async (
 ) => {
   try {
     const { page = 1, limit = 10, level } = req.query;
-    const userId = res.locals.userId; 
+    const userId = res.locals.userId;
+
+    // Get user's current level
+    let userLevel = "Apple1";
+    let userLevelNumber = 1;
+    let dailyLimit = 12;
+
+    if (userId) {
+      const user = await models.User.findById(userId).select(
+        "currentLevel currentLevelNumber todayTasksCompleted"
+      );
+
+      if (user) {
+        userLevel = user.currentLevel || "Apple1";
+        userLevelNumber = user.currentLevelNumber || 1;
+
+        // Get daily limit from level config
+        const levelConfig = await models.level.findOne({
+          levelNumber: userLevelNumber,
+          isActive: true,
+        });
+
+        if (levelConfig) {
+          dailyLimit = levelConfig.dailyTaskLimit;
+
+          // Check if user reached daily limit
+          if (user.todayTasksCompleted >= dailyLimit) {
+            return JsonResponse(res, {
+              status: "success",
+              statusCode: 200,
+              title: "Tasks",
+              message: "Daily task limit reached.",
+              data: {
+                tasks: [],
+                pagination: {
+                  currentPage: Number(page),
+                  totalPages: 0,
+                  totalTasks: 0,
+                  limit: Number(limit),
+                },
+                stats: {
+                  todayCompleted: user.todayTasksCompleted,
+                  dailyLimit,
+                  limitReached: true,
+                },
+              },
+            });
+          }
+        }
+      }
+    }
 
     const query: any = {
       isActive: true,
+      level: level || userLevel, // Filter by user's level
     };
-
-    if (level) {
-      query.level = level;
-    }
 
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -61,7 +109,7 @@ export const getTasks = async (
     if (userId) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       todayCompleted = await models.taskCompletion.countDocuments({
         userId,
         completedAt: { $gte: today },
@@ -83,7 +131,9 @@ export const getTasks = async (
         },
         stats: {
           todayCompleted,
+          dailyLimit,
           totalAvailable: totalTasks,
+          remainingTasks: Math.max(0, dailyLimit - todayCompleted),
         },
       },
     });
@@ -177,7 +227,6 @@ export const completeTask = async (
     const { taskId } = req.params;
     const userId = res.locals.userId;
 
-    // Validation checks
     if (!userId) {
       return JsonResponse(res, {
         status: "error",
@@ -196,7 +245,6 @@ export const completeTask = async (
       });
     }
 
-    // Check if task already completed BEFORE doing anything
     const existingCompletion = await models.taskCompletion.findOne({
       userId,
       taskId,
@@ -211,7 +259,6 @@ export const completeTask = async (
       });
     }
 
-    // Find task
     const task = await models.task.findOne({
       _id: taskId,
       isActive: true,
@@ -226,7 +273,6 @@ export const completeTask = async (
       });
     }
 
-    // Find user
     const user = await models.User.findById(userId);
 
     if (!user) {
@@ -234,6 +280,31 @@ export const completeTask = async (
         status: "error",
         statusCode: 404,
         message: "User not found.",
+        title: "Complete Task",
+      });
+    }
+
+    // Get user's current level configuration
+    const userLevelConfig = await models.level.findOne({
+      levelNumber: user.currentLevelNumber || 1,
+      isActive: true,
+    });
+
+    if (!userLevelConfig) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "Level configuration not found.",
+        title: "Complete Task",
+      });
+    }
+
+    // Check if task belongs to user's level
+    if (task.level !== user.currentLevel) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: "This task is not available for your current level.",
         title: "Complete Task",
       });
     }
@@ -255,10 +326,19 @@ export const completeTask = async (
       user.todayIncome = 0;
     }
 
-    const rewardPrice = task.rewardPrice || 0;
+    // Check daily task limit
+    if (user.todayTasksCompleted >= userLevelConfig.dailyTaskLimit) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: `Daily task limit reached (${userLevelConfig.dailyTaskLimit} tasks).`,
+        title: "Complete Task",
+      });
+    }
 
-    // CRITICAL: Create task completion FIRST before updating user
-    // This prevents duplicate rewards due to race conditions
+    // Use reward from level configuration
+    const rewardPrice = userLevelConfig.rewardPerTask;
+
     try {
       await models.taskCompletion.create({
         userId,
@@ -266,10 +346,9 @@ export const completeTask = async (
         rewardAmount: rewardPrice,
         completedAt: now,
       });
-      
+
       console.log("✅ Task completion record created successfully");
     } catch (dupError: any) {
-      // If duplicate key error, task was already completed
       if (dupError.code === 11000) {
         console.log("⚠️ Duplicate task completion detected");
         return JsonResponse(res, {
@@ -282,8 +361,8 @@ export const completeTask = async (
       throw dupError;
     }
 
-    // Now update user balances and counters
-    user.mainWallet = (user.mainWallet || 0) + rewardPrice;
+    // Update user - Add to commissionWallet instead of mainWallet
+    user.commissionWallet = (user.commissionWallet || 0) + rewardPrice;
     user.todayIncome = (user.todayIncome || 0) + rewardPrice;
     user.monthlyIncome = (user.monthlyIncome || 0) + rewardPrice;
     user.totalRevenue = (user.totalRevenue || 0) + rewardPrice;
@@ -292,30 +371,28 @@ export const completeTask = async (
     user.todayTasksCompleted = (user.todayTasksCompleted || 0) + 1;
     user.lastTaskCompletedAt = now;
 
-    // Save user
     await user.save();
-    
+
     console.log("✅ User data updated successfully");
 
-    // Return success response
     return JsonResponse(res, {
       status: "success",
       statusCode: 200,
       title: "Complete Task",
-      message: "Congratulations! Task completed successfully.",
+      message: `Congratulations! You earned ₹${rewardPrice}`,
       data: {
         rewardAmount: rewardPrice,
-        newBalance: user.mainWallet,
+        commissionWallet: user.commissionWallet,
         todayTasksCompleted: user.todayTasksCompleted,
+        dailyLimit: userLevelConfig.dailyTaskLimit,
+        remainingTasks: userLevelConfig.dailyTaskLimit - user.todayTasksCompleted,
         totalTasksCompleted: user.totalTasksCompleted,
         todayIncome: user.todayIncome,
       },
     });
-
   } catch (error: any) {
     console.error("❌ Error completing task:", error);
 
-    // Handle duplicate key error
     if (error.code === 11000) {
       return JsonResponse(res, {
         status: "error",
@@ -325,40 +402,11 @@ export const completeTask = async (
       });
     }
 
-    // Handle validation errors
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors || {})
-        .map((err: any) => err.message)
-        .join(", ");
-      
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: messages || "Validation error occurred.",
-        title: "Complete Task",
-      });
-    }
-
-    // Handle cast errors
-    if (error.name === "CastError") {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "Invalid ID format.",
-        title: "Complete Task",
-      });
-    }
-
-    // Generic error response
     return JsonResponse(res, {
       status: "error",
       statusCode: 500,
       message: "An error occurred while completing the task.",
       title: "Complete Task",
-      ...(process.env.NODE_ENV === "development" && {
-        error: error.message,
-        stack: error.stack,
-      }),
     });
   }
 };
@@ -369,7 +417,6 @@ export const createTask = async (
   __: NextFunction
 ) => {
   try {
-    // Validate file upload
     if (!req.file) {
       return JsonResponse(res, {
         status: 'error',
@@ -379,16 +426,14 @@ export const createTask = async (
       });
     }
 
-    const { thumbnail, level, rewardPrice, order } = req.body;
+    const { thumbnail, level, order } = req.body;
 
-    // Validate required fields
     if (!level) {
-      // Clean up uploaded file
       const filePath = path.join('uploads/videos', req.file.filename);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
-      
+
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
@@ -397,32 +442,35 @@ export const createTask = async (
       });
     }
 
-    if (!rewardPrice || isNaN(Number(rewardPrice)) || Number(rewardPrice) <= 0) {
-      // Clean up uploaded file
+    // Get level configuration to set reward price
+    const levelConfig = await models.level.findOne({
+      levelName: level,
+      isActive: true,
+    });
+
+    if (!levelConfig) {
       const filePath = path.join('uploads/videos', req.file.filename);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
-      
+
       return JsonResponse(res, {
         status: 'error',
-        statusCode: 400,
-        message: 'Valid reward price is required.',
+        statusCode: 404,
+        message: 'Level configuration not found.',
         title: 'Create Task',
       });
     }
 
     const videoUrl = `/uploads/videos/${req.file.filename}`;
 
-    // Check if task with same video URL already exists
     const existingTask = await models.task.findOne({ videoUrl });
     if (existingTask) {
-      // Clean up uploaded file
       const filePath = path.join('uploads/videos', req.file.filename);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
-      
+
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
@@ -431,12 +479,13 @@ export const createTask = async (
       });
     }
 
-    // Create task
+    // Create task with reward from level config
     const task = await models.task.create({
       videoUrl,
       thumbnail: thumbnail || '',
-      level,
-      rewardPrice: Number(rewardPrice),
+      level: levelConfig.levelName,
+      levelNumber: levelConfig.levelNumber,
+      rewardPrice: levelConfig.rewardPerTask,
       order: order ? Number(order) : 0,
       isActive: true,
     });
@@ -446,12 +495,9 @@ export const createTask = async (
       statusCode: 201,
       title: 'Create Task',
       message: 'Task created successfully.',
-      data: {
-        task,
-      },
+      data: { task },
     });
   } catch (error: any) {
-    // Clean up uploaded file on error
     if (req.file) {
       const filePath = path.join('uploads/videos', req.file.filename);
       if (fs.existsSync(filePath)) {
@@ -460,29 +506,12 @@ export const createTask = async (
     }
 
     console.error('Error creating task:', error);
-    
-    // Handle validation errors
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors || {})
-        .map((err: any) => err.message)
-        .join(", ");
-      
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: messages || "Validation error occurred.",
-        title: "Create Task",
-      });
-    }
 
     return JsonResponse(res, {
       status: 'error',
       statusCode: 500,
       message: 'An error occurred while creating the task.',
       title: 'Create Task',
-      ...(process.env.NODE_ENV === "development" && {
-        error: error.message,
-      }),
     });
   }
 };
@@ -680,10 +709,10 @@ export const toggleTaskStatus = async (
 
 export default {
   getTasks,
-  getTaskById,
   completeTask,
   createTask,
-  updateTask,
-  deleteTask,
+  getTaskById,
   toggleTaskStatus,
+  deleteTask,
+  updateTask,
 };

@@ -7,6 +7,7 @@ import BankAccountModel from "./Recharge/BankAccount.model";
 import WithdrawalModel from "./Recharge/Withdrawal.model";
 import PaymentMethodModel from "./UserRecharge/PaymentMethod.model";
 import RechargeModel from "./UserRecharge/Recharge.model";
+import levelModel from "./Level/Level.model";
 const models = {
   User: UserModel,
   Otp: OtpModel,
@@ -17,7 +18,7 @@ const models = {
   withdrawal:WithdrawalModel,
   paymentMethod:PaymentMethodModel,
   recharge:RechargeModel,
-  
+  level:levelModel,
 };
 
 export default models;

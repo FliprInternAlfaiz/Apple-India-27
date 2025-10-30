@@ -1,3 +1,4 @@
+// models/task.model.ts (Updated)
 import { Schema, model } from "mongoose";
 import { ITask, ITaskMethods } from "../../interface/task.interface";
 
@@ -19,6 +20,12 @@ const schema = new Schema<ITask>(
       trim: true,
       index: true,
     },
+    levelNumber: {
+      type: Number,
+      required: true,
+      min: 1,
+      index: true,
+    },
     rewardPrice: {
       type: Number,
       required: true,
@@ -36,8 +43,10 @@ const schema = new Schema<ITask>(
   { timestamps: true }
 );
 
+// Compound indexes for efficient queries
 schema.index({ level: 1, isActive: 1, order: 1 });
-
+schema.index({ levelNumber: 1, isActive: 1 });
+schema.index({ level: 1, levelNumber: 1 });
 
 const taskModel: ITaskMethods = model<ITask, ITaskMethods>("task", schema);
 export default taskModel;

@@ -29,6 +29,13 @@ export interface IUser extends Document {
   todayTasksCompleted: number;
   lastTaskCompletedAt?: Date | null;
 
+
+   // Level System (UPDATED)
+  currentLevel: string; // Apple1, Apple2, etc.
+  currentLevelNumber: number; // 1, 2, 3, etc.
+  investmentAmount: number; // Total invested
+  levelUpgradedAt?: Date;
+  
   // User level / tier
   userLevel: number;
   levelName: string;

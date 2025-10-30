@@ -7,6 +7,7 @@ import { TaskRoutes } from '../routes/task/task.routes';
 import { WithdrawalRoutes } from '../routes/withdrawal/withdrawal.route';
 import { RechargeRoutes } from '../routes/recharge/recharge.route';
 import { PaymentRoutes } from '../routes/paymentMethod/paymentMethod.route';
+import { levelRoutes } from '../routes/level/level.route';
 
 class ExpressConfig {
   app: express.Application;
@@ -25,7 +26,8 @@ class ExpressConfig {
       new TaskRoutes(this.app),
       new WithdrawalRoutes(this.app),
       new RechargeRoutes(this.app),
-      new PaymentRoutes(this.app)
+      new PaymentRoutes(this.app),
+      new levelRoutes(this.app),
     ];
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);
     return this.app;
