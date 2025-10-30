@@ -3,23 +3,18 @@ import {
   Box,
   Loader,
   Alert,
-  Button,
   Text,
-  Badge,
-  Progress,
-  Grid,
   Card,
-  Title,
-  Stack,
-  Divider,
-  Table,
-  Group,
   Container,
-  ScrollArea,
-  rem,
+  Flex,
+  Button,
+  Badge,
 } from "@mantine/core";
+import { Carousel } from "@mantine/carousel";
+import { FaStar } from "react-icons/fa";
+import { Trophy} from "lucide-react";
 import { notifications } from "@mantine/notifications";
-import { Star, Trophy, Lock, CheckCircle } from "lucide-react";
+import classes from "./LevelTasksScreen.module.scss";
 import {
   useGetAllLevelsQuery,
   useUpgradeUserLevelMutation,
@@ -73,11 +68,9 @@ const LevelTasksScreen: React.FC = () => {
   useEffect(() => {
     if (userLevel && levels.length > 0) {
       const currentIndex = levels.findIndex(
-        (l: Level) => l.levelNumber === userLevel.currentLevelNumber
+        (l) => l.levelNumber === userLevel.currentLevelNumber
       );
-      if (currentIndex !== -1) {
-        setActiveLevelIndex(currentIndex);
-      }
+      if (currentIndex !== -1) setActiveLevelIndex(currentIndex);
     }
   }, [levels, userLevel]);
 
@@ -105,29 +98,26 @@ const LevelTasksScreen: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
       <Box ta="center" mih="400px" mt="xl">
         <Loader color="blue" size="lg" />
       </Box>
     );
-  }
 
-  if (isError) {
+  if (isError)
     return (
       <Alert color="red" title="Error">
         Failed to load levels. Please try again later.
       </Alert>
     );
-  }
 
-  if (!currentLevel) {
+  if (!currentLevel)
     return (
       <Alert color="blue" title="Info">
         No levels available.
       </Alert>
     );
-  }
 
   const progressPercentage =
     currentLevel.dailyTaskLimit > 0
@@ -135,212 +125,196 @@ const LevelTasksScreen: React.FC = () => {
       : 0;
 
   return (
-    <Container size="lg" py="md">
-      {/* ✅ Current Level Info */}
-      {userLevel && (
-        <Card shadow="sm" radius="md" mb="md" withBorder>
-          <Stack gap={4}>
-            <Text fw={600} c="blue">
-              Your Current Level: {currentLevel.icon} {userLevel.currentLevel}
+    <div className={classes.screen}>
+      {/* ✅ Carousel Section */}
+      <Container className={classes.carouselContainer}>
+        <Carousel
+          withControls
+          slideSize="100%"
+          slideGap="md"
+          onSlideChange={setActiveLevelIndex}
+          emblaOptions={{ loop: true, align: "start" }}
+        >
+          {levels.map((level, idx) => {
+            const slideProgress =
+              level.dailyTaskLimit > 0
+                ? (level.completed / level.dailyTaskLimit) * 100
+                : 0;
+
+            return (
+              <Carousel.Slide key={level._id}>
+                <Card className={classes.levelCard} shadow="md" radius="lg" withBorder>
+                  <Flex align="center" gap="xs" mb="md">
+                    <span>{level.icon || "🏅"}</span>
+                    <Text size="lg" fw={600}>
+                      {level.level}
+                    </Text>
+                    {level.isCurrent && <Badge color="green">Current</Badge>}
+                    {!level.isUnlocked && <Badge color="red">Locked</Badge>}
+                  </Flex>
+
+                  <Flex justify="space-between" align="flex-end">
+                    <Flex direction="column">
+                      <Text size="sm" fw={500} mb="xs">
+                        Remaining tasks: {level.remaining}
+                      </Text>
+                      <Text size="sm" fw={500}>
+                        Completed tasks: {level.completed}
+                      </Text>
+                    </Flex>
+                    <Box className={classes.targetBox}>
+                      <Text size="sm" fw={500}>
+                        Target amount
+                      </Text>
+                      <Text size="md" fw={700}>
+                        ₹{level.target.toLocaleString()}
+                      </Text>
+                    </Box>
+                  </Flex>
+
+                  <Box className={classes.progressBar}>
+                    <Box
+                      className={classes.progressFill}
+                      style={{ width: `${slideProgress}%` }}
+                    />
+                  </Box>
+                </Card>
+              </Carousel.Slide>
+            );
+          })}
+        </Carousel>
+      </Container>
+
+      {/* ✅ Level Indicators */}
+      <Box mt="xl">
+        <Carousel
+          withControls={false}
+          slideSize={{ base: "20%", sm: "15%" }}
+          height={80}
+          emblaOptions={{ loop: true, align: "center" }}
+          slideGap="sm"
+          draggable
+        >
+          {levels.map((level, index) => (
+            <Carousel.Slide key={level._id}>
+              <Box
+                onClick={() => setActiveLevelIndex(index)}
+                className={`${classes.levelIndicator} ${
+                  activeLevelIndex === index ? classes.activeIndicator : ""
+                }`}
+              >
+                {activeLevelIndex === index ? (
+                  <FaStar size={16} />
+                ) : (
+                  <span className={classes.inactiveDot} />
+                )}
+                <Text fz="xs">{level.level}</Text>
+              </Box>
+            </Carousel.Slide>
+          ))}
+        </Carousel>
+      </Box>
+
+      {/* ✅ Details Section */}
+      <Box className={classes.detailsSection}>
+        <Flex className={classes.levelTitleWrapper}>
+          <Text size="md" fw={700}>
+            {currentLevel.level}
+          </Text>
+        </Flex>
+
+        <Text size="sm" fw={500} className={classes.sectionSubtitle}>
+          Number of promotion tasks and commission income per day
+        </Text>
+
+        <div className={classes.tableContainer}>
+          <Flex justify="space-between" className={classes.tableHeader}>
+            <Text size="sm" fw={700} className={classes.flex2}>
+              Time unit
             </Text>
-            <Text size="sm" c="dimmed">
-              Tasks Completed Today: {userLevel.todayTasksCompleted} /{" "}
+            <Text size="sm" fw={700} className={classes.flex1Center}>
+              Number of tasks
+            </Text>
+            <Text size="sm" fw={700} className={classes.flex1Right}>
+              Total commission
+            </Text>
+          </Flex>
+
+          <Flex
+            justify="space-between"
+            className={`${classes.tableRow} ${classes.tableRowBorder}`}
+          >
+            <Text size="xs" fw={600} className={classes.flex2}>
+              Daily
+            </Text>
+            <Text size="xs" fw={600} className={classes.flex1Center}>
               {currentLevel.dailyTaskLimit}
             </Text>
-          </Stack>
-        </Card>
-      )}
-
-      {/* ✅ Level Selector */}
-      <ScrollArea mb="md" scrollbarSize={6}>
-        <Group justify="flex-start" gap="sm" wrap="nowrap">
-          {levels.map((level: Level, index: number) => (
-            <Button
-              key={level.levelNumber}
-              variant={activeLevelIndex === index ? "filled" : "outline"}
-              color={activeLevelIndex === index ? "blue" : "gray"}
-              size="sm"
-              onClick={() => setActiveLevelIndex(index)}
-              leftSection={
-                level.isUnlocked ? (
-                  level.isCurrent ? (
-                    <Star size={16} />
-                  ) : (
-                    <CheckCircle size={16} />
-                  )
-                ) : (
-                  <Lock size={16} />
-                )
-              }
-              opacity={level.isUnlocked ? 1 : 0.6}
-            >
-              {level.icon} {level.level}
-            </Button>
-          ))}
-        </Group>
-      </ScrollArea>
-
-      {/* ✅ Current Level Card */}
-      <Card shadow="md" mb="lg" radius="md" withBorder>
-        <Stack>
-          <Box bg="blue.6" p="md" style={{ borderRadius: rem(6) }}>
-            <Title order={4} c="white">
-              {currentLevel.icon} {currentLevel.level}
-            </Title>
-            <Group mt="xs">
-              {currentLevel.isCurrent && <Badge color="green">Current</Badge>}
-              {!currentLevel.isUnlocked && <Badge color="red">Locked</Badge>}
-            </Group>
-            <Text size="sm" mt="xs" c="white">
-              {currentLevel.description}
+            <Text size="xs" fw={600} className={classes.flex1Right}>
+              ₹{currentLevel.commission}
             </Text>
-          </Box>
+          </Flex>
+        </div>
 
-          <Stack gap="sm" p="sm">
-            {/* Investment */}
-            <Box>
-              <Text fw={500} c="blue.7">
-                Investment Required: ₹{currentLevel.target.toLocaleString()}
+        <Text size="sm" fw={500} className={classes.sectionSubtitle}>
+          Invitation commission profit margin
+        </Text>
+
+        <div className={classes.tableContainer}>
+          <Flex justify="space-between" className={classes.tableHeader}>
+            <Text size="xs" fw={700} className={classes.flex2}>
+              Invitation Method
+            </Text>
+            <Text size="xs" fw={700} className={classes.flex1Center}>
+              Rate
+            </Text>
+            <Text size="xs" fw={700} className={classes.flex1Right}>
+              Income amount
+            </Text>
+          </Flex>
+          {currentLevel.invitations.map((inv, index) => (
+            <Flex
+              key={index}
+              justify="space-between"
+              className={`${classes.tableRow} ${
+                index < currentLevel.invitations.length - 1
+                  ? classes.tableRowBorder
+                  : ""
+              }`}
+            >
+              <Text size="xs" className={classes.flex2}>
+                {inv.method}
               </Text>
-              {!currentLevel.isUnlocked && (
-                <Button
-                  mt="sm"
-                  color="blue"
-                  loading={upgradeMutation.isPending}
-                  onClick={() => handleUpgrade(currentLevel.levelNumber)}
-                >
-                  Upgrade to {currentLevel.level}
-                </Button>
-              )}
-            </Box>
-
-            {/* Daily Progress */}
-            {currentLevel.isCurrent && (
-              <Box>
-                <Text size="sm" fw={500}>
-                  Daily Progress: {currentLevel.completed} /{" "}
-                  {currentLevel.dailyTaskLimit} tasks
-                </Text>
-                <Progress
-                  value={progressPercentage}
-                  color={progressPercentage >= 100 ? "green" : "blue"}
-                  size="lg"
-                  radius="xl"
-                  mt={6}
-                />
-                <Text size="xs" c="dimmed" mt={4}>
-                  {currentLevel.remaining} tasks remaining today
-                </Text>
-              </Box>
-            )}
-
-            <Divider />
-
-            {/* Daily Earnings */}
-            <Box bg="green.0" p="md">
-              <Group>
-                <Trophy size={18} color="green" />
-                <Title order={5} c="green.7">
-                  Daily Earnings
-                </Title>
-              </Group>
-              <Grid mt="sm">
-                <Grid.Col span={6}>
-                  <Text size="sm" c="dimmed">
-                    Per Task
-                  </Text>
-                  <Text size="xl" fw={700} c="green.7">
-                    ₹{currentLevel.rewardPerTask}
-                  </Text>
-                </Grid.Col>
-                <Grid.Col span={6}>
-                  <Text size="sm" c="dimmed">
-                    Daily Income
-                  </Text>
-                  <Text size="xl" fw={700} c="green.7">
-                    ₹{currentLevel.commission}
-                  </Text>
-                </Grid.Col>
-              </Grid>
-              <Text size="sm" c="dimmed" mt="xs">
-                💸 Earnings added to Commission Wallet
+              <Text size="xs" fw={600} className={classes.flex1Center}>
+                {inv.rate}
               </Text>
-            </Box>
-
-            <Divider />
-
-            {/* Referral Table */}
-            <Box>
-              <Title order={5} mb="xs">
-                Referral Commission Rates
-              </Title>
-              <Table striped highlightOnHover withColumnBorders>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Level</Table.Th>
-                    <Table.Th ta="right">Rate</Table.Th>
-                    <Table.Th ta="right">Amount</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {currentLevel.invitations.map(
-                    (inv: Invitation, idx: number) => (
-                      <Table.Tr key={idx}>
-                        <Table.Td>{inv.method}</Table.Td>
-                        <Table.Td ta="right" fw={500} c="blue.7">
-                          {inv.rate}
-                        </Table.Td>
-                        <Table.Td ta="right" fw={500} c="green.7">
-                          ₹{inv.amount}
-                        </Table.Td>
-                      </Table.Tr>
-                    )
-                  )}
-                </Table.Tbody>
-              </Table>
-            </Box>
-          </Stack>
-        </Stack>
-      </Card>
-
-      {/* ✅ All Levels Overview */}
-      <Card withBorder>
-        <Title order={4} mb="md">
-          All Apple Levels
-        </Title>
-        <Grid>
-          {levels.map((level: Level) => (
-            <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={level._id}>
-              <Card
-                shadow="xs"
-                radius="md"
-                withBorder
-                style={{
-                  cursor: "pointer",
-                  opacity: level.isUnlocked ? 1 : 0.7,
-                  transition: "0.2s",
-                }}
-                onClick={() => setActiveLevelIndex(levels.indexOf(level))}
-              >
-                <Stack gap="xs">
-                  <Text fz="xl">{level.icon}</Text>
-                  <Text fw={600}>{level.level}</Text>
-                  <Text size="sm" c="dimmed">
-                    ₹{level.target.toLocaleString()}
-                  </Text>
-                  <Group gap="xs">
-                    <Badge color={level.isUnlocked ? "green" : "red"}>
-                      {level.isUnlocked ? "Unlocked" : "Locked"}
-                    </Badge>
-                    {level.isCurrent && <Badge color="blue">Active</Badge>}
-                  </Group>
-                </Stack>
-              </Card>
-            </Grid.Col>
+              <Text size="xs" fw={600} className={classes.flex1Right}>
+                ₹{inv.amount}
+              </Text>
+            </Flex>
           ))}
-        </Grid>
-      </Card>
-    </Container>
+        </div>
+
+        {!currentLevel.isUnlocked && (
+          <Button
+            fullWidth
+            mt="md"
+            color="blue"
+            loading={upgradeMutation.isPending}
+            onClick={() => handleUpgrade(currentLevel.levelNumber)}
+          >
+            Upgrade to {currentLevel.level}
+          </Button>
+        )}
+
+        <Flex align="center" justify="center" mt="lg" gap="xs">
+          <Trophy size={18} color="green" />
+          <Text size="sm" c="green">
+            Daily Earnings: ₹{currentLevel.rewardPerTask} per task
+          </Text>
+        </Flex>
+      </Box>
+    </div>
   );
 };
 
