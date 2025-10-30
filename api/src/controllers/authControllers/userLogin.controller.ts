@@ -11,6 +11,8 @@ const { JsonResponse } = commonsUtils;
 export default async (req: Request, res: Response, __: NextFunction) => {
   const { phone, password } = req.body;
 
+  const isProduction = process.env.NODE_ENV === "production";
+
   const user = await models.User.findOne({ phone });
 
   if (!user) {
@@ -56,8 +58,8 @@ export default async (req: Request, res: Response, __: NextFunction) => {
 
   res.cookie(CONSTANTS.userTokenKey, authToken.token, {
     httpOnly: true,
- sameSite: "lax",
-     secure: false,
+sameSite: isProduction ? "none" : "lax",
+  secure: isProduction, 
      path: "/"
   });
 

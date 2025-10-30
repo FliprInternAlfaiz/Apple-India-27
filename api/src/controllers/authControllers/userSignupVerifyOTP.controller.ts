@@ -8,6 +8,9 @@ import CONSTANTS from "../../constants/CONSTANTS";
 const { JsonResponse } = commonsUtils;
 
 export default async (req: Request, res: Response) => {
+
+  const isProduction = process.env.NODE_ENV === "production";
+
   const { name, email, phone, password, otp } = req.body;
 
   if (!phone || !otp || !password || !name || !email) {
@@ -44,8 +47,8 @@ export default async (req: Request, res: Response) => {
 
   res.cookie(CONSTANTS.userTokenKey, token, {
     httpOnly: true,
-   sameSite: "lax",
-     secure: false,
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction, 
      path: "/"
   });
 
