@@ -45,7 +45,6 @@ const rechargeSchema = new Schema<IRecharge>(
     amount: {
       type: Number,
       required: true,
-      min: 280,
     },
     paymentMethodId: {
       type: Schema.Types.ObjectId,

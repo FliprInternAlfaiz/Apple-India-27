@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
+import QRCode from 'qrcode';
 
 const { JsonResponse } = commonsUtils;
 
@@ -79,106 +80,132 @@ export const getPaymentMethods = async (
   }
 };
 
-// Create recharge order
-export const createRechargeOrder = async (
-  req: Request,
-  res: Response,
-  __: NextFunction
-) => {
+export const createRechargeOrder = async (req: Request, res: Response) => {
   try {
-    const userId = res.locals.userId;
     const { amount, paymentMethodId } = req.body;
+    const userId = res.locals.userId;
 
-    // Validate amount
-    if (isNaN(amount) || amount < 280) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "Minimum recharge amount is Rs 280.",
-        title: "Recharge",
+    // 🔹 Validate payment method
+    const paymentMethod = await models.paymentMethod.findById(paymentMethodId);
+    if (!paymentMethod || !paymentMethod.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment method not available",
       });
     }
 
-    if (amount > 500000) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "Maximum recharge amount is Rs 500,000.",
-        title: "Recharge",
+    // 🔹 Generate QR code (for UPI)
+    let dynamicQRCode = null;
+    if (paymentMethod.methodType === "upi" && paymentMethod.upiId) {
+      const upiString = `upi://pay?pa=${paymentMethod.upiId}&pn=${encodeURIComponent(
+        paymentMethod.accountName || "Merchant"
+      )}&am=${amount}&cu=INR&tn=${encodeURIComponent(
+        `Order-${Date.now()}`
+      )}`;
+
+      dynamicQRCode = await QRCode.toDataURL(upiString, {
+        width: 300,
+        margin: 2,
       });
     }
 
-    // Get payment method
-    const paymentMethod = await models.paymentMethod.findOne({
-      _id: paymentMethodId,
-      isActive: true,
-    });
-
-    if (!paymentMethod) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 404,
-        message: "Payment method not found or inactive.",
-        title: "Recharge",
-      });
-    }
-
-    // Generate unique order ID
-    const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
-
-    // Create recharge order
-    const rechargeOrder = await models.recharge.create({
+    // ✅ Create recharge order with correct schema fields
+    const order = await models.recharge.create({
       userId,
-      orderId,
+      orderId: `RCH${Date.now()}`,
       amount,
-      paymentMethodId,
-      status: "pending",
+      paymentMethodId: paymentMethod._id, // ✅ correct field name
       paymentDetails: {
         methodName: paymentMethod.methodName,
         methodType: paymentMethod.methodType,
         upiId: paymentMethod.upiId,
-        qrCode: paymentMethod.qrCode,
+        qrCode: dynamicQRCode || paymentMethod.qrCode,
         accountName: paymentMethod.accountName,
         accountNumber: paymentMethod.accountNumber,
         ifscCode: paymentMethod.ifscCode,
         bankName: paymentMethod.bankName,
       },
+      status: "pending",
+      createdAt: new Date(),
     });
 
-    return JsonResponse(res, {
-      status: "success",
-      statusCode: 201,
-      title: "Recharge",
-      message: "Recharge order created successfully.",
-      data: {
-        order: {
-          _id: rechargeOrder._id,
-          orderId: rechargeOrder.orderId,
-          amount: rechargeOrder.amount,
-          status: rechargeOrder.status,
-          paymentMethod: {
-            methodName: paymentMethod.methodName,
-            methodType: paymentMethod.methodType,
-            upiId: paymentMethod.upiId,
-            qrCode: paymentMethod.qrCode,
-            accountName: paymentMethod.accountName,
-            accountNumber: paymentMethod.accountNumber,
-            ifscCode: paymentMethod.ifscCode,
-            bankName: paymentMethod.bankName,
-          },
-        },
+    // Return response
+    return res.status(201).json({
+      success: true,
+      message: "Recharge order created successfully",
+      order: {
+        ...order.toObject(),
+        dynamicQRCode,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating recharge order:", error);
-    return JsonResponse(res, {
-      status: "error",
-      statusCode: 500,
-      message: "An error occurred while creating recharge order.",
-      title: "Recharge",
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create recharge order",
+      error: error.message,
     });
   }
 };
+
+
+export const generateUPIQRCode = async (req: Request, res: Response) => {
+    try {
+      const { amount, paymentMethodId } = req.body;
+
+      // Get payment method details
+      const paymentMethod = await models.paymentMethod.findById(paymentMethodId);
+      
+      if (!paymentMethod || !paymentMethod.isActive) {
+        return res.status(404).json({
+          success: false,
+          message: "Payment method not found or inactive",
+        });
+      }
+
+      let qrCodeData = "";
+
+      if (paymentMethod.methodType === "upi" && paymentMethod.upiId) {
+        const upiString = `upi://pay?pa=${paymentMethod.upiId}&pn=${encodeURIComponent(
+          paymentMethod.accountName || "Merchant"
+        )}&am=${amount}&cu=INR&tn=${encodeURIComponent(
+          `Recharge Order ${Date.now()}`
+        )}`;
+
+        const qrCodeImage = await QRCode.toDataURL(upiString, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: "#000000",
+            light: "#FFFFFF",
+          },
+        });
+
+        qrCodeData = qrCodeImage;
+      } 
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          qrCode: qrCodeData,
+          amount,
+          upiId: paymentMethod.upiId,
+          paymentMethod: {
+            _id: paymentMethod._id,
+            methodName: paymentMethod.methodName,
+            methodType: paymentMethod.methodType,
+          },
+        },
+      });
+    } catch (error: any) {
+      console.error("Error generating QR code:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to generate QR code",
+        error: error.message,
+      });
+    }
+  };
 
 // Verify payment and complete recharge
 export const verifyRechargePayment = async (
@@ -284,7 +311,7 @@ export const approveRecharge = async (
     const { orderId } = req.params;
     const { remarks } = req.body;
 
-    const rechargeOrder = await models.recharge.findById(orderId);
+    const rechargeOrder = await models.recharge.findOne({ orderId });
 
     if (!rechargeOrder) {
       return JsonResponse(res, {
@@ -399,7 +426,6 @@ export const rejectRecharge = async (
     });
   }
 };
-
 // Get recharge history
 export const getRechargeHistory = async (
   req: Request,
@@ -458,6 +484,7 @@ export default {
   getPaymentMethods,
   createRechargeOrder,
   verifyRechargePayment,
+  generateUPIQRCode,
   approveRecharge,
   rejectRecharge,
   getRechargeHistory,

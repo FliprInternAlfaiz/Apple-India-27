@@ -22,7 +22,6 @@ export const getBankAccounts = async (
       .sort({ isDefault: -1, createdAt: -1 })
       .lean();
 
-    console.log(accounts)
 
     return JsonResponse(res, {
       status: "success",
@@ -60,7 +59,6 @@ export const addBankAccount = async (
       isDefault,
     } = req.body;
 
-    console.log(req.body)
 
     // Check if user already has 4 accounts
     const accountCount = await models.bankAccount.countDocuments({

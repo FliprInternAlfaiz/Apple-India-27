@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { commonsMiddleware } from "../../middleware";
 import rechargeController from "../../controllers/rechargeControllers/recharge.controller";
-import { handleMulterError, paymentProof } from "../../middleware/upload.middleware";
+import { handleMulterError, paymentProofUpload } from "../../middleware/upload.middleware";
 
 export default (router: Router) => {
   // 🔹 Get wallet info
@@ -25,11 +25,17 @@ export default (router: Router) => {
     rechargeController.createRechargeOrder
   );
 
+   router.post(
+    "/generate-qr",
+    commonsMiddleware.checkUserAuth,
+    rechargeController.generateUPIQRCode
+  );
+
   // 🔹 Verify payment (upload proof)
   router.post(
     "/verify-payment",
     commonsMiddleware.checkUserAuth,
-    paymentProof,
+    paymentProofUpload.single("paymentProof"),
     handleMulterError,
     rechargeController.verifyRechargePayment
   );
@@ -48,14 +54,12 @@ export default (router: Router) => {
   // 🔹 Approve recharge order
   router.patch(
     "/admin/approve/:orderId",
-    commonsMiddleware.checkUserAuth,
     rechargeController.approveRecharge
   );
 
   // 🔹 Reject recharge order
   router.patch(
     "/admin/reject/:orderId",
-    commonsMiddleware.checkUserAuth,
     rechargeController.rejectRecharge
   );
 

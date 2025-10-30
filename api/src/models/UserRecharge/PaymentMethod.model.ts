@@ -16,7 +16,7 @@ export interface IPaymentMethod extends Document {
 const paymentMethodSchema = new Schema<IPaymentMethod>(
   {
     methodName: { type: String, required: true },
-    methodType: { type: String, enum: ["upi", "qr", "bank"], required: true },
+    methodType: { type: String, enum: ["upi", "bank"], required: true },
     upiId: { type: String },
     qrCode: { type: String },
     accountName: { type: String },

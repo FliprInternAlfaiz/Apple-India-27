@@ -410,6 +410,43 @@ const WithdrawalScreen: React.FC = () => {
   }`}
       </Button>
 
+        <Card shadow="sm" p="md" radius="md" className={classes.card} mt="md">
+       <Flex direction="column" mb="10" justify="center" align="center">
+         <Text fw={600} mb="sm" ta="center">
+          Withdrawal Time: 08:30 am - 17:00 pm
+        </Text>
+        <Divider mb="sm" />
+        <Text size="sm" fw={500} mb="xs">
+          Member Withdrawal Time
+        </Text>
+        <Text size="sm" mb="xs">
+          <strong>Monday:</strong> Apple Level 1 & 2
+        </Text>
+        <Text size="sm" mb="xs">
+          <strong>Tuesday:</strong> Apple Level 3 & 4
+        </Text>
+        <Text size="sm" mb="xs">
+          <strong>Wednesday:</strong> Apple Level 5 & 6
+        </Text>
+        </Flex>
+        <Alert color="blue" icon={<FaInfoCircle />}>
+          <Text size="sm">
+            Please make the withdrawal on the corresponding date according to your Apple level.
+            If you encounter any problems with withdrawals, please contact your work manager immediately.
+          </Text>
+        </Alert>
+        <Divider my="sm" />
+        <Text size="xs" c="dimmed" ta="center">
+          निकासी समय: सुबह 8:30 - शाम 5:00 बजे
+        </Text>
+        <Text size="xs" c="dimmed" ta="center">
+          सदस्य वापसी का समय
+        </Text>
+        <Text size="xs" c="dimmed" ta="center">
+          प्रशिक्षु कर्मचारी: सोमवार से रविवार
+        </Text>
+      </Card>
+
       {/* Add Account Modal */}
       <Modal 
         opened={addAccountOpened} 

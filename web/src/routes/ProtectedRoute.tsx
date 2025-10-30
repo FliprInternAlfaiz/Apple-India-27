@@ -8,7 +8,6 @@ import classes from "./index.module.scss";
 const ProtectedRoute = () => {
   const { pathname } = useLocation();
   const { data, isLoading, isError } = useVerifyUserQuery();
-  console.log(data)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });

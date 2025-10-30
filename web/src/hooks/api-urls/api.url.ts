@@ -38,6 +38,7 @@ export const rechargeUrls = {
   CREATE_ORDER: rechargePrefix + "/create-order",
   VERIFY_PAYMENT: rechargePrefix + "/verify-payment",
   HISTORY: rechargePrefix + "/history",
+  GENERATE_QR : rechargePrefix + "/generate-qr",
   APPROVE: (orderId: string) => rechargePrefix + `/admin/approve/${orderId}`,
   REJECT: (orderId: string) => rechargePrefix + `/admin/reject/${orderId}`,
 };

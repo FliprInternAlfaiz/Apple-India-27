@@ -298,48 +298,6 @@ const Profile: React.FC = () => {
           </Flex>
         </Box>
 
-        {/* Stats Summary */}
-        <Box
-          mt="lg"
-          p="md"
-          style={{
-            background: "linear-gradient(135deg, #f9d77e20 0%, #f0b94420 100%)",
-            borderRadius: 12,
-          }}
-        >
-          <Flex justify="space-around" align="center">
-            <Box ta="center">
-              <Text size="xs" c="#666" fw={500}>
-                Tasks Completed
-              </Text>
-              <Text size="lg" fw={700} c="#d4a017" mt={4}>
-                {userData.totalTasksCompleted}
-              </Text>
-            </Box>
-            <Divider orientation="vertical" />
-            <Box ta="center">
-              <Text size="xs" c="#666" fw={500}>
-                Today's Tasks
-              </Text>
-              <Text size="lg" fw={700} c="#d4a017" mt={4}>
-                {userData.todayTasksCompleted}
-              </Text>
-            </Box>
-            {userData.referralCode && (
-              <>
-                <Divider orientation="vertical" />
-                <Box ta="center">
-                  <Text size="xs" c="#666" fw={500}>
-                    Referrals
-                  </Text>
-                  <Text size="lg" fw={700} c="#d4a017" mt={4}>
-                    {userData.totalReferrals}
-                  </Text>
-                </Box>
-              </>
-            )}
-          </Flex>
-        </Box>
 
         {/* Menu Items */}
         <Box mt="lg" mb="sm">

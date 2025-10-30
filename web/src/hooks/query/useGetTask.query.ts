@@ -117,7 +117,6 @@ export const completeTask = async (
     url: `${taskUrls.COMPLETE_TASK}/${taskId}/complete`,
     method: "POST",
   });
-  console.log("response skksksksksk",response.data)
   return response.data;
 };
 

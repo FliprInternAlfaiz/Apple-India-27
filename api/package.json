@@ -34,6 +34,7 @@
   "dependencies": {
     "@types/multer": "^1.4.12",
     "@types/node-cron": "^3.0.11",
+    "@types/qrcode": "^1.5.6",
     "api": "file:",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
@@ -51,6 +52,7 @@
     "multer": "^2.0.2",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
+    "qrcode": "^1.5.4",
     "yup": "^1.4.0"
   }
 }

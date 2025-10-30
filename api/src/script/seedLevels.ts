@@ -87,21 +87,7 @@ export const seedLevelsData = async () => {
         order: 6,
         icon: '👑',
         description: 'Watch 24 videos = Earn ₹2,400/day',
-      },
-      {
-        levelNumber: 7,
-        levelName: "Apple7",
-        investmentAmount: 150000,
-        rewardPerTask: 120,
-        dailyTaskLimit: 40,
-        aLevelCommissionRate: 22,
-        bLevelCommissionRate: 10,
-        cLevelCommissionRate: 6,
-        isActive: true,
-        order: 7,
-        icon: '🔥',
-        description: 'Watch 30 videos = Earn ₹3,600/day',
-      },
+      }
     ];
 
     await models.level.deleteMany({});

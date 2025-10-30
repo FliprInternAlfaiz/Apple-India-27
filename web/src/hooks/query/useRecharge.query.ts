@@ -54,7 +54,7 @@ const createRechargeOrder = async (payload: CreateRechargeOrderPayload) => {
     method: "POST",
     data: payload,
   });
-  return response?.data;
+  return response;
 };
 
 export const useCreateRechargeOrderMutation = () => {
@@ -62,7 +62,7 @@ export const useCreateRechargeOrderMutation = () => {
 
   return useMutation({
     mutationFn: createRechargeOrder,
-    onSuccess: () => {
+     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rechargeHistory"] });
     },
     onError: (error: any) => {
@@ -70,6 +70,37 @@ export const useCreateRechargeOrderMutation = () => {
         title: "Error",
         message:
           error?.response?.data?.message || "Failed to create recharge order",
+        color: "red",
+        autoClose: 4000,
+      });
+    },
+  });
+};
+
+// hooks/query/useRecharge.query.ts
+
+// Add new hook for generating QR code
+interface GenerateQRPayload {
+  amount: number;
+  paymentMethodId: string;
+}
+
+const generateQRCode = async (payload: GenerateQRPayload) => {
+  const response = await request({
+    url: rechargeUrls.GENERATE_QR,
+    method: "POST",
+    data: payload,
+  });
+  return response?.data;
+};
+
+export const useGenerateQRMutation = () => {
+  return useMutation({
+    mutationFn: generateQRCode,
+    onError: (error: any) => {
+      notifications.show({
+        title: "Error",
+        message: error?.response?.data?.message || "Failed to generate QR code",
         color: "red",
         autoClose: 4000,
       });

@@ -44,7 +44,6 @@ const VideoPlayerScreen: React.FC = () => {
 
   try {
     const result = await completeMutation.mutateAsync(taskId);
-    console.log("Reward API result:", result);
 
     // The API returns only data (no .status), so just treat any successful response as success
     if (result && typeof result.rewardAmount !== "undefined") {

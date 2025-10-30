@@ -347,10 +347,8 @@ export const completeTask = async (
         completedAt: now,
       });
 
-      console.log("✅ Task completion record created successfully");
     } catch (dupError: any) {
       if (dupError.code === 11000) {
-        console.log("⚠️ Duplicate task completion detected");
         return JsonResponse(res, {
           status: "error",
           statusCode: 400,
@@ -373,7 +371,6 @@ export const completeTask = async (
 
     await user.save();
 
-    console.log("✅ User data updated successfully");
 
     return JsonResponse(res, {
       status: "success",
