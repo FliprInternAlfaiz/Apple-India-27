@@ -563,14 +563,28 @@ const RechargeScreen: React.FC = () => {
           details
         </Alert>
 
+          <Flex gap={10}>
+             <Button
+            w="40%"
+          variant="outline"
+          size="md"
+          onClick={() => {
+    closeModal();
+    setCurrentStep(RechargeStep.SELECT_PAYMENT);
+  }}
+        >
+          Back
+        </Button>
         <Button
-          fullWidth
-          size="lg"
+          
+          size="md"
           onClick={handleProceedToUTR}
           rightSection={<FaArrowRight />}
         >
           I Have Completed Payment
         </Button>
+          </Flex>
+          
       </Stack>
     );
   };
@@ -688,7 +702,7 @@ const RechargeScreen: React.FC = () => {
             title="Amount will be credited"
           >
             <Text size="xs" c="dimmed">
-              Within 5-10 minutes
+              After Admin Approval
             </Text>
           </Timeline.Item>
         </Timeline>

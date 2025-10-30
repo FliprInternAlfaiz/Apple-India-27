@@ -403,7 +403,11 @@ const WithdrawalScreen: React.FC = () => {
         loading={createWithdrawalMutation.isPending}
         disabled={!canSubmitWithdrawal()}
       >
-        Submit Withdrawal Request
+          {`Submit Withdrawal Request ${
+    customAmount || selectedAmount
+      ? `₹${(customAmount || selectedAmount)?.toLocaleString()}`
+      : ""
+  }`}
       </Button>
 
       {/* Add Account Modal */}

@@ -119,11 +119,6 @@ const LevelTasksScreen: React.FC = () => {
       </Alert>
     );
 
-  const progressPercentage =
-    currentLevel.dailyTaskLimit > 0
-      ? (currentLevel.completed / currentLevel.dailyTaskLimit) * 100
-      : 0;
-
   return (
     <div className={classes.screen}>
       {/* ✅ Carousel Section */}

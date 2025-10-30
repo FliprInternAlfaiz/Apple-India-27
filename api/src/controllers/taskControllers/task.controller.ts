@@ -299,7 +299,7 @@ export const completeTask = async (
       });
     }
 
-    // Check if task belongs to user's level
+
     if (task.level !== user.currentLevel) {
       return JsonResponse(res, {
         status: "error",
