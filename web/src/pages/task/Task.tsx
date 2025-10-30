@@ -14,7 +14,7 @@ const Task: React.FC = () => {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useInfiniteTasksQuery({ level: "Apple4", limit: 4 });
+  } = useInfiniteTasksQuery({ level: "Apple1", limit: 4 });
 
   const observer = useRef<IntersectionObserver | null>(null);
 
