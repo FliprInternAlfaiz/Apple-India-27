@@ -2,6 +2,7 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+
 import { AuthRoutes } from '../routes/auth/auth.routes';
 import { TaskRoutes } from '../routes/task/task.routes';
 import { WithdrawalRoutes } from '../routes/withdrawal/withdrawal.route';
@@ -21,6 +22,7 @@ class ExpressConfig {
   start() {
     this.addGlobalMiddlewares();
     this.staticServe();
+
     const routes = [
       new AuthRoutes(this.app),
       new TaskRoutes(this.app),
@@ -29,30 +31,54 @@ class ExpressConfig {
       new PaymentRoutes(this.app),
       new levelRoutes(this.app),
     ];
+
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);
     return this.app;
   }
 
   private configureRoutes(routes: any[]) {
     return this.app.listen(this.PORT, () => {
-      console.log(`server listening @ port : ${this.PORT}`);
+      console.log(`✅ Server listening on port: ${this.PORT}`);
       routes.forEach((route) => {
-        console.log('listening for route: ', route.name);
+        console.log('📍 Listening for route:', route.name);
       });
     });
   }
 
   private addGlobalMiddlewares() {
-    this.app.use(cors({ credentials: true, origin: true }));
+    const allowedOrigins = [
+      'https://apple-india-27-web.onrender.com', // Frontend (live)
+      'https://apple-india-27.onrender.com', // Backend (self-origin)
+      'http://localhost:3000', // Local development
+    ];
+
+    this.app.use(
+      cors({
+        origin: (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
+        credentials: true,
+      })
+    );
+
+    // Handle preflight requests
+    this.app.options('*', cors());
+
+    // Common middlewares
     this.app.use(express.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(cookieParser());
-    console.log('global middlewares configured');
+
+    console.log('⚙️ Global middlewares configured successfully');
   }
 
   private staticServe() {
     this.app.use('/uploads', express.static('uploads'));
-    console.log('static content serve successfull');
+    console.log('📦 Static content served successfully');
   }
 }
 
