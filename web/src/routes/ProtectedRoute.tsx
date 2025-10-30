@@ -8,6 +8,7 @@ import classes from "./index.module.scss";
 const ProtectedRoute = () => {
   const { pathname } = useLocation();
   const { data, isLoading, isError } = useVerifyUserQuery();
+  console.log(data)
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -22,7 +23,7 @@ const ProtectedRoute = () => {
   }
 
   if (isError || !data || data.status !== "success") {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+    return <Navigate to={ROUTES.LOGIN} replace/>;
   }
 
   return ( <div className={classes.root}> <Outlet /> </div> );

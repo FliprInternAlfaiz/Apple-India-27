@@ -46,6 +46,7 @@ export default async (req: Request, res: Response) => {
     httpOnly: true,
    sameSite: "lax",
      secure: false,
+     path: "/"
   });
 
   return JsonResponse(res, {

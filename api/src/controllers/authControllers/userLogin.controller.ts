@@ -58,6 +58,7 @@ export default async (req: Request, res: Response, __: NextFunction) => {
     httpOnly: true,
  sameSite: "lax",
      secure: false,
+     path: "/"
   });
 
   const { password: _, ...userData } = user.toObject();

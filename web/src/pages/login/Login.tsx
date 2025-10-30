@@ -15,6 +15,7 @@ import { ROUTES } from "../../enum/routes";
 import classes from "./Login.module.scss";
 import { useAppDispatch } from "../../store/hooks";
 import { login } from "../../store/reducer/authSlice";
+import { useVerifyUserQuery } from "../../hooks/query/useGetVerifyUser.query";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const { mutate, isPending } = useLoginMutation();
   const dispatch = useAppDispatch();
+
+    const { refetch } = useVerifyUserQuery(); 
 
   const handleSubmit = () => {
     if (!phone || !password) {
@@ -44,7 +47,10 @@ const Login: React.FC = () => {
               message: "Welcome back!",
               color: "green",
             });
-            navigate(ROUTES.HOMEPAGE);
+             setTimeout(async () => {
+              await refetch(); 
+              navigate(ROUTES.HOMEPAGE);
+            }, 400);
           } else {
             showNotification({
               title: res?.data?.title || "Login Failed",

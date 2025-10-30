@@ -18,8 +18,9 @@ export const request = async (options: AxiosRequestConfig<unknown>) => {
 
   const onError = (error: unknown) => {
     const res = (error as IAxiosResponse).response;
-    if (res?.status === 401 && location.pathname !== ROUTES.LOGIN) {
-      window.location.replace(ROUTES.LOGIN); 
+ if (res?.status === 401 && location.pathname !== ROUTES.LOGIN) {
+      console.warn("Unauthorized – handled by ProtectedRoute");
+      // do NOT hard-redirect here; ProtectedRoute will handle navigation
     }
     return { ...(res ?? {}), status: res?.status || 500 };
   };

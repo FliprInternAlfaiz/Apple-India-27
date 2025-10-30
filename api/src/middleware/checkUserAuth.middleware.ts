@@ -10,26 +10,25 @@ const { JsonResponse } = commonsUtils;
 const middleware: RequestHandler = async (req, res, next) => {
   try {
     const cookie = req.cookies[CONSTANTS.userTokenKey];
-    if (!cookie) throw new Error('unauthorized access');
-    
-    const token = await models.token.getToken(cookie);
+    if (!cookie) throw new Error("unauthorized access");
 
-    if (!token) throw new Error('unauthorized access');
+    const tokenDoc = await models.token.getToken(cookie);
+    if (!tokenDoc) throw new Error("unauthorized access");
 
-    const { email, id } = jwtConfig.verifyJWT(token.token);
+    const { id, email } = jwtConfig.verifyJWT(tokenDoc.token);
     res.locals.userId = id;
     res.locals.userEmail = email;
-
-    return next();
-  } catch (error) {
-    res.clearCookie('userAuth');
+    next();
+  } catch {
+    res.clearCookie(CONSTANTS.userTokenKey);
     return JsonResponse(res, {
-      status: 'error',
+      status: "error",
       statusCode: 401,
-      message: 'login to continue',
-      title: 'unauthorized access',
+      message: "login to continue",
+      title: "unauthorized access",
     });
   }
 };
+
 
 export default middleware;

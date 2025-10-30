@@ -17,6 +17,7 @@ import { useAppDispatch } from "../../store/hooks";
 import { login } from "../../store/reducer/authSlice";
 import classes from "./Signup.module.scss";
 import { ROUTES } from "../../enum/routes";
+import { useVerifyUserQuery } from "../../hooks/query/useGetVerifyUser.query";
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ const Signup: React.FC = () => {
 
   const { mutate: sendOtp, isPending: sendingOtp } = useSignupMutation();
   const { mutate: verifyOtp, isPending: verifyingOtp } = useVerifyOtpMutation();
+    const { refetch } = useVerifyUserQuery(); 
 
   const validateForm = () => {
     const { name, email, phone, password } = formData;
@@ -111,7 +113,10 @@ const Signup: React.FC = () => {
               message: "Account created successfully.",
               color: "green",
             });
-            navigate(ROUTES.HOMEPAGE);
+             setTimeout(async () => {
+              await refetch(); 
+              navigate(ROUTES.HOMEPAGE);
+            }, 400);
           } else {
             showNotification({
               title: res?.title || "Verification Failed",
