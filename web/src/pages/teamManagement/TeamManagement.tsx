@@ -1,7 +1,6 @@
 import { Flex, Text, Card, Container, Box } from "@mantine/core";
 import { FaCrown, FaMedal, FaRegUser, FaRegClock, FaRegCalendarAlt } from "react-icons/fa";
 import classes from "./TeamManagement.module.scss";
-import { useNavigate } from "react-router-dom";
 import { IoTrophyOutline } from "react-icons/io5";
 
 
