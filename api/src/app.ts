@@ -3,8 +3,8 @@ import express from 'express';
 
 import ExpressConfig from './config/expressConfig';
 import Config from './config/serverConfig';
-import { cronInit } from './crons';
 import cookieParser from 'cookie-parser';
+import "./crons/autoApproveRecharge"; 
 
 if (process.env.NODE_ENV === 'test') config({ path: '.env.test' });
 

@@ -1,0 +1,220 @@
+.financialRecords {
+  min-height: 100vh;
+  background: #ffffff;
+  font-family: 'Inter', sans-serif;
+  color: #2c2c54;
+  padding-bottom: 90px;
+  position: relative;
+
+  // ===== HEADER =====
+  .header {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: #2c2c54;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(44, 44, 84, 0.25);
+
+    .backButton {
+      margin-right: 12px;
+      color: #ffffff;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.4px;
+    }
+  }
+
+  // ===== CONTAINER =====
+  .container {
+    padding-top: 24px;
+  }
+
+  // ===== WALLET SUMMARY =====
+  .walletCard {
+    background: #f7f7fb;
+    border: 1px solid rgba(44, 44, 84, 0.1);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(44, 44, 84, 0.1);
+    }
+
+    .walletInfo {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .walletSection {
+      text-align: center;
+    }
+
+    .walletLabel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2c2c54;
+      font-size: 0.95rem;
+
+      .walletIcon {
+        font-size: 18px;
+        margin-right: 6px;
+        color: #fbc531;
+      }
+    }
+
+    .walletAmount {
+      margin-top: 8px;
+      color: #2c2c54;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+  }
+
+  // ===== TABS SECTION =====
+  .historyTabs {
+    margin-top: 20px;
+
+    .tabsList {
+      display: flex;
+      justify-content: space-around;
+      background: #f2f2f7;
+      border-radius: 12px;
+      padding: 5px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 6px rgba(44, 44, 84, 0.08);
+    }
+
+    .tab {
+      flex: 1;
+      position: relative;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 12px 0;
+      color: #2c2c54;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 8px;
+
+      &:hover {
+        background: rgba(44, 44, 84, 0.08);
+      }
+
+      &[data-active='true'] {
+        background: linear-gradient(135deg, #2c2c54, #3a3a6b);
+        color: #ffffff;
+        box-shadow: 0 3px 8px rgba(44, 44, 84, 0.2);
+        transform: translateY(-1px);
+        transition: all 0.35s ease;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 3px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 40%;
+          height: 3px;
+          border-radius: 2px;
+          background: #fbc531;
+          animation: glowLine 1.2s ease-in-out infinite alternate;
+        }
+      }
+    }
+  }
+
+  // ===== RECORD LIST =====
+  .recordsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .recordCard {
+    background: #fafafa;
+    border: 1px solid rgba(44, 44, 84, 0.1);
+    padding: 14px 18px;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+
+    &:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(44, 44, 84, 0.1);
+    }
+
+    .recordId {
+      font-weight: 600;
+      color: #2c2c54;
+    }
+
+    .recordDate {
+      font-size: 12px;
+      color: #7f8fa6;
+    }
+
+    .recordAmount {
+      color: #2c2c54;
+      font-weight: 700;
+    }
+  }
+
+  // ===== FLOATING HELP BUTTON =====
+  .helpButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2c2c54;
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(44, 44, 84, 0.25);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(44, 44, 84, 0.35);
+    }
+
+    .helpIcon {
+      font-size: 16px;
+    }
+
+    .helpText {
+      font-size: 13px;
+    }
+  }
+
+  // ===== GLOW ANIMATION =====
+  @keyframes glowLine {
+    from {
+      width: 30%;
+      opacity: 0.8;
+    }
+    to {
+      width: 60%;
+      opacity: 1;
+    }
+  }
+}

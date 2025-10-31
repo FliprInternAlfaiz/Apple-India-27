@@ -16,8 +16,8 @@ export const useGetAllLevelsQuery = () => {
   return useQuery({
     queryKey: ["allLevels"],
     queryFn: getAllLevels,
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
   });
 };
@@ -145,7 +145,7 @@ export const useUpdateLevelMutation = () => {
 
 /* --------------------------- UPGRADE USER LEVEL --------------------------- */
 interface UpgradeLevelPayload {
-  userId?: string; // optional if backend identifies via token
+  userId?: string;
   newLevelNumber: number;
 }
 
@@ -155,7 +155,7 @@ const upgradeUserLevel = async (payload: UpgradeLevelPayload) => {
     method: "POST",
     data: payload,
   });
-  return response?.data;
+  return response;
 };
 
 export const useUpgradeUserLevelMutation = () => {
@@ -163,22 +163,54 @@ export const useUpgradeUserLevelMutation = () => {
 
   return useMutation({
     mutationFn: upgradeUserLevel,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      queryClient.invalidateQueries({ queryKey: ["allLevels"] });
-      notifications.show({
-        title: "Success",
-        message: data?.message || "User level upgraded successfully",
-        color: "green",
-      });
+    onSuccess: (res) => {
+      console.log(res)
+      const { statusCode, title, message, data } = res || {};
+
+      if (statusCode === 200) {
+        notifications.show({
+          title: title || "Success",
+          message: message || "Level purchased successfully!",
+          color: "green",
+          autoClose: 4000,
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        queryClient.invalidateQueries({ queryKey: ["allLevels"] });
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["infiniteTasks"] });
+
+        if (data) {
+          const userLevel = {
+            currentLevel: data.newLevel,
+            currentLevelNumber: data.levelNumber,
+            mainWallet: data.remainingBalance,
+            investmentAmount: data.totalInvestment,
+          };
+          localStorage.setItem("userLevel", JSON.stringify(userLevel));
+        }
+      } else {
+        notifications.show({
+          title: title || "Purchase Failed",
+          message:
+            message || "Something went wrong while upgrading your level.",
+          color: "red",
+          autoClose: 4000,
+        });
+      }
+
+      return res;
     },
     onError: (error: any) => {
       notifications.show({
-        title: "Error",
+        title: error?.response?.data?.title || "Error",
         message:
-          error?.response?.data?.message || "Failed to upgrade user level",
+          error?.response?.data?.message ||
+          "Unable to purchase level. Please try again later.",
         color: "red",
+        autoClose: 4000,
       });
+      throw error;
     },
   });
 };

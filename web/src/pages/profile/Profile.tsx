@@ -1,12 +1,22 @@
 // components/Profile/Profile.tsx
 import React, { useEffect } from "react";
-import { Box, Text, Flex, Button, Divider, Loader, Center } from "@mantine/core";
+import {
+  Box,
+  Text,
+  Flex,
+  Button,
+  Divider,
+  Loader,
+  Center,
+} from "@mantine/core";
 import {
   FaBuilding,
   FaIdCard,
   FaFileAlt,
   FaUsers,
   FaShieldAlt,
+  FaDownload,
+  FaSignOutAlt,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +24,8 @@ import { IMAGES } from "../../assets";
 import type { RootState } from "../../store/store";
 import { login } from "../../store/reducer/authSlice";
 import { useVerifyUserQuery } from "../../hooks/query/useGetVerifyUser.query";
+import { notifications } from "@mantine/notifications";
+import { useLogoutMutation } from "../../hooks/mutations/useLogout.mutation";
 
 interface StatItemProps {
   label: string;
@@ -32,39 +44,47 @@ const StatItem: React.FC<StatItemProps> = ({ label, value }) => (
 );
 
 const menuItems = [
-  { 
-    icon: <FaBuilding size={24} />, 
+  {
+    icon: <FaBuilding size={24} />,
     title: "Company Introduction",
-    path: "/company"
+    path: "/company",
   },
-  { 
-    icon: <FaIdCard size={24} />, 
+  {
+    icon: <FaIdCard size={24} />,
     title: "Identity authentication",
-    path: "/identity"
+    path: "/identity",
   },
-  { 
-    icon: <FaFileAlt size={24} />, 
+  {
+    icon: <FaFileAlt size={24} />,
     title: "Financial Records",
-    path: "/financial-records"
+    path: "/financial-records",
   },
-  { 
-    icon: <FaUsers size={24} />, 
+  {
+    icon: <FaUsers size={24} />,
     title: "Team building application",
-    path: "/team"
+    path: "/team",
   },
-  { 
-    icon: <FaShieldAlt size={24} />, 
+  {
+    icon: <FaShieldAlt size={24} />,
     title: "Account Security",
-    path: "/security"
+    path: "/security",
   },
+  {
+    icon: <FaDownload size={24} />,
+    title: "Download App",
+    path: "/download-app",
+  },
+  { icon: <FaSignOutAlt size={24} />, title: "Logout", path: "logout" },
 ];
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { userData, isLoggedIn } = useSelector((state: RootState) => state.auth);
-  
-  const { data, isLoading, isError } = useVerifyUserQuery();
+  const { userData, isLoggedIn } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const { data, isLoading, isError, refetch } = useVerifyUserQuery();
+  const logoutMutation = useLogoutMutation();
 
   useEffect(() => {
     if (data?.status === "success" && data.data?.user) {
@@ -74,30 +94,47 @@ const Profile: React.FC = () => {
     }
   }, [data, isError, dispatch, navigate]);
 
-  const formatCurrency = (value: number): string => {
-    return value.toFixed(2);
-  };
+  const formatCurrency = (value: number): string => value.toFixed(2);
 
-  const getInitials = (name: string): string => {
-    return name
+  const getInitials = (name: string): string =>
+    name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
 
-  const handleMenuClick = (path: string) => {
+  const handleMenuClick = async (path: string) => {
+    if (path === "logout") {
+      try {
+        const res = await logoutMutation.mutateAsync();
+        if (res.status === "success") {
+          refetch();
+          localStorage.clear();
+          notifications.show({
+            title: "Logout Successful",
+            message: "You have been logged out successfully.",
+            color: "green",
+          });
+          navigate("/login");
+        }
+      } catch (error: any) {
+        notifications.show({
+          title: "Logout Failed",
+          message:
+            error?.response?.data?.message ||
+            "Something went wrong. Please try again.",
+          color: "red",
+        });
+      }
+      return;
+    }
+
     navigate(path);
   };
 
-  const handleRecharge = () => {
-    navigate("/recharge");
-  };
-
-  const handleWithdrawal = () => {
-    navigate("/withdrawal");
-  };
+  const handleRecharge = () => navigate("/recharge");
+  const handleWithdrawal = () => navigate("/withdrawal");
 
   if (isLoading || isLoggedIn === "loading") {
     return (
@@ -298,10 +335,9 @@ const Profile: React.FC = () => {
           </Flex>
         </Box>
 
-
         {/* Menu Items */}
         <Box mt="lg" mb="sm">
-          {menuItems.map((item,index) => (
+          {menuItems.map((item, index) => (
             <Box key={item.title}>
               <Flex
                 align="center"
@@ -333,9 +369,7 @@ const Profile: React.FC = () => {
                   ›
                 </Text>
               </Flex>
-              {
-                index != menuItems.length -1 && <Divider />
-              }
+              {index !== menuItems.length - 1 && <Divider />}
             </Box>
           ))}
         </Box>

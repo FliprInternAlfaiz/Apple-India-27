@@ -1,4 +1,4 @@
-// controllers/task.controller.ts (Updated with Level Integration)
+// controllers/task.controller.ts - UPDATED with Level Filtering
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
@@ -8,69 +8,46 @@ import fs from 'fs';
 
 const { JsonResponse } = commonsUtils;
 
-export const getTasks = async (
-  req: Request,
-  res: Response,
-  __: NextFunction
-) => {
+export const getTasks = async (req: Request, res: Response, __: NextFunction) => {
   try {
-    const { page = 1, limit = 10, level } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const userId = res.locals.userId;
 
-    // Get user's current level
+    if (!userId) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 401,
+        message: "User not authenticated.",
+        title: "Tasks",
+      });
+    }
+
+    // Default values
     let userLevel = "Apple1";
     let userLevelNumber = 1;
     let dailyLimit = 12;
 
-    if (userId) {
-      const user = await models.User.findById(userId).select(
-        "currentLevel currentLevelNumber todayTasksCompleted"
-      );
+    // Fetch user details
+    const user = await models.User.findById(userId).select(
+      "currentLevel currentLevelNumber todayTasksCompleted"
+    );
 
-      if (user) {
-        userLevel = user.currentLevel || "Apple1";
-        userLevelNumber = user.currentLevelNumber || 1;
+    if (user) {
+      userLevel = user.currentLevel || "Apple1";
+      userLevelNumber = user.currentLevelNumber || 1;
 
-        // Get daily limit from level config
-        const levelConfig = await models.level.findOne({
-          levelNumber: userLevelNumber,
-          isActive: true,
-        });
+      const levelConfig = await models.level.findOne({
+        levelNumber: userLevelNumber,
+        isActive: true,
+      });
 
-        if (levelConfig) {
-          dailyLimit = levelConfig.dailyTaskLimit;
-
-          // Check if user reached daily limit
-          if (user.todayTasksCompleted >= dailyLimit) {
-            return JsonResponse(res, {
-              status: "success",
-              statusCode: 200,
-              title: "Tasks",
-              message: "Daily task limit reached.",
-              data: {
-                tasks: [],
-                pagination: {
-                  currentPage: Number(page),
-                  totalPages: 0,
-                  totalTasks: 0,
-                  limit: Number(limit),
-                },
-                stats: {
-                  todayCompleted: user.todayTasksCompleted,
-                  dailyLimit,
-                  limitReached: true,
-                },
-              },
-            });
-          }
-        }
+      if (levelConfig) {
+        dailyLimit = levelConfig.dailyTaskLimit;
       }
     }
 
-    const query: any = {
-      isActive: true,
-      level: level || userLevel, // Filter by user's level
-    };
+    // Query only tasks matching current level
+    const query: any = { isActive: true, level: userLevel };
 
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -82,39 +59,36 @@ export const getTasks = async (
       .select("-__v")
       .lean();
 
-    if (userId) {
-      const completedTasks = await models.taskCompletion
-        .find({
-          userId,
-          taskId: { $in: tasks.map((t: any) => t._id) },
-        })
-        .select("taskId");
-
-      const completedTaskIds = new Set(
-        completedTasks.map((tc: any) => tc.taskId.toString())
-      );
-
-      tasks.forEach((task: any) => {
-        task.isCompleted = completedTaskIds.has(task._id.toString());
-      });
-    } else {
-      tasks.forEach((task: any) => {
-        task.isCompleted = false;
-      });
-    }
-
     const totalTasks = await models.task.countDocuments(query);
 
-    let todayCompleted = 0;
-    if (userId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    // Fetch completed tasks for this user & level
+    const completedTasks = await models.taskCompletion.find({
+      userId,
+      taskId: { $in: tasks.map((t: any) => t._id) },
+    }).select("taskId");
 
-      todayCompleted = await models.taskCompletion.countDocuments({
-        userId,
-        completedAt: { $gte: today },
-      });
-    }
+    const completedTaskIds = new Set(completedTasks.map((c: any) => c.taskId.toString()));
+
+    tasks.forEach((task: any) => {
+      task.isCompleted = completedTaskIds.has(task._id.toString());
+    });
+
+    // Get today's completed task count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayCompleted = await models.taskCompletion.countDocuments({
+      userId,
+      completedAt: { $gte: today },
+    });
+
+    // Correct remaining task calculation:
+    // Remaining = min(dailyLimit, totalAvailable) - todayCompleted
+    const totalAvailable = totalTasks;
+    const maxAvailable = Math.min(dailyLimit, totalAvailable);
+    const remainingTasks = Math.max(0, maxAvailable - todayCompleted);
+
+    const limitReached = todayCompleted >= maxAvailable;
 
     return JsonResponse(res, {
       status: "success",
@@ -132,8 +106,11 @@ export const getTasks = async (
         stats: {
           todayCompleted,
           dailyLimit,
-          totalAvailable: totalTasks,
-          remainingTasks: Math.max(0, dailyLimit - todayCompleted),
+          totalAvailable,
+          remainingTasks,
+          limitReached,
+          userLevel,
+          userLevelNumber,
         },
       },
     });
@@ -299,7 +276,7 @@ export const completeTask = async (
       });
     }
 
-
+    // Verify task belongs to user's current level
     if (task.level !== user.currentLevel) {
       return JsonResponse(res, {
         status: "error",
@@ -346,7 +323,6 @@ export const completeTask = async (
         rewardAmount: rewardPrice,
         completedAt: now,
       });
-
     } catch (dupError: any) {
       if (dupError.code === 11000) {
         return JsonResponse(res, {
@@ -359,7 +335,7 @@ export const completeTask = async (
       throw dupError;
     }
 
-    // Update user - Add to commissionWallet instead of mainWallet
+    // Update user - Add to commissionWallet
     user.commissionWallet = (user.commissionWallet || 0) + rewardPrice;
     user.todayIncome = (user.todayIncome || 0) + rewardPrice;
     user.monthlyIncome = (user.monthlyIncome || 0) + rewardPrice;
@@ -370,7 +346,6 @@ export const completeTask = async (
     user.lastTaskCompletedAt = now;
 
     await user.save();
-
 
     return JsonResponse(res, {
       status: "success",
@@ -407,6 +382,7 @@ export const completeTask = async (
     });
   }
 };
+
 
 export const createTask = async (
   req: Request,

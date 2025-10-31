@@ -1,4 +1,4 @@
-// controllers/level.controller.ts
+// controllers/level.controller.ts - UPDATED
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
@@ -25,7 +25,7 @@ export const getAllLevels = async (
 
     if (userId) {
       const user = await models.User.findById(userId).select(
-        "currentLevel currentLevelNumber investmentAmount todayTasksCompleted"
+        "currentLevel currentLevelNumber investmentAmount todayTasksCompleted mainWallet"
       );
 
       if (user) {
@@ -34,6 +34,7 @@ export const getAllLevels = async (
           currentLevelNumber: user.currentLevelNumber || 1,
           investmentAmount: user.investmentAmount || 0,
           todayTasksCompleted: user.todayTasksCompleted || 0,
+          mainWallet: user.mainWallet || 0,
         };
 
         // Get tasks completed for current level
@@ -71,6 +72,10 @@ export const getAllLevels = async (
         description: level.description,
         isUnlocked: userCurrentLevel ? level.levelNumber <= userCurrentLevel.currentLevelNumber : level.levelNumber === 1,
         isCurrent: isUserLevel,
+        canPurchase: userCurrentLevel 
+          ? level.levelNumber === userCurrentLevel.currentLevelNumber + 1 && 
+            userCurrentLevel.mainWallet >= level.investmentAmount
+          : false,
         invitations: [
           {
             method: "Invite A-level to join",
@@ -108,6 +113,106 @@ export const getAllLevels = async (
       statusCode: 500,
       message: "An error occurred while fetching levels.",
       title: "Levels",
+    });
+  }
+};
+
+export const upgradeUserLevel = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
+    const newLevelNumber = Number(req.body.newLevelNumber); // ✅ ensure numeric
+
+    if (!userId) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 401,
+        message: "User not authenticated.",
+        title: "Purchase Level",
+      });
+    }
+
+    const user = await models.User.findById(userId);
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "User not found.",
+        title: "Purchase Level",
+      });
+    }
+
+    const targetLevel = await models.level.findOne({
+      levelNumber: newLevelNumber,
+      isActive: true,
+    });
+
+    if (!targetLevel) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: `Target level ${newLevelNumber} not found.`,
+        title: "Purchase Level",
+      });
+    }
+
+    // Sequential level check
+    if (newLevelNumber !== (user.currentLevelNumber || 1) + 1) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "You must purchase levels sequentially.",
+        title: "Purchase Level",
+      });
+    }
+
+    // Balance check
+    if (user.mainWallet < targetLevel.investmentAmount) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: `Insufficient balance. Required: ₹${targetLevel.investmentAmount}, Available: ₹${user.mainWallet}`,
+        title: "Purchase Level",
+      });
+    }
+
+    // Deduct and update
+    user.mainWallet -= targetLevel.investmentAmount;
+    user.investmentAmount = (user.investmentAmount || 0) + targetLevel.investmentAmount;
+    user.currentLevel = targetLevel.levelName;
+    user.currentLevelNumber = targetLevel.levelNumber;
+    user.levelName = targetLevel.levelName;
+    user.userLevel = targetLevel.levelNumber;
+    user.levelUpgradedAt = new Date();
+    user.todayTasksCompleted = 0;
+
+    await user.save();
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Purchase Level",
+      message: `Successfully purchased ${targetLevel.levelName}!`,
+      data: {
+        newLevel: targetLevel.levelName,
+        levelNumber: targetLevel.levelNumber,
+        investmentAmount: targetLevel.investmentAmount,
+        rewardPerTask: targetLevel.rewardPerTask,
+        dailyTaskLimit: targetLevel.dailyTaskLimit,
+        remainingBalance: user.mainWallet,
+        totalInvestment: user.investmentAmount,
+      },
+    });
+  } catch (error) {
+    console.error("Error purchasing level:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while purchasing level.",
+      title: "Purchase Level",
     });
   }
 };
@@ -346,108 +451,6 @@ export const updateLevel = async (
       statusCode: 500,
       message: "An error occurred while updating the level.",
       title: "Update Level",
-    });
-  }
-};
-
-// Upgrade user to new level
-export const upgradeUserLevel = async (
-  req: Request,
-  res: Response,
-  __: NextFunction
-) => {
-  try {
-    const userId = res.locals.userId;
-    const { levelNumber } = req.body;
-
-    if (!userId) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 401,
-        message: "User not authenticated.",
-        title: "Upgrade Level",
-      });
-    }
-
-    const user = await models.User.findById(userId);
-
-    if (!user) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 404,
-        message: "User not found.",
-        title: "Upgrade Level",
-      });
-    }
-
-    const targetLevel = await models.level.findOne({
-      levelNumber,
-      isActive: true,
-    });
-
-    if (!targetLevel) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 404,
-        message: "Target level not found.",
-        title: "Upgrade Level",
-      });
-    }
-
-    // Check if user can upgrade (must be sequential)
-    if (levelNumber !== (user.currentLevelNumber || 1) + 1) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "You must upgrade levels sequentially.",
-        title: "Upgrade Level",
-      });
-    }
-
-    // Check if user has enough balance
-    if (user.mainWallet < targetLevel.investmentAmount) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: `Insufficient balance. Required: ₹${targetLevel.investmentAmount}`,
-        title: "Upgrade Level",
-      });
-    }
-
-    // Deduct investment from wallet
-    user.mainWallet -= targetLevel.investmentAmount;
-    user.investmentAmount = (user.investmentAmount || 0) + targetLevel.investmentAmount;
-    
-    // Update user level
-    user.currentLevel = targetLevel.levelName;
-    user.currentLevelNumber = targetLevel.levelNumber;
-    user.levelName = targetLevel.levelName;
-    user.userLevel = targetLevel.levelNumber;
-    user.levelUpgradedAt = new Date();
-
-    await user.save();
-
-    return JsonResponse(res, {
-      status: "success",
-      statusCode: 200,
-      title: "Upgrade Level",
-      message: `Successfully upgraded to ${targetLevel.levelName}!`,
-      data: {
-        newLevel: targetLevel.levelName,
-        levelNumber: targetLevel.levelNumber,
-        investmentAmount: targetLevel.investmentAmount,
-        rewardPerTask: targetLevel.rewardPerTask,
-        dailyTaskLimit: targetLevel.dailyTaskLimit,
-        remainingBalance: user.mainWallet,
-      },
-    });
-  } catch (error) {
-    console.error("Error upgrading level:", error);
-    return JsonResponse(res, {
-      status: "error",
-      statusCode: 500,
-      message: "An error occurred while upgrading level.",
-      title: "Upgrade Level",
     });
   }
 };

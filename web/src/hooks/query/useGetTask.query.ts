@@ -31,6 +31,9 @@ export type TPagination = {
 export type TTaskStats = {
   todayCompleted: number;
   totalAvailable: number;
+  dailyLimit:number;
+  remainingTasks:number;
+  limitReached:number;
 };
 
 export type TTaskResponse = {

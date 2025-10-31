@@ -13,7 +13,8 @@ export const authUrls = {
   LOGIN: authPrefix + "/login",
   VERIFYSIGNUPOTP: authPrefix + "/otp/verify",
   SIGNUP: authPrefix + "/signup",
-  VERIFYUSER:authPrefix + "/profile"
+  VERIFYUSER:authPrefix + "/profile",
+  LOGOUT:authPrefix + "/logout"
 };
 
 export const taskUrls = {

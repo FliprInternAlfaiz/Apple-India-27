@@ -9,11 +9,11 @@ import {
   Flex,
   Button,
   Badge,
+  Modal,
 } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { FaStar } from "react-icons/fa";
-import { Trophy} from "lucide-react";
-import { notifications } from "@mantine/notifications";
+import { Trophy, AlertCircle } from "lucide-react";
 import classes from "./LevelTasksScreen.module.scss";
 import {
   useGetAllLevelsQuery,
@@ -38,6 +38,7 @@ interface Level {
   remaining: number;
   isUnlocked: boolean;
   isCurrent: boolean;
+  canPurchase: boolean;
   icon: string;
   description: string;
   invitations: Invitation[];
@@ -47,16 +48,20 @@ interface UserLevel {
   currentLevel: string;
   currentLevelNumber: number;
   todayTasksCompleted: number;
+  mainWallet: number;
+  investmentAmount: number;
 }
 
 const LevelTasksScreen: React.FC = () => {
-  const { data, isLoading, isError } = useGetAllLevelsQuery();
+  const { data, isLoading, isError, refetch } = useGetAllLevelsQuery();
   const levels: Level[] = data?.levels ?? [];
   const fetchedUserLevel: UserLevel | null = data?.userLevel ?? null;
   const upgradeMutation = useUpgradeUserLevelMutation();
 
   const [activeLevelIndex, setActiveLevelIndex] = useState<number>(0);
   const [userLevel, setUserLevel] = useState<UserLevel | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
 
   useEffect(() => {
     if (fetchedUserLevel) {
@@ -79,22 +84,23 @@ const LevelTasksScreen: React.FC = () => {
     [levels, activeLevelIndex]
   );
 
-  const handleUpgrade = async (levelNumber: number) => {
+  const handlePurchaseClick = (level: Level) => {
+    setSelectedLevel(level);
+    setShowPurchaseModal(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!selectedLevel) return;
+
     try {
-      await upgradeMutation.mutateAsync({ newLevelNumber: levelNumber });
-      notifications.show({
-        title: "Success",
-        message: "Your level has been upgraded!",
-        color: "green",
+      await upgradeMutation.mutateAsync({
+        newLevelNumber: selectedLevel.levelNumber,
       });
-    } catch (error: any) {
-      notifications.show({
-        title: "Upgrade Failed",
-        message:
-          error?.response?.data?.message ||
-          "Unable to upgrade level right now.",
-        color: "red",
-      });
+      setShowPurchaseModal(false);
+      setSelectedLevel(null);
+      refetch();
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -121,7 +127,6 @@ const LevelTasksScreen: React.FC = () => {
 
   return (
     <div className={classes.screen}>
-      {/* ✅ Carousel Section */}
       <Container className={classes.carouselContainer}>
         <Carousel
           withControls
@@ -131,48 +136,44 @@ const LevelTasksScreen: React.FC = () => {
           emblaOptions={{ loop: true, align: "start" }}
         >
           {levels.map((level) => {
-            const slideProgress =
-              level.dailyTaskLimit > 0
-                ? (level.completed / level.dailyTaskLimit) * 100
-                : 0;
-
             return (
               <Carousel.Slide key={level._id}>
-                <Card className={classes.levelCard} shadow="md" radius="lg" withBorder>
+                <Card
+                  className={classes.levelCard}
+                  shadow="md"
+                  radius="lg"
+                  withBorder
+                >
                   <Flex align="center" gap="xs" mb="md">
-                    <span>{level.icon || "🏅"}</span>
+                    <span style={{ fontSize: "2rem" }}>
+                      {level.icon || "🏅"}
+                    </span>
                     <Text size="lg" fw={600}>
                       {level.level}
                     </Text>
                     {level.isCurrent && <Badge color="green">Current</Badge>}
                     {!level.isUnlocked && <Badge color="red">Locked</Badge>}
+                    {level.canPurchase && <Badge color="blue">Available</Badge>}
                   </Flex>
 
-                  <Flex justify="space-between" align="flex-end">
+                  <Flex justify="space-between" align="flex-end" mb="md">
                     <Flex direction="column">
                       <Text size="sm" fw={500} mb="xs">
-                        Remaining tasks: {level.remaining}
+                        Daily Tasks: {level.dailyTaskLimit}
                       </Text>
-                      <Text size="sm" fw={500}>
-                        Completed tasks: {level.completed}
+                      <Text size="sm" fw={500} c="green">
+                        Reward: ₹{level.rewardPerTask} per task
                       </Text>
                     </Flex>
                     <Box className={classes.targetBox}>
                       <Text size="sm" fw={500}>
-                        Target amount
+                        Investment Required
                       </Text>
                       <Text size="md" fw={700}>
                         ₹{level.target.toLocaleString()}
                       </Text>
                     </Box>
                   </Flex>
-
-                  <Box className={classes.progressBar}>
-                    <Box
-                      className={classes.progressFill}
-                      style={{ width: `${slideProgress}%` }}
-                    />
-                  </Box>
                 </Card>
               </Carousel.Slide>
             );
@@ -180,7 +181,6 @@ const LevelTasksScreen: React.FC = () => {
         </Carousel>
       </Container>
 
-      {/* ✅ Level Indicators */}
       <Box mt="xl">
         <Carousel
           withControls={false}
@@ -210,7 +210,7 @@ const LevelTasksScreen: React.FC = () => {
         </Carousel>
       </Box>
 
-      {/* ✅ Details Section */}
+      {/* Details Section */}
       <Box className={classes.detailsSection}>
         <Flex className={classes.levelTitleWrapper}>
           <Text size="md" fw={700}>
@@ -290,25 +290,132 @@ const LevelTasksScreen: React.FC = () => {
           ))}
         </div>
 
-        {!currentLevel.isUnlocked && (
+        {/* Purchase Button */}
+        {!currentLevel.isUnlocked && currentLevel.canPurchase && userLevel && (
           <Button
             fullWidth
             mt="md"
             color="blue"
+            size="lg"
             loading={upgradeMutation.isPending}
-            onClick={() => handleUpgrade(currentLevel.levelNumber)}
+            onClick={() => handlePurchaseClick(currentLevel)}
+            leftSection={<Trophy size={20} />}
           >
-            Upgrade to {currentLevel.level}
+            Purchase {currentLevel.level} - ₹
+            {currentLevel.target.toLocaleString()}
           </Button>
+        )}
+
+        {!currentLevel.isUnlocked && !currentLevel.canPurchase && (
+          <Alert icon={<AlertCircle size={16} />} color="orange" mt="md">
+            {userLevel && userLevel.mainWallet < currentLevel.target
+              ? `Insufficient balance. You need ₹${(
+                  currentLevel.target - userLevel.mainWallet
+                ).toLocaleString()} more.`
+              : "Complete previous levels to unlock this level."}
+          </Alert>
         )}
 
         <Flex align="center" justify="center" mt="lg" gap="xs">
           <Trophy size={18} color="green" />
           <Text size="sm" c="green">
-            Daily Earnings: ₹{currentLevel.rewardPerTask} per task
+            Daily Earnings: ₹{currentLevel.rewardPerTask} per task ×{" "}
+            {currentLevel.dailyTaskLimit} tasks = ₹
+            {currentLevel.rewardPerTask * currentLevel.dailyTaskLimit}
           </Text>
         </Flex>
       </Box>
+
+      {/* Purchase Confirmation Modal */}
+      <Modal
+        opened={showPurchaseModal}
+        onClose={() => setShowPurchaseModal(false)}
+        title="Confirm Level Purchase"
+        centered
+      >
+        {selectedLevel && userLevel && (
+          <Box>
+            <Text size="sm" mb="md">
+              You are about to purchase <strong>{selectedLevel.level}</strong>
+            </Text>
+
+            <Flex direction="column" gap="sm" mb="lg">
+              <Flex justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Investment Amount:
+                </Text>
+                <Text size="sm" fw={600}>
+                  ₹{selectedLevel.target.toLocaleString()}
+                </Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Current Balance:
+                </Text>
+                <Text size="sm" fw={600}>
+                  ₹{userLevel.mainWallet.toLocaleString()}
+                </Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Balance After Purchase:
+                </Text>
+                <Text
+                  size="sm"
+                  fw={600}
+                  c={
+                    userLevel.mainWallet - selectedLevel.target >= 0
+                      ? "green"
+                      : "red"
+                  }
+                >
+                  ₹
+                  {(
+                    userLevel.mainWallet - selectedLevel.target
+                  ).toLocaleString()}
+                </Text>
+              </Flex>
+              <Box
+                mt="sm"
+                p="sm"
+                style={{ background: "#e7f5ff", borderRadius: "8px" }}
+              >
+                <Text size="sm" fw={500} mb="xs">
+                  Benefits:
+                </Text>
+                <Text size="xs">
+                  • Daily tasks: {selectedLevel.dailyTaskLimit}
+                </Text>
+                <Text size="xs">
+                  • Reward per task: ₹{selectedLevel.rewardPerTask}
+                </Text>
+                <Text size="xs">
+                  • Max daily earnings: ₹
+                  {selectedLevel.rewardPerTask * selectedLevel.dailyTaskLimit}
+                </Text>
+              </Box>
+            </Flex>
+
+            <Flex gap="sm">
+              <Button
+                variant="outline"
+                fullWidth
+                onClick={() => setShowPurchaseModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                fullWidth
+                color="blue"
+                loading={upgradeMutation.isPending}
+                onClick={handleConfirmPurchase}
+              >
+                Confirm Purchase
+              </Button>
+            </Flex>
+          </Box>
+        )}
+      </Modal>
     </div>
   );
 };

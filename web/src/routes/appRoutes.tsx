@@ -21,7 +21,7 @@ import Recharge from "../pages/company/Recharge";
 import IdentityAuth from "../pages/company/IdentityAuth";
 import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
 import WithdrawalScreen from "../pages/withdrawalScreen/WithdrawalScreen";
-
+import FinancialRecords from "../pages/financialRecords/financialRecords";
 
 
 export const appRouter = createBrowserRouter([
@@ -49,7 +49,8 @@ export const appRouter = createBrowserRouter([
           { path: "/recharge", element: <Recharge /> },
           {path:"/withdrawal",element: <WithdrawalScreen/>},
           { path: "/identity-auth", element: <IdentityAuth /> },
-        ],
+          { path: "/financial-records", element: <FinancialRecords /> },
+                  ],
       },
     ],
   },

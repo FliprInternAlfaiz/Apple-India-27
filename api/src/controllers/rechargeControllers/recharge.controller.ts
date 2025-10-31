@@ -109,12 +109,11 @@ export const createRechargeOrder = async (req: Request, res: Response) => {
       });
     }
 
-    // ✅ Create recharge order with correct schema fields
     const order = await models.recharge.create({
       userId,
       orderId: `RCH${Date.now()}`,
       amount,
-      paymentMethodId: paymentMethod._id, // ✅ correct field name
+      paymentMethodId: paymentMethod._id, 
       paymentDetails: {
         methodName: paymentMethod.methodName,
         methodType: paymentMethod.methodType,
@@ -129,7 +128,6 @@ export const createRechargeOrder = async (req: Request, res: Response) => {
       createdAt: new Date(),
     });
 
-    // Return response
     return res.status(201).json({
       success: true,
       message: "Recharge order created successfully",
@@ -153,7 +151,6 @@ export const generateUPIQRCode = async (req: Request, res: Response) => {
     try {
       const { amount, paymentMethodId } = req.body;
 
-      // Get payment method details
       const paymentMethod = await models.paymentMethod.findById(paymentMethodId);
       
       if (!paymentMethod || !paymentMethod.isActive) {
