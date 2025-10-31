@@ -347,9 +347,11 @@ const RechargeScreen: React.FC = () => {
   );
 
   const renderPaymentDetails = () => {
+
     if (!paymentDetails) return null;
 
     const method = paymentDetails.paymentDetails; // ✅ Corrected
+    console.log(method)
     const qrCodeToShow = dynamicQRCode || method?.qrCode;
 
     // ✅ Check if QR code is base64 or URL
@@ -392,45 +394,81 @@ const RechargeScreen: React.FC = () => {
           </Flex>
         </Card>
 
-        {/* 🔹 QR or Bank Info */}
-        <Card withBorder p="md">
-          <Text size="sm" fw={600} mb="md" c="dimmed">
-            PAYMENT DETAILS
-          </Text>
+      {/* 🔹 QR or Bank / UPI Info */}
+<Card withBorder p="md">
+  <Text size="sm" fw={600} mb="md" c="dimmed">
+    PAYMENT DETAILS
+  </Text>
 
-          {method?.methodType === "upi" && qrCodeSrc ? (
-            <Flex justify="center" align="center" direction="column" gap="xs">
-              <Image
-                src={qrCodeSrc}
-                alt="Payment QR Code"
-                width={280}
-                height={280}
-                fit="contain"
-                style={{
-                  border: "2px solid #228be6",
-                  borderRadius: 8,
-                }}
-              />
-              <Alert
-                color="green"
-                icon={<FaCheckCircle />}
-                style={{ width: "100%" }}
-              >
-                <Text size="sm" fw={500}>
-                  Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Scan this QR code to complete payment
-                </Text>
-              </Alert>
-            </Flex>
-          ) : (
-            <Alert color="yellow" icon={<FaInfoCircle />}>
-              QR code not available for this method. Please check details
-              manually.
-            </Alert>
-          )}
-        </Card>
+  {/* ✅ Case 1: UPI / QR Payment */}
+  {method?.methodType === "upi" && qrCodeSrc ? (
+    <Flex justify="center" align="center" direction="column" gap="xs">
+      <Image
+        src={qrCodeSrc}
+        alt="Payment QR Code"
+        width={260}
+        height={260}
+        fit="contain"
+        style={{
+          border: "2px solid #228be6",
+          borderRadius: 8,
+        }}
+      />
+      {method?.upiId && (
+        <Text size="sm" mt="sm" fw={600}>
+          UPI ID: <Text span c="blue">{method.upiId}</Text>
+        </Text>
+      )}
+      <Alert
+        color="green"
+        icon={<FaCheckCircle />}
+        style={{ width: "100%" }}
+      >
+        <Text size="sm" fw={500}>
+          Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
+        </Text>
+        <Text size="xs" c="dimmed">
+          Scan this QR code or use the UPI ID above to complete payment.
+        </Text>
+      </Alert>
+    </Flex>
+  ) : method?.methodType === "bank" ? (
+    /* ✅ Case 2: Bank Transfer */
+    <Stack gap="xs">
+      <Flex justify="space-between">
+        <Text fw={500}>Account Holder:</Text>
+        <Text c="blue">{method?.accountName || "N/A"}</Text>
+      </Flex>
+      <Flex justify="space-between">
+        <Text fw={500}>Account Number:</Text>
+        <Text c="blue">{method?.accountNumber || "N/A"}</Text>
+      </Flex>
+      <Flex justify="space-between">
+        <Text fw={500}>Bank Name:</Text>
+        <Text c="blue">{method?.bankName || "N/A"}</Text>
+      </Flex>
+      <Flex justify="space-between">
+        <Text fw={500}>IFSC Code:</Text>
+        <Text c="blue">{method?.ifscCode || "N/A"}</Text>
+      </Flex>
+
+      <Alert color="green" icon={<FaCheckCircle />}>
+        <Text size="sm" fw={500}>
+          Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
+        </Text>
+        <Text size="xs" c="dimmed">
+          Use the above details to transfer via your banking app or net banking.
+        </Text>
+      </Alert>
+    </Stack>
+  ) : (
+    /* Fallback: No Payment Info */
+    <Alert color="yellow" icon={<FaInfoCircle />}>
+      Payment details not available for this method. Please contact support.
+    </Alert>
+  )}
+</Card>
+
 
         {/* 🔹 Submit Section */}
         <Alert color="orange" icon={<FaInfoCircle />}>
