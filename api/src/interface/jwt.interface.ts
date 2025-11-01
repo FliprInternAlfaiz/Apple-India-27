@@ -2,7 +2,6 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export interface ISessionData extends JwtPayload {
   id: string;
-  email?: string;  
   phone?: string
 }
 

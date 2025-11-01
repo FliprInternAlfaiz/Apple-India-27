@@ -14,7 +14,7 @@ export default async (req: Request, res: Response) => {
         status: "error",
         statusCode: 400,
         title: "Missing Values",
-        message: "Name, email, and phone are required.",
+        message: "Name, and phone are required.",
       });
     }
 

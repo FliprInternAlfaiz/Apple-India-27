@@ -10,12 +10,6 @@ const schema = new Schema<IUser>(
       required: true,
       trim: true,
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-    },
     phone: {
       type: String,
       required: true,
@@ -112,11 +106,10 @@ const schema = new Schema<IUser>(
 );
 
 schema.index({ phone: 1 });
-schema.index({ email: 1 });
+
 schema.index({ referralCode: 1 });
 schema.index({ lastActiveDate: 1 });
 
-commonsUtils.dbUtils.handleDuplicates(schema, 'email');
 commonsUtils.dbUtils.handleDuplicates(schema, 'phone');
 
 const userModel: IUserMethods = model<IUser, IUserMethods>('user', schema);

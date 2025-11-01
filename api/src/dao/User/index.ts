@@ -15,12 +15,7 @@ export default {
   ): Promise<IUser | null> {
     return this.findById(id);
   },
-  findByEmail: function (this: IUserMethods, email: IUser['email']) {
-    return this.findOne({ email: email });
-  },
-  createGoogleUser: function (this: IUserMethods, email: IUser['email'], name: IUser['name'], picture: IUser['picture']) {
-    return this.create({ email, name, picture, isSSO: true });
-  },  
+
   updatePassword(
     this: IUserMethods,
     { id, password }: { id: IUser['id']; password: IUser['password'] },

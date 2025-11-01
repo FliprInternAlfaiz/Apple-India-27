@@ -7,7 +7,7 @@ export interface IUser extends Document {
 
   // Basic info
   name: string;
-  email: string;
+
   phone: string;
   password: string;
   username: string;
@@ -67,14 +67,8 @@ type TQueryType = Query<IUser, IUser>;
 
 // ✅ Model methods for user operations
 export interface IUserMethods extends Model<IUser> {
-  createUser(user: Pick<IUser, "name" | "email" | "password">): TQueryType;
-  createGoogleUser(
-    email: string,
-    name: string,
-    picture: string
-  ): Promise<IUser>;
+  createUser(user: Pick<IUser, "name" | "password">): TQueryType;
   getById(id: IUser["id"]): TQueryType;
-  findByEmail(email: IUser["email"]): TQueryType;
   updatePassword(data: {
     id: IUser["id"];
     password: IUser["password"];
