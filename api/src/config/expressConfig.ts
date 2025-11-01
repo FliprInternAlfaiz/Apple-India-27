@@ -56,7 +56,11 @@ class ExpressConfig {
     this.app.use(
       cors({
         origin: (origin, callback) => {
-          if (!origin || allowedOrigins.includes(origin)) {
+          if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        /\.netlify\.app$/.test(origin) 
+      ) {
             callback(null, true);
           } else {
             callback(new Error('Not allowed by CORS'));
