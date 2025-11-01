@@ -25,7 +25,6 @@ const Signup: React.FC = () => {
   const [step, setStep] = useState<"form" | "otp">("form");
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     phone: "",
     password: "",
   });
@@ -36,19 +35,11 @@ const Signup: React.FC = () => {
     const { refetch } = useVerifyUserQuery(); 
 
   const validateForm = () => {
-    const { name, email, phone, password } = formData;
-    if (!name || !email || !phone || !password) {
+    const { name, phone, password } = formData;
+    if (!name || !phone || !password) {
       showNotification({
         title: "Validation Error",
         message: "All fields are required.",
-        color: "red",
-      });
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showNotification({
-        title: "Invalid Email",
-        message: "Please enter a valid email address.",
         color: "red",
       });
       return false;
@@ -144,7 +135,7 @@ const Signup: React.FC = () => {
 
         {step === "form" ? (
           <>
-            {["name", "email", "phone"].map((field) => (
+            {["name", "phone"].map((field) => (
               <TextInput
                 key={field}
                 label={field[0].toUpperCase() + field.slice(1)}

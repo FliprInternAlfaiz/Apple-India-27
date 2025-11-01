@@ -6,9 +6,10 @@ const { JsonResponse } = commonsUtils;
 
 export default async (req: Request, res: Response) => {
   try {
-    const { name, email, phone } = req.body;
+    const { name, phone } = req.body;
+    console.log(req.body)
 
-    if (!name || !email || !phone) {
+    if (!name || !phone) {
       return JsonResponse(res, {
         status: "error",
         statusCode: 400,
@@ -17,9 +18,7 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    const existingUser = await models.User.findOne({
-      $or: [{ email }, { phone }],
-    });
+     const existingUser = await models.User.findOne({ phone });
 
     if (existingUser) {
       return JsonResponse(res, {
@@ -35,7 +34,6 @@ export default async (req: Request, res: Response) => {
     await models.Otp.deleteMany({ phone });
 
     await models.Otp.create({
-      email,
       phone,
       otp: generatedOtp,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes expiry

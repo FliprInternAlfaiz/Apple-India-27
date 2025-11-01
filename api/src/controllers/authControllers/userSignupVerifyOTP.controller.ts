@@ -3,7 +3,6 @@ import models from "../../models";
 import encryptPassword from "../../utils/encryptPassword";
 import commonsUtils from "../../utils";
 import { jwtConfig } from "../../services";
-import CONSTANTS from "../../constants/CONSTANTS";
 import { ObjectId } from 'mongodb';
 
 
@@ -13,9 +12,9 @@ export default async (req: Request, res: Response) => {
 
   const isProduction = process.env.NODE_ENV === "production";
 
-  const { name, email, phone, password, otp } = req.body;
+  const { name, phone, password, otp } = req.body;
 
-  if (!phone || !otp || !password || !name || !email) {
+  if (!phone || !otp || !password || !name ) {
     return JsonResponse(res, {
       status: "error",
       statusCode: 400,
@@ -38,14 +37,13 @@ export default async (req: Request, res: Response) => {
 
   const newUser = await models.User.create({
     name,
-    email,
     phone,
     password: hashedPassword,
   });
 
   await models.Otp.deleteOne({ phone });
 
-  const token = jwtConfig.jwtService.generateJWT({ email: newUser.email, id: newUser.id! });
+  const token = jwtConfig.jwtService.generateJWT({ phone: newUser.phone, id: newUser.id! });
 
     const authToken = await models.token.createToken({
       userId: new ObjectId(newUser.id as string),

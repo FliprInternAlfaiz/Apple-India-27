@@ -4,7 +4,6 @@ import { authUrls } from "../api-urls/api.url";
 
 interface SignupPayload {
   name: string;
-  email: string;
   phone: string;
   password: string;
 }
