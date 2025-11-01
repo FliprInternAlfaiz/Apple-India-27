@@ -3,7 +3,16 @@ import CONSTANTS from '../../constants/CONSTANTS';
 import { JsonResponse } from '../../utils/jsonResponse';
 
 export default async (_: Request, res: Response, __: NextFunction) => {
-  res.clearCookie(CONSTANTS.userTokenKey);
+
+    const isProduction = process.env.NODE_ENV === "production";
+
+    
+   res.clearCookie(CONSTANTS.userTokenKey, {
+     httpOnly: true,
+ sameSite: isProduction ? "none" : "lax",
+   secure: isProduction, 
+      path: "/"
+   });
 
   return JsonResponse(res, {
     status: 'success',
