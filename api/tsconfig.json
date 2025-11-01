@@ -4,13 +4,13 @@
     "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",
-    "typeRoots": ["src/types"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
   },
-  "include": ["src", "src/**/*/*.json"],
+  "include": ["src"],
   "exclude": ["src/testing", "src/**/*test.ts"]
 }
