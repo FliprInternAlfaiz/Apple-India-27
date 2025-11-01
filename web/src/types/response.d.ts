@@ -19,3 +19,4 @@ type TGetRequestParams = {
   searchFieldString?: string[];
   searchFieldBoolean?: { [key: string]: boolean }[];
 };
+  
