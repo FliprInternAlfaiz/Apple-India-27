@@ -60,12 +60,51 @@ export const getTasks = async (params?: {
   limit?: number;
   level?: string;
 }): Promise<TTaskResponse> => {
-  const response = await request({
-    url: taskUrls.GET_USER_TASKS,
-    method: "GET",
-    params,
-  });
-  return response.data as TTaskResponse;
+  try {
+    const response = await request({
+      url: taskUrls.GET_USER_TASKS,
+      method: "GET",
+      params,
+    });
+
+    const data = response?.data;
+
+    // ✅ Always return a safe default shape
+    return {
+      tasks: data?.data?.tasks || [],
+      pagination: data?.data?.pagination || {
+        currentPage: 1,
+        totalPages: 0,
+        totalTasks: 0,
+        limit: params?.limit || 10,
+      },
+      stats: data?.data?.stats || {
+        todayCompleted: 0,
+        totalAvailable: 0,
+        dailyLimit: 0,
+        remainingTasks: 0,
+        limitReached: 0,
+      },
+    };
+  } catch (error: any) {
+    // ✅ If 403 or other error, still return an empty structure
+    return {
+      tasks: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalTasks: 0,
+        limit: params?.limit || 10,
+      },
+      stats: {
+        todayCompleted: 0,
+        totalAvailable: 0,
+        dailyLimit: 0,
+        remainingTasks: 0,
+        limitReached: 0,
+      },
+    };
+  }
 };
 
 export const useInfiniteTasksQuery = (params?: {
@@ -86,13 +125,19 @@ export const useInfiniteTasksQuery = (params?: {
       return await getTasks({ ...params, page: pageParam, limit });
     },
     getNextPageParam: (lastPage) => {
-      if (lastPage.tasks.length < limit) return undefined;
-      return lastPage.pagination.currentPage + 1;
+      if (!lastPage?.tasks?.length) return undefined;
+
+      const { currentPage, totalPages } = lastPage.pagination || {};
+      if (!currentPage || currentPage >= totalPages) return undefined;
+
+      return currentPage + 1;
     },
     initialPageParam: 1,
     staleTime: 1000 * 60 * 5,
+    retry: false, 
   });
 };
+
 
 export const getTaskById = async (
   taskId: string
