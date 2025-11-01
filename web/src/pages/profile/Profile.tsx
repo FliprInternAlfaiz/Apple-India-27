@@ -47,7 +47,7 @@ const menuItems = [
   {
     icon: <FaBuilding size={24} />,
     title: "Company Introduction",
-    path: "/company",
+    path: "/company-intro",
   },
   {
     icon: <FaIdCard size={24} />,
@@ -68,6 +68,11 @@ const menuItems = [
     icon: <FaShieldAlt size={24} />,
     title: "Account Security",
     path: "/security",
+  },
+  {
+    icon: <FaFileAlt size={24} />,
+    title: "Privacy Policy",
+    path: "/privacy-policy",
   },
   {
     icon: <FaDownload size={24} />,

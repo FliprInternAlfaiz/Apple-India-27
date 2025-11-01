@@ -31,15 +31,18 @@ export type TPagination = {
 export type TTaskStats = {
   todayCompleted: number;
   totalAvailable: number;
-  dailyLimit:number;
-  remainingTasks:number;
-  limitReached:number;
+  dailyLimit: number;
+  remainingTasks: number;
+  limitReached: number;
+  userLevel: string | null;
+  userLevelNumber: number | null;
 };
 
 export type TTaskResponse = {
   tasks: TaskType[];
   pagination: TPagination;
   stats?: TTaskStats;
+  requiresLevelPurchase?: boolean;
 };
 
 export type TSingleTaskResponse = {
@@ -60,15 +63,82 @@ export const getTasks = async (params?: {
   limit?: number;
   level?: string;
 }): Promise<TTaskResponse> => {
-
+  try {
     const response = await request({
       url: taskUrls.GET_USER_TASKS,
       method: "GET",
       params,
     });
 
-    return response.data as TTaskResponse;
-  
+    // Handle successful response
+    if (response?.data) {
+      return {
+        tasks: response.data.tasks || [],
+        pagination: response.data.pagination || {
+          currentPage: 1,
+          totalPages: 0,
+          totalTasks: 0,
+          limit: params?.limit || 10,
+        },
+        stats: response.data.stats || {
+          todayCompleted: 0,
+          totalAvailable: 0,
+          dailyLimit: 0,
+          remainingTasks: 0,
+          limitReached: 0,
+          userLevel: null,
+          userLevelNumber: null,
+        },
+        requiresLevelPurchase: response.data.requiresLevelPurchase || false,
+      };
+    }
+
+    // Fallback empty response
+    return {
+      tasks: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalTasks: 0,
+        limit: params?.limit || 10,
+      },
+      stats: {
+        todayCompleted: 0,
+        totalAvailable: 0,
+        dailyLimit: 0,
+        remainingTasks: 0,
+        limitReached: 0,
+        userLevel: null,
+        userLevelNumber: null,
+      },
+    };
+  } catch (error: any) {
+    // Handle 403 - Level purchase required
+    if (error?.response?.status === 403) {
+      return {
+        tasks: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalTasks: 0,
+          limit: params?.limit || 10,
+        },
+        stats: {
+          todayCompleted: 0,
+          totalAvailable: 0,
+          dailyLimit: 0,
+          remainingTasks: 0,
+          limitReached: 0,
+          userLevel: null,
+          userLevelNumber: null,
+        },
+        requiresLevelPurchase: true,
+      };
+    }
+
+    // Re-throw other errors
+    throw error;
+  }
 };
 
 export const useInfiniteTasksQuery = (params?: {
@@ -89,28 +159,45 @@ export const useInfiniteTasksQuery = (params?: {
       return await getTasks({ ...params, page: pageParam, limit });
     },
     getNextPageParam: (lastPage) => {
+      // Don't fetch more if level purchase is required
+      if (lastPage?.requiresLevelPurchase) return undefined;
+      
       if (!lastPage?.tasks?.length) return undefined;
 
       const { currentPage, totalPages } = lastPage.pagination || {};
-      if (!currentPage || currentPage >= totalPages) return undefined;
+      if (!currentPage || !totalPages || currentPage >= totalPages) return undefined;
 
       return currentPage + 1;
     },
     initialPageParam: 1,
     staleTime: 1000 * 60 * 5,
-    retry: false, 
+    retry: (failureCount, error: any) => {
+      // Don't retry on 403 (level purchase required)
+      if (error?.response?.status === 403) return false;
+      // Retry other errors up to 2 times
+      return failureCount < 2;
+    },
   });
 };
-
 
 export const getTaskById = async (
   taskId: string
 ): Promise<TSingleTaskResponse> => {
-  const response = await request({
-    url: `${taskUrls.GET_TASK_BY_ID}/${taskId}`,
-    method: "GET",
-  });
-  return response.data as TSingleTaskResponse;
+  try {
+    const response = await request({
+      url: `${taskUrls.GET_TASK_BY_ID}/${taskId}`,
+      method: "GET",
+    });
+    
+    if (!response?.data?.task) {
+      throw new Error("Task not found");
+    }
+    
+    return response.data as TSingleTaskResponse;
+  } catch (error) {
+    console.error("Error fetching task:", error);
+    throw error;
+  }
 };
 
 export const useTaskQuery = (taskId: string) => {
@@ -119,6 +206,7 @@ export const useTaskQuery = (taskId: string) => {
     queryFn: () => getTaskById(taskId),
     enabled: !!taskId,
     staleTime: 1000 * 60 * 5,
+    retry: 2,
   });
 };
 
@@ -150,7 +238,7 @@ export const createTask = async (data: {
   level: string;
   rewardPrice: number;
   order?: number;
-}): Promise<TServerResponse> => {
+}): Promise<any> => {
   const response = await request({
     url: taskUrls.CREATE_TASK,
     method: "POST",
@@ -159,10 +247,9 @@ export const createTask = async (data: {
   return response;
 };
 
-// ---------------- MUTATION ----------------
 export const useCreateTaskMutation = () => {
   return useMutation<
-    TServerResponse,
+    any,
     unknown,
     {
       videoUrl: string;

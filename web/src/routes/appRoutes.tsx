@@ -22,6 +22,7 @@ import IdentityAuth from "../pages/company/IdentityAuth";
 import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
 import WithdrawalScreen from "../pages/withdrawalScreen/WithdrawalScreen";
 import FinancialRecords from "../pages/financialRecords/financialRecords";
+import PrivacyPolicy from "../pages/company/PrivacyPolicy";
 
 
 export const appRouter = createBrowserRouter([
@@ -50,6 +51,7 @@ export const appRouter = createBrowserRouter([
           {path:"/withdrawal",element: <WithdrawalScreen/>},
           { path: "/identity-auth", element: <IdentityAuth /> },
           { path: "/financial-records", element: <FinancialRecords /> },
+          { path: "/privacy-policy", element: <PrivacyPolicy /> },
                   ],
       },
     ],
