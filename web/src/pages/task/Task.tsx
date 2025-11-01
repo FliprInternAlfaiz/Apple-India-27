@@ -35,7 +35,6 @@ const Task: React.FC = () => {
     isFetchingNextPage,
     isLoading,
     isError,
-    error,
   } = useInfiniteTasksQuery({ 
     level: currentLevelName, 
     limit: 10 

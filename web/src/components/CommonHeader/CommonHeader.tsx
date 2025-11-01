@@ -1,7 +1,7 @@
 import React from "react";
-import { Flex, Text, ActionIcon } from "@mantine/core";
+import { Flex, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaLongArrowAltLeft } from "react-icons/fa";
+import { FaLongArrowAltLeft } from "react-icons/fa";
 
 interface CommonHeaderProps {
   heading: string;
