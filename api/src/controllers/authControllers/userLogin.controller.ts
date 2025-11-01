@@ -56,13 +56,11 @@ export default async (req: Request, res: Response, __: NextFunction) => {
     token,
   });
 
-  res.cookie(CONSTANTS.userTokenKey, authToken.token, {
+ res.cookie('userAuth', authToken.token, {
     httpOnly: true,
-sameSite: isProduction ? "none" : "lax",
-  secure: isProduction, 
-     path: "/"
+    sameSite: 'none',
+    secure: true,
   });
-
   const { password: _, ...userData } = user.toObject();
 
   return JsonResponse(res, {

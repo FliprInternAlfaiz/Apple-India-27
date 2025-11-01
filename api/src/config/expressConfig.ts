@@ -45,41 +45,14 @@ class ExpressConfig {
     });
   }
 
-  private addGlobalMiddlewares() {
-    const allowedOrigins = [
-      'https://apple-india-27-web.onrender.com', // Frontend (live)
-      'https://apple-india-27.onrender.com', // Backend (self-origin)
-      'http://localhost:5173', // Local development
-       'http://localhost:5174'
-    ];
-
-    this.app.use(
-      cors({
-        origin: (origin, callback) => {
-          if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        /\.netlify\.app$/.test(origin) 
-      ) {
-            callback(null, true);
-          } else {
-            callback(new Error('Not allowed by CORS'));
-          }
-        },
-        credentials: true,
-      })
-    );
-
-    // Handle preflight requests
-    this.app.options('*', cors());
-
-    // Common middlewares
+ private addGlobalMiddlewares() {
+    this.app.use(cors({ credentials: true, origin: true }));
     this.app.use(express.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
     this.app.use(cookieParser());
-
-    console.log('⚙️ Global middlewares configured successfully');
+    console.log('global middlewares configured');
   }
+
 
   private staticServe() {
     this.app.use('/uploads', express.static('uploads'));

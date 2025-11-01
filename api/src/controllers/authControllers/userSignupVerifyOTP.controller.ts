@@ -4,6 +4,8 @@ import encryptPassword from "../../utils/encryptPassword";
 import commonsUtils from "../../utils";
 import { jwtConfig } from "../../services";
 import CONSTANTS from "../../constants/CONSTANTS";
+import { ObjectId } from 'mongodb';
+
 
 const { JsonResponse } = commonsUtils;
 
@@ -45,11 +47,15 @@ export default async (req: Request, res: Response) => {
 
   const token = jwtConfig.jwtService.generateJWT({ email: newUser.email, id: newUser.id! });
 
-  res.cookie(CONSTANTS.userTokenKey, token, {
+    const authToken = await models.token.createToken({
+      userId: new ObjectId(newUser.id as string),
+      token,
+    });
+
+ res.cookie('userAuth', authToken.token, {
     httpOnly: true,
-  sameSite: isProduction ? "none" : "lax",
-  secure: isProduction, 
-     path: "/"
+    sameSite: 'none',
+    secure: true,
   });
 
   return JsonResponse(res, {
