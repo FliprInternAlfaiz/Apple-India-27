@@ -31,9 +31,9 @@ export interface IUser extends Document {
 
 
    // Level System (UPDATED)
-  currentLevel: string; // Apple1, Apple2, etc.
-  currentLevelNumber: number; // 1, 2, 3, etc.
-  investmentAmount: number; // Total invested
+  currentLevel: string; 
+  currentLevelNumber: number; 
+  investmentAmount: number; 
   levelUpgradedAt?: Date;
   
   // User level / tier

@@ -311,7 +311,7 @@ const LevelTasksScreen: React.FC = () => {
             {userLevel && userLevel.mainWallet < currentLevel.target
               ? `Insufficient balance. You need ₹${(
                   currentLevel.target - userLevel.mainWallet
-                ).toLocaleString()} more.`
+                ).toLocaleString()} more. Please Recharge`
               : "Complete previous levels to unlock this level."}
           </Alert>
         )}

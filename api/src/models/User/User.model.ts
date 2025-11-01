@@ -1,6 +1,6 @@
+// models/user.model.ts - Using -1 for no level
 import { Schema, model } from 'mongoose';
 import commonsUtils from '../../utils';
-import dao from '../../dao/User';
 import { IUser, IUserMethods } from '../../interface/user.interface';
 
 const schema = new Schema<IUser>(
@@ -43,58 +43,23 @@ const schema = new Schema<IUser>(
     },
 
     // Statistics
-    todayIncome: {
-      type: Number,
-      default: 0,
-    },
-    monthlyIncome: {
-      type: Number,
-      default: 0,
-    },
-    totalRevenue: {
-      type: Number,
-      default: 0,
-    },
-    totalWithdrawals: {
-      type: Number,
-      default: 0,
-    },
-    totalProfit: {
-      type: Number,
-      default: 0,
-    },
+    todayIncome: { type: Number, default: 0 },
+    monthlyIncome: { type: Number, default: 0 },
+    totalRevenue: { type: Number, default: 0 },
+    totalWithdrawals: { type: Number, default: 0 },
+    totalProfit: { type: Number, default: 0 },
 
     // Task Tracking
-    totalTasksCompleted: {
-      type: Number,
-      default: 0,
-    },
-    todayTasksCompleted: {
-      type: Number,
-      default: 0,
-    },
-    lastTaskCompletedAt: {
-      type: Date,
-      default: null,
-    },
+    totalTasksCompleted: { type: Number, default: 0 },
+    todayTasksCompleted: { type: Number, default: 0 },
+    lastTaskCompletedAt: { type: Date, default: null },
 
     withdrawalPassword: {
       type: String,
       required: false,
-      select: false, // Don't include in normal queries
+      select: false,
     },
 
-     currentLevel: {
-      type: String,
-      default: 'Apple1',
-      index: true,
-    },
-    currentLevelNumber: {
-      type: Number,
-      default: 1,
-      min: 1,
-      index: true,
-    },
     investmentAmount: {
       type: Number,
       default: 0,
@@ -105,42 +70,31 @@ const schema = new Schema<IUser>(
       default: null,
     },
 
-    // User Level/Tier
-    userLevel: {
-      type: Number,
-      default: 1,
-      min: 1,
+    // Level fields - Use -1 to indicate "no level purchased"
+    userLevel: { 
+      type: Number, 
+      default: -1  // -1 means no level
+    },
+    currentLevelNumber: { 
+      type: Number, 
+      default: -1  // -1 means no level
+    },
+    currentLevel: { 
+      type: String, 
+      default: null 
     },
     levelName: {
       type: String,
-      default: 'Bronze',
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    isSSO: {
-      type: Boolean,
-      default: false,
-    },
-
-    lastActiveDate: {
-      type: Date,
       default: null,
     },
-    lastIncomeResetDate: {
-      type: Date,
-      default: Date.now,
-    },
-    lastMonthlyResetDate: {
-      type: Date,
-      default: Date.now,
-    },
+
+    isActive: { type: Boolean, default: true },
+    isVerified: { type: Boolean, default: false },
+    isSSO: { type: Boolean, default: false },
+
+    lastActiveDate: { type: Date, default: null },
+    lastIncomeResetDate: { type: Date, default: Date.now },
+    lastMonthlyResetDate: { type: Date, default: Date.now },
 
     referralCode: {
       type: String,
@@ -152,21 +106,16 @@ const schema = new Schema<IUser>(
       ref: 'user',
       default: null,
     },
-    totalReferrals: {
-      type: Number,
-      default: 0,
-    },
+    totalReferrals: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
 
 schema.index({ phone: 1 });
 schema.index({ email: 1 });
-schema.index({ username: 1 });
 schema.index({ referralCode: 1 });
 schema.index({ lastActiveDate: 1 });
 
-commonsUtils.dbUtils.registerDaos(schema, dao);
 commonsUtils.dbUtils.handleDuplicates(schema, 'email');
 commonsUtils.dbUtils.handleDuplicates(schema, 'phone');
 

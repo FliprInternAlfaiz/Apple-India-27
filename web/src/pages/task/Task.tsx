@@ -18,7 +18,7 @@ const Task: React.FC = () => {
     }
   }, []);
 
-  const currentLevelName = userLevel?.currentLevel || "Apple1";
+  const currentLevelName = userLevel?.currentLevel;
 
   const {
     data,
@@ -80,21 +80,19 @@ const Task: React.FC = () => {
   const progressPercentage =
     dailyLimit > 0 ? (todayCompleted / dailyLimit) * 100 : 0;
 
-  const limitReached = stats?.limitReached || todayCompleted >= dailyLimit;
-
   return (
     <Flex className={classes.taskContainer} direction="column">
       <Flex className={classes.taskInfoBox} direction="column">
         <Flex align="center" justify="space-between" mb="md">
           <Text size="xl" fw={700}>
-            {currentLevelName}
+            {currentLevelName == "null" ? "No Level": currentLevelName}
           </Text>
           <Badge
             size="lg"
             variant="gradient"
             gradient={{ from: "blue", to: "cyan" }}
           >
-            Level {userLevel?.currentLevelNumber || 1}
+            {userLevel?.currentLevelNumber == -1 ? "Please Purchase Level":  `Level ${userLevel?.currentLevelNumber}`}
           </Badge>
         </Flex>
 
@@ -135,40 +133,11 @@ const Task: React.FC = () => {
           </Flex>
         </Flex>
 
-        {limitReached && (
-          <Alert
-            color="teal"
-            mt="md"
-            icon={<CheckCircle size={16} color="#00b894" />}
-            style={{ background: "#55efc4", color: "#2d3436", fontWeight: 500 }}
-          >
-            🎉 Daily task limit reached! Come back tomorrow for more tasks.
-          </Alert>
-        )}
       </Flex>
 
       {/* Task List */}
       <Flex direction="column" className={classes.taskItemContainer}>
-        {limitReached ? (
-          <Flex
-            direction="column"
-            justify="center"
-            align="center"
-            flex={1}
-            gap="md"
-            style={{ padding: "2rem" }}
-          >
-            <Trophy size={64} color="#40c057" />
-            <Text size="xl" fw={700} ta="center">
-              All Tasks Completed!
-            </Text>
-            <Text size="sm" c="dimmed" ta="center">
-              You've completed all {dailyLimit} tasks for today.
-              <br />
-              Come back tomorrow to continue earning.
-            </Text>
-          </Flex>
-        ) : allTasks.length === 0 ? (
+       { allTasks.length === 0 ? (
           <Flex
             direction="column"
             justify="center"
@@ -177,7 +146,7 @@ const Task: React.FC = () => {
             gap="md"
           >
             <Text size="lg" c="gray" ta="center">
-              No tasks available for {currentLevelName}
+              No tasks available. Please purchase & upgrade Level
             </Text>
             <Text size="sm" c="dimmed" ta="center">
               Check back later for new tasks

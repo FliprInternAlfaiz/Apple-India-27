@@ -8,7 +8,7 @@ const schema = new Schema<ILevel>(
       type: Number,
       required: true,
       unique: true,
-      min: 1,
+
     },
     levelName: {
       type: String,

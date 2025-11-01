@@ -1,22 +1,35 @@
-// scripts/seedLevels.ts
 import models from "../models";
 
 export const seedLevelsData = async () => {
   try {
     const levelsData = [
       {
+        levelNumber: 0,
+        levelName: "AppleMini",
+        investmentAmount: 1800,
+        rewardPerTask: 15,
+        dailyTaskLimit: 4,
+        aLevelCommissionRate: 6,
+        bLevelCommissionRate: 2,
+        cLevelCommissionRate: 1,
+        isActive: true,
+        order: 0,
+        icon: '🍏',
+        description: 'Entry level - Watch 4 videos = Earn ₹60/day',
+      },
+      {
         levelNumber: 1,
         levelName: "Apple1",
-        investmentAmount: 0, // Free tier
-        rewardPerTask: 40,
-        dailyTaskLimit: 6,
+        investmentAmount: 6000,
+        rewardPerTask: 25,
+        dailyTaskLimit: 8,
         aLevelCommissionRate: 8,
         bLevelCommissionRate: 3,
         cLevelCommissionRate: 1,
         isActive: true,
         order: 1,
-        icon: '🍏',
-        description: 'Start earning with free tasks',
+        icon: '🍎',
+        description: 'Watch 8 videos = Earn ₹200/day',
       },
       {
         levelNumber: 2,

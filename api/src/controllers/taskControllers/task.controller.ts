@@ -1,4 +1,4 @@
-// controllers/task.controller.ts - UPDATED with Level Filtering
+// controllers/task.controller.ts - UPDATED with Level Purchase Check
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
@@ -22,29 +22,69 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
       });
     }
 
-    // Default values
-    let userLevel = "Apple1";
-    let userLevelNumber = 1;
-    let dailyLimit = 12;
-
     // Fetch user details
     const user = await models.User.findById(userId).select(
       "currentLevel currentLevelNumber todayTasksCompleted"
     );
 
-    if (user) {
-      userLevel = user.currentLevel || "Apple1";
-      userLevelNumber = user.currentLevelNumber || 1;
-
-      const levelConfig = await models.level.findOne({
-        levelNumber: userLevelNumber,
-        isActive: true,
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "User not found.",
+        title: "Tasks",
       });
-
-      if (levelConfig) {
-        dailyLimit = levelConfig.dailyTaskLimit;
-      }
     }
+
+    // Check if user has purchased a level
+    const hasNoLevel = !user.currentLevel || user.currentLevelNumber === null || user.currentLevelNumber === undefined;
+
+    if (hasNoLevel) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: "Please purchase a level first to access tasks.",
+        title: "Tasks",
+        data: {
+          requiresLevelPurchase: true,
+          tasks: [],
+          pagination: {
+            currentPage: Number(page),
+            totalPages: 0,
+            totalTasks: 0,
+            limit: Number(limit),
+          },
+          stats: {
+            todayCompleted: 0,
+            dailyLimit: 0,
+            totalAvailable: 0,
+            remainingTasks: 0,
+            limitReached: false,
+            userLevel: null,
+            userLevelNumber: null,
+          },
+        },
+      });
+    }
+
+    const userLevel = user.currentLevel;
+    const userLevelNumber = user.currentLevelNumber;
+
+    const levelConfig = await models.level.findOne({
+      levelNumber: userLevelNumber,
+      isActive: true,
+    });
+
+    if (!levelConfig) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "Level configuration not found.",
+        title: "Tasks",
+      });
+    }
+
+    const dailyLimit = levelConfig.dailyTaskLimit;
 
     // Query only tasks matching current level
     const query: any = { isActive: true, level: userLevel };
@@ -96,6 +136,7 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
       title: "Tasks",
       message: "Tasks retrieved successfully.",
       data: {
+        requiresLevelPurchase: false,
         tasks,
         pagination: {
           currentPage: Number(page),
@@ -111,6 +152,8 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
           limitReached,
           userLevel,
           userLevelNumber,
+          rewardPerTask: levelConfig.rewardPerTask,
+          maxDailyEarning: levelConfig.rewardPerTask * dailyLimit,
         },
       },
     });
@@ -141,6 +184,24 @@ export const getTaskById = async (
         message: "Invalid task ID.",
         title: "Get Task",
       });
+    }
+
+    // Check if user has purchased a level
+    if (userId) {
+      const user = await models.User.findById(userId).select("currentLevel currentLevelNumber");
+      
+      if (user) {
+        const hasNoLevel = !user.currentLevel || user.currentLevelNumber === null || user.currentLevelNumber === undefined;
+        
+        if (hasNoLevel) {
+          return JsonResponse(res, {
+            status: "error",
+            statusCode: 403,
+            message: "Please purchase a level first to access tasks.",
+            title: "Get Task",
+          });
+        }
+      }
     }
 
     const task = await models.task.findById(taskId).lean();
@@ -261,9 +322,21 @@ export const completeTask = async (
       });
     }
 
+    // Check if user has purchased a level
+    const hasNoLevel = !user.currentLevel || user.currentLevelNumber === null || user.currentLevelNumber === undefined;
+
+    if (hasNoLevel) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: "Please purchase a level first to complete tasks.",
+        title: "Complete Task",
+      });
+    }
+
     // Get user's current level configuration
     const userLevelConfig = await models.level.findOne({
-      levelNumber: user.currentLevelNumber || 1,
+      levelNumber: user.currentLevelNumber,
       isActive: true,
     });
 
@@ -382,7 +455,6 @@ export const completeTask = async (
     });
   }
 };
-
 
 export const createTask = async (
   req: Request,

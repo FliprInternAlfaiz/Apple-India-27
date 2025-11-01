@@ -2,7 +2,7 @@ import { Model } from "mongoose";
 
 export interface ILevel extends Document {
   levelNumber: number;
-  levelName: string; // Apple1, Apple2, etc.
+  levelName: string; 
   investmentAmount: number; // Amount needed to unlock this level
   rewardPerTask: number; // Earnings per video/task
   dailyTaskLimit: number; // Maximum tasks per day
