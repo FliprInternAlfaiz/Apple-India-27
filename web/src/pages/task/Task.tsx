@@ -65,7 +65,7 @@ const Task: React.FC = () => {
 
   const handlePurchaseLevel = () => {
     // Navigate to level purchase page
-    navigate("/levels");
+    navigate("/level");
   };
 
   // Loading state
