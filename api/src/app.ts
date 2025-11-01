@@ -5,7 +5,8 @@ import ExpressConfig from './config/expressConfig';
 import Config from './config/serverConfig';
 import cookieParser from 'cookie-parser';
 import "./crons/autoApproveRecharge"; 
-
+import dotenv from "dotenv";
+dotenv.config();
 if (process.env.NODE_ENV === 'test') config({ path: '.env.test' });
 
 const PORT = process.env.PORT ?? 4000;
