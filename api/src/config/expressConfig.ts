@@ -39,24 +39,70 @@ class ExpressConfig {
   private configureRoutes(routes: any[]) {
     return this.app.listen(this.PORT, () => {
       console.log(`✅ Server listening on port: ${this.PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+      console.log(`🔗 Allowed Origins: ${process.env.ALLOWED_ORIGINS}`);
       routes.forEach((route) => {
         console.log('📍 Listening for route:', route.name);
       });
     });
   }
 
- private addGlobalMiddlewares() {
-    this.app.use(cors({ credentials: true, origin: true }));
+  private addGlobalMiddlewares() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Get allowed origins from env
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(origin => origin.trim()) || [];
+    
+    console.log('🔒 Allowed Origins:', allowedOrigins);
+
+    const corsOptions = {
+      origin: (origin: string | undefined, callback: Function) => {
+        console.log('🌐 Request from origin:', origin);
+        
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) {
+          console.log('✅ No origin - allowing request');
+          return callback(null, true);
+        }
+        
+        // In development, allow all
+        if (!isProduction) {
+          console.log('✅ Development mode - allowing all origins');
+          return callback(null, true);
+        }
+        
+        // In production, check against whitelist
+        if (allowedOrigins.includes(origin)) {
+          console.log('✅ Origin allowed:', origin);
+          callback(null, true);
+        } else {
+          console.log('❌ Origin not allowed:', origin);
+          callback(null, false); // Don't throw error, just deny
+        }
+      },
+      credentials: true, // CRITICAL: Allow cookies and authorization headers
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+      exposedHeaders: ['Set-Cookie'],
+      maxAge: 86400, // 24 hours
+      optionsSuccessStatus: 200
+    };
+
+    // Apply CORS
+    this.app.use(cors(corsOptions));
+    this.app.options('*', cors(corsOptions));
+
+    // Parse cookies
+    this.app.use(cookieParser());
     this.app.use(express.json());
     this.app.use(bodyParser.urlencoded({ extended: true }));
-    this.app.use(cookieParser());
-    console.log('global middlewares configured');
+    
+    console.log('✅ Global middlewares configured');
   }
-
 
   private staticServe() {
     this.app.use('/uploads', express.static('uploads'));
-    console.log('📦 Static content served successfully');
+    console.log('📦 Static content served');
   }
 }
 

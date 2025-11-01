@@ -5,6 +5,7 @@ import { authUrls } from "../api-urls/api.url";
 const logoutRequest = async () => {
   const response = await request({
     url: authUrls.LOGOUT, 
+    withCredentials: true,
     method: "POST",
   });
   return response;

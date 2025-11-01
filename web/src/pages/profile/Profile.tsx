@@ -94,38 +94,53 @@ const Profile: React.FC = () => {
     }
   }, [data, isError, dispatch, navigate]);
 
-  const formatCurrency = (value: number): string => value.toFixed(2);
+  const formatCurrency = (value?: number): string => {
+    return value !== undefined ? value.toFixed(2) : "0.00";
+  };
 
-  const getInitials = (name: string): string =>
-    name
+  const getInitials = (name?: string): string => {
+    if (!name || typeof name !== "string" || name.trim() === "") {
+      return "U";
+    }
+
+    return name
+      .trim()
       .split(" ")
+      .filter((n) => n.length > 0)
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
 
   const handleMenuClick = async (path: string) => {
     if (path === "logout") {
       try {
         const res = await logoutMutation.mutateAsync();
         if (res.status === "success") {
-          refetch();
+          // Clear all auth data
+          localStorage.removeItem("authToken");
           localStorage.clear();
+          refetch();
           notifications.show({
             title: "Logout Successful",
             message: "You have been logged out successfully.",
             color: "green",
           });
+
           navigate("/login");
         }
       } catch (error: any) {
+        localStorage.removeItem("authToken");
+        localStorage.clear();
+
         notifications.show({
-          title: "Logout Failed",
-          message:
-            error?.response?.data?.message ||
-            "Something went wrong. Please try again.",
-          color: "red",
+          title: "Logged Out",
+          message: "You have been logged out.",
+          color: "blue",
         });
+
+        navigate("/login");
       }
       return;
     }
@@ -193,7 +208,7 @@ const Profile: React.FC = () => {
               >
                 <img
                   src={userData.picture}
-                  alt={userData.name}
+                  alt={userData.name || "User"}
                   style={{
                     width: "100%",
                     height: "100%",
@@ -223,7 +238,7 @@ const Profile: React.FC = () => {
 
             <Flex direction="column">
               <Text size="sm" c="#fff" fw={500}>
-                {userData.phone}
+                {userData.phone || "N/A"}
               </Text>
               <Box
                 mt={10}
@@ -237,7 +252,7 @@ const Profile: React.FC = () => {
                   alignSelf: "flex-start",
                 }}
               >
-                {userData.username}
+                {userData.username || userData.name || "User"}
               </Box>
               {userData.levelName && (
                 <Box
@@ -252,7 +267,7 @@ const Profile: React.FC = () => {
                     alignSelf: "flex-start",
                   }}
                 >
-                  {userData.levelName} • Level {userData.userLevel}
+                  {userData.levelName} • Level {userData.userLevel || 0}
                 </Box>
               )}
             </Flex>

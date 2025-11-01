@@ -52,11 +52,24 @@ export default async (req: Request, res: Response) => {
       token,
     });
 
- res.cookie('userAuth', authToken.token, {
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true,
-  });
+ const cookieOptions: any = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    };
+
+    // Don't set domain for cross-origin (Render + Netlify)
+    const cookieDomain = process.env.COOKIE_DOMAIN;
+    if (isProduction && cookieDomain && cookieDomain.trim() !== '') {
+      const cleanDomain = cookieDomain.replace(/^https?:\/\//, '');
+      if (cleanDomain && cleanDomain !== '') {
+        cookieOptions.domain = cleanDomain;
+      }
+    }
+
+    res.cookie('userAuth', authToken.token, cookieOptions);
 
   return JsonResponse(res, {
     status: "success",

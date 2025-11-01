@@ -12,6 +12,7 @@ interface SignupPayload {
 const signupRequest = async (payload: SignupPayload) => {
   const response = await request({
     url: authUrls.SIGNUP,
+    withCredentials: true,
     method: "POST",
     data: payload,
   });

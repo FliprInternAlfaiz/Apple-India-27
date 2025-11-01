@@ -10,6 +10,7 @@ interface LoginPayload {
 const loginRequest = async (payload: LoginPayload) => {
   const response = await request({
     url: authUrls.LOGIN,
+    withCredentials: true,
     method: "POST",
     data: payload,
   });
