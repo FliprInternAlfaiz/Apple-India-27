@@ -11,7 +11,7 @@ const TeamManagementScreen = () => {
     { level: "Level C", people: 0, icon: <FaCrown color="#CD7F32"/>,  }, 
   ];
 
-    const totalMembers = teamLevels.reduce((sum, lvl) => sum + lvl.people, 0);
+    const totalMembers =0;
 
 
   const managementOptions = [
