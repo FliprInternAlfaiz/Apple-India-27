@@ -8,10 +8,8 @@ const rechargePrefix = "/recharge"
 
 const levelPrefix = "/level";
   
-
 export const authUrls = {
   LOGIN: authPrefix + "/login",
-  VERIFYSIGNUPOTP: authPrefix + "/otp/verify",
   SIGNUP: authPrefix + "/signup",
   VERIFYUSER:authPrefix + "/profile",
   LOGOUT:authPrefix + "/logout"

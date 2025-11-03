@@ -15,5 +15,4 @@ export default (router: Router) => {
   );
   router.get('/user/profile', commonsMiddleware.checkUserAuth, getUserProfile);
   router.post('/user/logout', commonsMiddleware.checkUserAuth, userLogout);
-  router.post('/user/otp/verify', authController.userSignupVerifyOtp);
 };

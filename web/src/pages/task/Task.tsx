@@ -120,15 +120,16 @@ const Task: React.FC = () => {
           gap="lg"
         >
           <ShoppingCart size={64} color="#868e96" />
-          <Text size="xl" fw={600} ta="center">
+          <Text size="xl" fw={600} ta="center" c="#868e96">
             Purchase a Level to Access Tasks
           </Text>
-          <Text size="sm" c="dimmed" ta="center" maw={400}>
+          <Text size="sm" c="#868e96" ta="center" maw={400}>
             You need to purchase a level before you can start completing tasks and earning rewards.
           </Text>
           <Button
-            size="lg"
-            variant="gradient"
+            size="md"
+            variant="filled"
+            color="#868e96"
             gradient={{ from: "blue", to: "cyan" }}
             onClick={handlePurchaseLevel}
             leftSection={<ShoppingCart size={20} />}
