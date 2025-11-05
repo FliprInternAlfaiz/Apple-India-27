@@ -1,14 +1,12 @@
-import cron from "node-cron";
-import models from "../models";
+import cron from 'node-cron';
+import models from '../models';
 
-cron.schedule("* * * * *", async () => {
+cron.schedule('* * * * *', async () => {
   try {
-    console.log("⏰ Auto Recharge Cron Started...");
-
     const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000);
 
     const pendingRecharges = await models.recharge.find({
-      status: "processing",
+      status: 'processing',
       submittedAt: { $lte: oneMinuteAgo },
     });
 
@@ -19,16 +17,12 @@ cron.schedule("* * * * *", async () => {
       user.mainWallet = (user.mainWallet || 0) + recharge.amount;
       await user.save();
 
-      recharge.status = "completed";
+      recharge.status = 'completed';
       recharge.approvedAt = new Date();
-      recharge.remarks = "Auto-approved by system after 1 minute.";
+      recharge.remarks = 'Auto-approved by system after 1 minute.';
       await recharge.save();
-
-      console.log(`✅ Auto-approved recharge: ${recharge.orderId}`);
     }
-
-    console.log(`⚡ Auto Recharge Cron Completed.`);
   } catch (error) {
-    console.error("❌ Error in auto-approve cron:", error);
+    console.error('❌ Error in auto-approve cron:', error);
   }
 });

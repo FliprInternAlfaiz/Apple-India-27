@@ -11,9 +11,6 @@ export default async (req: Request, res: Response, __: NextFunction) => {
   try {
     const { phone, password } = req.body;
 
-    console.log('🔑 Login attempt for:', phone);
-    console.log('🌍 Environment:', process.env.NODE_ENV);
-
     if (!phone || !password) {
       return JsonResponse(res, {
         status: "error",
@@ -28,7 +25,6 @@ export default async (req: Request, res: Response, __: NextFunction) => {
     const user = await models.User.findOne({ phone });
 
     if (!user) {
-      console.log('❌ User not found:', phone);
       return JsonResponse(res, {
         status: "error",
         statusCode: 401,
@@ -48,7 +44,6 @@ export default async (req: Request, res: Response, __: NextFunction) => {
 
     const isValidPassword = bcrypt.compareSync(password, user.password);
     if (!isValidPassword) {
-      console.log('❌ Invalid password for:', phone);
       return JsonResponse(res, {
         status: "error",
         statusCode: 400,
@@ -70,9 +65,6 @@ export default async (req: Request, res: Response, __: NextFunction) => {
       token,
     });
 
-    console.log('✅ Token generated');
-
-    // FIXED: Cookie configuration for production deployment
     const cookieOptions: any = {
       httpOnly: true,
       secure: isProduction, // true in production, false in dev
@@ -94,8 +86,6 @@ export default async (req: Request, res: Response, __: NextFunction) => {
         cookieOptions.domain = cleanDomain;
       }
     }
-
-    console.log('🍪 Setting cookie with options:', cookieOptions);
 
     res.cookie('userAuth', authToken.token, cookieOptions);
 

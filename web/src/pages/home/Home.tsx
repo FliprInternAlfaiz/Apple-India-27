@@ -26,7 +26,7 @@ const menuItems = [
   { icon: <FaTicketAlt />, title: "Lucky Draw", path: "/lucky-draw" },
   { icon: <FaMoneyBillWave />, title: "Financial Management Fund", path: "/finance-fund" },
   { icon: <FaUniversity />, title: "Recharge", path: "/recharge" },
-  { icon: <FaIdCard />, title: "Identity Authentication", path: "/identity-auth" },
+  { icon: <FaIdCard />, title: "Identity Authentication", path: "/identity-verification" },
 ];
 
 const ads = [IMAGES.ad1, IMAGES.ad2];

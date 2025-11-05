@@ -24,6 +24,7 @@ interface UserResponse {
   isVerified: boolean;
   referralCode?: string;
   totalReferrals: number;
+  teamLevel:string;
 }
 
 interface TServerResponse {

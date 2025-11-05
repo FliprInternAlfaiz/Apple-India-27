@@ -11,19 +11,18 @@ import Login from "../pages/login/Login";
 import Signup from "../pages/signup/Signup";
 import CompanyIntro from "../pages/company/CompanyIntro";
 import CompanyActivities from "../pages/company/CompanyActivities";
-import ConferenceNews from "../pages/company/ConferenceNews";
 import MemberBenefits from "../pages/company/MemberBenefits";
 import ManagementPositions from "../pages/company/ManagementPositions";
 import TeamExpansion from "../pages/company/TeamExpansion";
-import LuckyDraw from "../pages/company/LuckyDraw";
 import FinanceFund from "../pages/company/FinanceFund";
 import Recharge from "../pages/company/Recharge";
-import IdentityAuth from "../pages/company/IdentityAuth";
 import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
 import WithdrawalScreen from "../pages/withdrawalScreen/WithdrawalScreen";
 import FinancialRecords from "../pages/financialRecords/financialRecords";
 import PrivacyPolicy from "../pages/company/PrivacyPolicy";
-
+import IdentityVerificationScreen from "../pages/IdentityVerification/IdentityVerificationScreen";
+import ConferenceNewsScreen from "../pages/ConferenceNewsScreen/ConferenceNewsScreen";
+import LuckyDrawScreen from "../pages/luckydrawScreen/LuckyDrawScreen";
 
 export const appRouter = createBrowserRouter([
   {
@@ -31,7 +30,7 @@ export const appRouter = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <TheLayout />, 
+        element: <TheLayout />,
         children: [
           { path: "/", element: <Home /> },
           { path: "/task", element: <Task /> },
@@ -41,18 +40,21 @@ export const appRouter = createBrowserRouter([
           { path: "/profile", element: <Profile /> },
           { path: "/company-intro", element: <CompanyIntro /> },
           { path: "/company-activities", element: <CompanyActivities /> },
-          { path: "/conference-news", element: <ConferenceNews /> },
+          { path: "/conference-news", element: <ConferenceNewsScreen /> },
           { path: "/member-benefits", element: <MemberBenefits /> },
           { path: "/management-positions", element: <ManagementPositions /> },
           { path: "/team-expansion", element: <TeamExpansion /> },
-          { path: "/lucky-draw", element: <LuckyDraw /> },
+          { path: "/lucky-draw", element: <LuckyDrawScreen /> },
           { path: "/finance-fund", element: <FinanceFund /> },
           { path: "/recharge", element: <Recharge /> },
-          {path:"/withdrawal",element: <WithdrawalScreen/>},
-          { path: "/identity-auth", element: <IdentityAuth /> },
+          { path: "/withdrawal", element: <WithdrawalScreen /> },
           { path: "/financial-records", element: <FinancialRecords /> },
           { path: "/privacy-policy", element: <PrivacyPolicy /> },
-                  ],
+          {
+            path: "/identity-verification",
+            element: <IdentityVerificationScreen />,
+          },
+        ],
       },
     ],
   },

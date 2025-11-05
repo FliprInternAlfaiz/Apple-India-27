@@ -1,0 +1,64 @@
+.modalBody {
+  padding: 1.5rem;
+  background: #f9f9ff;
+  border-radius: 0 0 1rem 1rem;
+}
+
+.imageWrapper {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modalImage {
+  width: 100%;
+  object-fit: cover;
+}
+
+.closeIcon {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+  }
+}
+
+.statBox {
+  padding: 1rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+  border-radius: 1rem;
+  text-align: center;
+  transition: transform 0.25s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  p {
+    color: #555;
+  }
+}
+
+.prizeBox {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #fff5f5, #ffe0e0);
+  border-left: 5px solid #f87171;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateX(5px);
+  }
+
+  span {
+    font-weight: 600;
+    color: #ff7043;
+  }
+}

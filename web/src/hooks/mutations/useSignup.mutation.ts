@@ -6,6 +6,7 @@ interface SignupPayload {
   name: string;
   phone: string;
   password: string;
+  referralCode?:string;
 }
 
 const signupRequest = async (payload: SignupPayload) => {

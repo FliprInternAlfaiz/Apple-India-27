@@ -7,6 +7,10 @@ import WithdrawalModel from "./Recharge/Withdrawal.model";
 import PaymentMethodModel from "./UserRecharge/PaymentMethod.model";
 import RechargeModel from "./UserRecharge/Recharge.model";
 import levelModel from "./Level/Level.model";
+import TeamReferral from "./teamReferral/teamReferral.model";
+import ConferenceNewsModel from "./ConferenceNews/ConferenceNews.model";
+import { LuckyDraw, LuckyDrawParticipant } from "./Luckydraw/LuckyDraw.model";
+
 const models = {
   User: UserModel,
   token: tokenModel,
@@ -17,6 +21,10 @@ const models = {
   paymentMethod:PaymentMethodModel,
   recharge:RechargeModel,
   level:levelModel,
+  TeamReferral:TeamReferral,
+  ConferenceNews:ConferenceNewsModel,
+  LuckyDraw: LuckyDraw,
+  LuckyDrawParticipant: LuckyDrawParticipant,
 };
 
 export default models;

@@ -1,7 +1,5 @@
-// routes/withdrawal.routes.ts
 import { Router } from "express";
 import { commonsMiddleware } from "../../middleware";
-import { Validators } from "../../validators";
 import withdrawalController from "../../controllers/withdrawalControllers/withdrawal.controller";
 
 const {
@@ -16,7 +14,6 @@ const {
 } = withdrawalController;
 
 export default (router: Router) => {
-  // Bank account routes
   router.get(
     "/bank-accounts",
     commonsMiddleware.checkUserAuth,
@@ -41,14 +38,12 @@ export default (router: Router) => {
     setDefaultAccount
   );
 
-  // Wallet routes
   router.get(
     "/wallet-info",
     commonsMiddleware.checkUserAuth,
     getWalletInfo
   );
 
-  // Withdrawal routes
   router.post(
     "/create",
     commonsMiddleware.checkUserAuth,
@@ -61,7 +56,6 @@ export default (router: Router) => {
     getWithdrawalHistory
   );
 
-  // Withdrawal password
   router.post(
     "/set-password",
     commonsMiddleware.checkUserAuth,

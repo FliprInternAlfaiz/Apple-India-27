@@ -2,14 +2,24 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// Create upload directories
+/* ============================================================
+   ✅ Create upload directories if not exist
+============================================================ */
 const videoDir = "uploads/videos";
 const proofDir = "uploads/paymentProofs";
+const aadhaarDir = "uploads/aadhaar";
+const newsDir = "uploads/conference-news";
+const luckyDrawDir = "uploads/lucky-draw";
 
-if (!fs.existsSync(videoDir)) fs.mkdirSync(videoDir, { recursive: true });
-if (!fs.existsSync(proofDir)) fs.mkdirSync(proofDir, { recursive: true });
+[videoDir, proofDir, aadhaarDir, newsDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
-// ---------- Storage for videos ----------
+/* ============================================================
+   ✅ Storage configurations
+============================================================ */
+
+// ---------- Video Storage ----------
 const videoStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, videoDir),
   filename: (req, file, cb) => {
@@ -20,7 +30,7 @@ const videoStorage = multer.diskStorage({
   },
 });
 
-// ---------- Storage for payment proofs (any file) ----------
+// ---------- Payment Proof Storage ----------
 const proofStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, proofDir),
   filename: (req, file, cb) => {
@@ -30,6 +40,37 @@ const proofStorage = multer.diskStorage({
     cb(null, `${nameWithoutExt}-${uniqueSuffix}${ext}`);
   },
 });
+
+// ---------- Aadhaar Storage ----------
+const aadhaarStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, aadhaarDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `aadhaar-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+// ---------- Conference News Storage ----------
+const newsStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, newsDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `news-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+const luckyDrawStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, luckyDrawDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `lucky-draw-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+
+/* ============================================================
+   ✅ File Filters
+============================================================ */
 
 // ---------- Video Filter ----------
 const videoFilter = (
@@ -58,12 +99,58 @@ const proofFilter = (
   req: any,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
+) => cb(null, true);
+
+// ---------- Aadhaar Filter ----------
+const aadhaarFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
 ) => {
-  // Allow any type (image, pdf, docx, etc.)
-  cb(null, true);
+  const allowedTypes = /jpeg|jpg|png|pdf/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) cb(null, true);
+  else cb(new Error("Only JPEG, JPG, PNG, or PDF files are allowed for Aadhaar!"));
 };
 
-// ---------- Upload Middleware Instances ----------
+// ---------- Conference News Filter ----------
+const newsFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) cb(null, true);
+  else cb(new Error("Only image files are allowed for news upload!"));
+};
+
+const luckyDrawFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) cb(null, true);
+  else cb(new Error("Only image files are allowed for lucky draw upload!"));
+};
+
+/* ============================================================
+   ✅ Upload Middleware Instances
+============================================================ */
 export const videoUpload = multer({
   storage: videoStorage,
   fileFilter: videoFilter,
@@ -73,13 +160,39 @@ export const videoUpload = multer({
 export const paymentProofUpload = multer({
   storage: proofStorage,
   fileFilter: proofFilter,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB for proof
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
 });
 
+export const aadhaarUpload = multer({
+  storage: aadhaarStorage,
+  fileFilter: aadhaarFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+export const newsUpload = multer({
+  storage: newsStorage,
+  fileFilter: newsFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+export const luckyDrawUpload = multer({
+  storage: luckyDrawStorage,
+  fileFilter: luckyDrawFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+/* ============================================================
+   ✅ Single Upload Helpers
+============================================================ */
 export const uploadSingleVideo = videoUpload.single("video");
 export const uploadPaymentProof = paymentProofUpload.single("paymentProof");
+export const uploadAadhaarFile = aadhaarUpload.single("aadhaarPhoto");
+export const uploadConferenceNews = newsUpload.single("newsImage");
+export const uploadLuckyDrawImage = luckyDrawUpload.single("luckyDrawImage");
 
-// ---------- Error Handler ----------
+/* ============================================================
+   ✅ Error Handler Middleware
+============================================================ */
 export const handleMulterError = (err: any, req: any, res: any, next: any) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {

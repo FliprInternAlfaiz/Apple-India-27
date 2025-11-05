@@ -1,7 +1,6 @@
 // store/slices/authSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-
 interface UserStats {
   todayIncome: number;
   monthlyIncome: number;
@@ -18,33 +17,35 @@ interface UserData {
   phone: string;
   username: string;
   picture?: string;
-  
+
   // Wallets
   mainWallet: number;
   commissionWallet: number;
-  
+
   // Statistics
   todayIncome: number;
   monthlyIncome: number;
   totalRevenue: number;
   totalWithdrawals: number;
   totalProfit: number;
-  
+
   // Tasks
   totalTasksCompleted: number;
   todayTasksCompleted: number;
-  
+
   // Level
   userLevel: number;
   levelName: string;
-  
+
   // Status
   isActive: boolean;
   isVerified: boolean;
-  
+
   // Referral
   referralCode?: string;
   totalReferrals: number;
+
+  teamLevel: string | undefined;
 }
 
 interface AuthData {
@@ -101,7 +102,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { login, logout, updateUserWallet, updateUserStats, updateUserProfile } =
-  authSlice.actions;
+export const {
+  login,
+  logout,
+  updateUserWallet,
+  updateUserStats,
+  updateUserProfile,
+} = authSlice.actions;
 
 export default authSlice.reducer;

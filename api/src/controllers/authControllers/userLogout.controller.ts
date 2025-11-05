@@ -5,9 +5,7 @@ import models from '../../models';
 export default async (req: Request, res: Response, _: NextFunction) => {
 
   try {
-    console.log('👋 Logout request');
 
-    // Get token from cookie or header
     let token = req.cookies?.userAuth;
     
     if (!token) {
@@ -21,10 +19,8 @@ export default async (req: Request, res: Response, _: NextFunction) => {
     if (token) {
       try {
         await models.token.deleteOne({ token });
-        console.log('✅ Token deleted from database');
       } catch (err) {
         console.error('⚠️ Token deletion error:', err);
-        // Continue with logout even if token deletion fails
       }
     }
 
@@ -48,7 +44,6 @@ export default async (req: Request, res: Response, _: NextFunction) => {
     }
 
     res.clearCookie('userAuth', clearOptions);
-    console.log('✅ Cookie cleared');
 
     return JsonResponse(res, {
       status: 'success',

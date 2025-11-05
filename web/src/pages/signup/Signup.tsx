@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/screens/Signup.tsx
+import React, { useEffect, useState } from "react";
 import {
   TextInput,
   PasswordInput,
@@ -7,8 +8,9 @@ import {
   Flex,
   Paper,
   Title,
+  Alert,
 } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { useSignupMutation } from "../../hooks/mutations/useSignup.mutation";
 import { useAppDispatch } from "../../store/hooks";
@@ -20,15 +22,25 @@ import { useVerifyUserQuery } from "../../hooks/query/useGetVerifyUser.query";
 const Signup: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
+  
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
   });
 
   const { mutate: signup, isPending: signingUp } = useSignupMutation();
   const { refetch } = useVerifyUserQuery();
+
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+    }
+  }, [searchParams]);
 
   const validateForm = () => {
     const { name, phone, password, confirmPassword } = formData;
@@ -72,22 +84,26 @@ const Signup: React.FC = () => {
     return true;
   };
 
- const handleSignup = () => {
+  const handleSignup = () => {
     if (!validateForm()) return;
 
-    const { name, phone, password } = formData;
+    const { name, phone, password, referralCode } = formData;
 
     signup(
-      { name, phone, password },
+      { 
+        name, 
+        phone, 
+        password,
+        referralCode: referralCode.trim() || undefined
+      },
       {
         onSuccess: async (res: any) => {
-          console.log("API Response:", res);
 
           if (res?.status === "success") {
             dispatch(login(res.data));
             showNotification({
-              title: res?.title || "Signup Successful",
-              message: res?.message || "Account created successfully.",
+              title: res?.data?.title || "Signup Successful",
+              message: res?.data?.message || "Account created successfully.",
               color: "green",
             });
 
@@ -97,8 +113,8 @@ const Signup: React.FC = () => {
             }, 600);
           } else {
             showNotification({
-              title: res?.title || "Signup Failed",
-              message: res?.message || "Something went wrong.",
+              title: res?.data?.title || "Signup Failed",
+              message: res?.data?.message || "Something went wrong.",
               color: "red",
             });
           }
@@ -133,6 +149,7 @@ const Signup: React.FC = () => {
             setFormData({ ...formData, name: e.currentTarget.value })
           }
           classNames={{ label: classes.label, input: classes.input }}
+          required
         />
 
         <TextInput
@@ -144,6 +161,7 @@ const Signup: React.FC = () => {
             setFormData({ ...formData, phone: e.currentTarget.value })
           }
           classNames={{ label: classes.label, input: classes.input }}
+          required
         />
 
         <PasswordInput
@@ -155,17 +173,19 @@ const Signup: React.FC = () => {
             setFormData({ ...formData, password: e.currentTarget.value })
           }
           classNames={{ label: classes.label, input: classes.input }}
+          required
         />
 
         <PasswordInput
           label="Confirm Password"
           placeholder="Confirm your password"
-          mb="lg"
+          mb="sm"
           value={formData.confirmPassword}
           onChange={(e) =>
             setFormData({ ...formData, confirmPassword: e.currentTarget.value })
           }
           classNames={{ label: classes.label, input: classes.input }}
+          required
         />
 
         <Text

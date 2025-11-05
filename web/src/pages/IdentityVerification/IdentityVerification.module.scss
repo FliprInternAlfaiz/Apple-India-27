@@ -1,0 +1,98 @@
+// IdentityVerification.module.scss
+
+.verificationContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+  padding-bottom: 80px;
+}
+
+.fullScreen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.mainContent {
+  max-width: 600px;
+  width: 100%;
+  padding: 0;
+}
+
+.headerCard {
+  background: white;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.alertCard {
+  margin-bottom: 1.5rem;
+}
+
+.formCard {
+  background: white;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+}
+
+.input {
+  input {
+    height: 48px;
+    font-size: 16px;
+  }
+}
+
+.uploadSection {
+  margin-top: 1rem;
+}
+
+.uploadBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  border: 2px dashed #dee2e6;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #228be6;
+    background: #e7f5ff;
+    transform: translateY(-2px);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
+}
+
+.previewContainer {
+  padding: 1rem;
+  background: #f8f9fa;
+  text-align: center;
+}
+
+.previewImage {
+  max-height: 300px;
+  width: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.infoCard {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}

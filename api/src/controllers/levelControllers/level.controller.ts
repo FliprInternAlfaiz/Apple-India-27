@@ -1,137 +1,137 @@
-// controllers/level.controller.ts - UPDATED with No Initial Level
-import { Request, Response, NextFunction } from "express";
-import commonsUtils from "../../utils";
-import models from "../../models";
-import mongoose from "mongoose";
+  // controllers/level.controller.ts - UPDATED with No Initial Level
+  import { Request, Response, NextFunction } from "express";
+  import commonsUtils from "../../utils";
+  import models from "../../models";
+  import mongoose from "mongoose";
 
-const { JsonResponse } = commonsUtils;
+  const { JsonResponse } = commonsUtils;
 
-// Get all levels with user progress
-export const getAllLevels = async (
-  req: Request,
-  res: Response,
-  __: NextFunction
-) => {
-  try {
-    const userId = res.locals.userId;
+  // Get all levels with user progress
+  export const getAllLevels = async (
+    req: Request,
+    res: Response,
+    __: NextFunction
+  ) => {
+    try {
+      const userId = res.locals.userId;
 
-    const levels = await models.level
-      .find({ isActive: true })
-      .sort({ order: 1, levelNumber: 1 })
-      .lean();
+      const levels = await models.level
+        .find({ isActive: true })
+        .sort({ order: 1, levelNumber: 1 })
+        .lean();
 
-    let userCurrentLevel = null;
-    let userTaskStats = null;
+      let userCurrentLevel = null;
+      let userTaskStats = null;
 
-    if (userId) {
-      const user = await models.User.findById(userId).select(
-        "currentLevel currentLevelNumber investmentAmount todayTasksCompleted mainWallet"
-      );
+      if (userId) {
+        const user = await models.User.findById(userId).select(
+          "currentLevel currentLevelNumber investmentAmount todayTasksCompleted mainWallet"
+        );
 
-      if (user) {
-        userCurrentLevel = {
-          currentLevel: user.currentLevel,
-          currentLevelNumber: user.currentLevelNumber,
-          investmentAmount: user.investmentAmount || 0,
-          todayTasksCompleted: user.todayTasksCompleted || 0,
-          mainWallet: user.mainWallet || 0,
-          hasLevel: user.currentLevel !== null && user.currentLevel !== undefined,
-        };
-
-        // Get tasks completed for current level (only if user has a level)
-        if (userCurrentLevel.hasLevel) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-
-          const completedToday = await models.taskCompletion.countDocuments({
-            userId,
-            completedAt: { $gte: today },
-          });
-
-          userTaskStats = {
-            completedToday,
+        if (user) {
+          userCurrentLevel = {
+            currentLevel: user.currentLevel,
+            currentLevelNumber: user.currentLevelNumber,
+            investmentAmount: user.investmentAmount || 0,
+            todayTasksCompleted: user.todayTasksCompleted || 0,
+            mainWallet: user.mainWallet || 0,
+            hasLevel: user.currentLevel !== null && user.currentLevel !== undefined,
           };
+
+          // Get tasks completed for current level (only if user has a level)
+          if (userCurrentLevel.hasLevel) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const completedToday = await models.taskCompletion.countDocuments({
+              userId,
+              completedAt: { $gte: today },
+            });
+
+            userTaskStats = {
+              completedToday,
+            };
+          }
         }
       }
+
+      // Format levels for frontend
+      const formattedLevels = levels.map((level) => {
+        const isUserLevel = userCurrentLevel?.currentLevelNumber === level.levelNumber;
+        const tasksCompleted = isUserLevel ? (userTaskStats?.completedToday || 0) : 0;
+        const tasksRemaining = level.dailyTaskLimit - tasksCompleted;
+
+        // User can purchase:
+        // 1. If no level: only AppleMini (levelNumber 0)
+        // 2. If has level: next sequential level if they have enough balance
+        const canPurchase = userCurrentLevel
+          ? !userCurrentLevel.hasLevel
+            ? level.levelNumber === 0 && userCurrentLevel.mainWallet >= level.investmentAmount
+            : level.levelNumber === userCurrentLevel.currentLevelNumber + 1 && 
+              userCurrentLevel.mainWallet >= level.investmentAmount
+          : false;
+
+        return {
+          level: level.levelName,
+          levelNumber: level.levelNumber,
+          remaining: Math.max(0, tasksRemaining),
+          completed: tasksCompleted,
+          target: level.investmentAmount,
+          purchasePrice: level.investmentAmount,
+          dailyTasks: `${Math.floor(level.dailyTaskLimit * 0.5)}-${level.dailyTaskLimit}`,
+          commission: `₹${level.rewardPerTask * Math.floor(level.dailyTaskLimit * 0.5)}-₹${level.rewardPerTask * level.dailyTaskLimit}`,
+          rewardPerTask: level.rewardPerTask,
+          dailyTaskLimit: level.dailyTaskLimit,
+          icon: level.icon,
+          description: level.description,
+          isUnlocked: userCurrentLevel 
+            ? userCurrentLevel.hasLevel 
+              ? level.levelNumber <= userCurrentLevel.currentLevelNumber
+              : false
+            : false,
+          isCurrent: isUserLevel,
+          canPurchase,
+          invitations: [
+            {
+              method: "Invite A-level to join",
+              rate: `${level.aLevelCommissionRate}%`,
+              amount: ((level.investmentAmount * level.aLevelCommissionRate) / 100).toFixed(2),
+            },
+            {
+              method: "Invite B-level to join",
+              rate: `${level.bLevelCommissionRate}%`,
+              amount: ((level.investmentAmount * level.bLevelCommissionRate) / 100).toFixed(2),
+            },
+            {
+              method: "Invite C-level to join",
+              rate: `${level.cLevelCommissionRate}%`,
+              amount: ((level.investmentAmount * level.cLevelCommissionRate) / 100).toFixed(2),
+            },
+          ],
+        };
+      });
+
+      return JsonResponse(res, {
+        status: "success",
+        statusCode: 200,
+        title: "Levels",
+        message: "Levels retrieved successfully.",
+        data: {
+          levels: formattedLevels,
+          userLevel: userCurrentLevel,
+          requiresLevelPurchase: userCurrentLevel ? !userCurrentLevel.hasLevel : true,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching levels:", error);
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 500,
+        message: "An error occurred while fetching levels.",
+        title: "Levels",
+      });
     }
-
-    // Format levels for frontend
-    const formattedLevels = levels.map((level) => {
-      const isUserLevel = userCurrentLevel?.currentLevelNumber === level.levelNumber;
-      const tasksCompleted = isUserLevel ? (userTaskStats?.completedToday || 0) : 0;
-      const tasksRemaining = level.dailyTaskLimit - tasksCompleted;
-
-      // User can purchase:
-      // 1. If no level: only AppleMini (levelNumber 0)
-      // 2. If has level: next sequential level if they have enough balance
-      const canPurchase = userCurrentLevel
-        ? !userCurrentLevel.hasLevel
-          ? level.levelNumber === 0 && userCurrentLevel.mainWallet >= level.investmentAmount
-          : level.levelNumber === userCurrentLevel.currentLevelNumber + 1 && 
-            userCurrentLevel.mainWallet >= level.investmentAmount
-        : false;
-
-      return {
-        level: level.levelName,
-        levelNumber: level.levelNumber,
-        remaining: Math.max(0, tasksRemaining),
-        completed: tasksCompleted,
-        target: level.investmentAmount,
-        purchasePrice: level.investmentAmount,
-        dailyTasks: `${Math.floor(level.dailyTaskLimit * 0.5)}-${level.dailyTaskLimit}`,
-        commission: `₹${level.rewardPerTask * Math.floor(level.dailyTaskLimit * 0.5)}-₹${level.rewardPerTask * level.dailyTaskLimit}`,
-        rewardPerTask: level.rewardPerTask,
-        dailyTaskLimit: level.dailyTaskLimit,
-        icon: level.icon,
-        description: level.description,
-        isUnlocked: userCurrentLevel 
-          ? userCurrentLevel.hasLevel 
-            ? level.levelNumber <= userCurrentLevel.currentLevelNumber
-            : false
-          : false,
-        isCurrent: isUserLevel,
-        canPurchase,
-        invitations: [
-          {
-            method: "Invite A-level to join",
-            rate: `${level.aLevelCommissionRate}%`,
-            amount: ((level.investmentAmount * level.aLevelCommissionRate) / 100).toFixed(2),
-          },
-          {
-            method: "Invite B-level to join",
-            rate: `${level.bLevelCommissionRate}%`,
-            amount: ((level.investmentAmount * level.bLevelCommissionRate) / 100).toFixed(2),
-          },
-          {
-            method: "Invite C-level to join",
-            rate: `${level.cLevelCommissionRate}%`,
-            amount: ((level.investmentAmount * level.cLevelCommissionRate) / 100).toFixed(2),
-          },
-        ],
-      };
-    });
-
-    return JsonResponse(res, {
-      status: "success",
-      statusCode: 200,
-      title: "Levels",
-      message: "Levels retrieved successfully.",
-      data: {
-        levels: formattedLevels,
-        userLevel: userCurrentLevel,
-        requiresLevelPurchase: userCurrentLevel ? !userCurrentLevel.hasLevel : true,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching levels:", error);
-    return JsonResponse(res, {
-      status: "error",
-      statusCode: 500,
-      message: "An error occurred while fetching levels.",
-      title: "Levels",
-    });
-  }
-};
+  };
 
 export const upgradeUserLevel = async (
   req: Request,

@@ -52,7 +52,7 @@ const menuItems = [
   {
     icon: <FaIdCard size={24} />,
     title: "Identity authentication",
-    path: "/identity",
+    path: "/identity-verification",
   },
   {
     icon: <FaFileAlt size={24} />,
