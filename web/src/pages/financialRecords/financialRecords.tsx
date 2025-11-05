@@ -12,7 +12,6 @@ import {
   Box,
 } from "@mantine/core";
 import { FaWallet, FaMoneyBillWave } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import {
   useWalletInfoQuery,
   useWithdrawalHistoryQuery,
