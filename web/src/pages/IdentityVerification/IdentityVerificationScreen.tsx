@@ -34,7 +34,6 @@ const IdentityVerificationScreen: React.FC = () => {
   const [aadhaarNumber, setAadhaarNumber] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,7 +65,6 @@ const IdentityVerificationScreen: React.FC = () => {
       }
 
       setSelectedFile(file);
-      setUploadedFileUrl(null);
 
       const reader = new FileReader();
       reader.onloadend = () => setPreviewUrl(reader.result as string);
@@ -103,8 +101,6 @@ const IdentityVerificationScreen: React.FC = () => {
           if (!fileUrl) {
             throw new Error("File upload failed.");
           }
-
-          setUploadedFileUrl(fileUrl);
           setUploadProgress(70);
 
           uploadMutation.mutate(
@@ -358,7 +354,6 @@ const IdentityVerificationScreen: React.FC = () => {
             onClick={() => {
               setSelectedFile(null);
               setPreviewUrl(null);
-              setUploadedFileUrl(null);
               if (fileInputRef.current) fileInputRef.current.value = "";
             }}
           >

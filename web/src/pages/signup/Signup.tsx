@@ -8,7 +8,6 @@ import {
   Flex,
   Paper,
   Title,
-  Alert,
 } from "@mantine/core";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
