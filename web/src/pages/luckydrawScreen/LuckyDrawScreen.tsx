@@ -43,7 +43,6 @@ const LuckyDrawScreen: React.FC = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, refetch } = useActiveLuckyDrawsQuery();
-  console.log(data)
   const { mutate: participate, isPending: isParticipating } = useParticipateInLuckyDraw();
 
 const luckyDrawsList = useMemo<LuckyDraw[]>(() => {

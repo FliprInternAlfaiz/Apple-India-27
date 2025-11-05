@@ -105,7 +105,7 @@ const fetchActiveLuckyDraws = async () => {
     method: "GET",
     withCredentials: true,
   });
-  return response.data;
+  return response;
 };
 
 export const useActiveLuckyDrawsQuery = () => {
