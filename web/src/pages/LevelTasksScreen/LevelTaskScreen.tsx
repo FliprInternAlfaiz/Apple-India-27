@@ -84,6 +84,12 @@ const LevelTasksScreen: React.FC = () => {
     [levels, activeLevelIndex]
   );
 
+  const canUserPurchase = (level: Level) => {
+    if (!userLevel) return false;
+    if (level.isCurrent || level.isUnlocked) return false;
+    return userLevel.mainWallet >= level.target;
+  };
+
   const handlePurchaseClick = (level: Level) => {
     setSelectedLevel(level);
     setShowPurchaseModal(true);
@@ -153,7 +159,7 @@ const LevelTasksScreen: React.FC = () => {
                     </Text>
                     {level.isCurrent && <Badge color="green">Current</Badge>}
                     {!level.isUnlocked && <Badge color="red">Locked</Badge>}
-                    {level.canPurchase && <Badge color="blue">Available</Badge>}
+                    {canUserPurchase(level) && <Badge color="blue">Available</Badge>}
                   </Flex>
 
                   <Flex justify="space-between" align="flex-end" mb="md">
@@ -291,7 +297,7 @@ const LevelTasksScreen: React.FC = () => {
         </div>
 
         {/* Purchase Button */}
-        {!currentLevel.isUnlocked && currentLevel.canPurchase && userLevel && (
+        {!currentLevel.isUnlocked && canUserPurchase(currentLevel) && userLevel && (
           <Button
             fullWidth
             mt="md"
@@ -306,13 +312,13 @@ const LevelTasksScreen: React.FC = () => {
           </Button>
         )}
 
-        {!currentLevel.isUnlocked && !currentLevel.canPurchase && (
+        {!currentLevel.isUnlocked && !canUserPurchase(currentLevel) && (
           <Alert icon={<AlertCircle size={16} />} color="orange" mt="md">
             {userLevel && userLevel.mainWallet < currentLevel.target
               ? `Insufficient balance. You need ₹${(
                   currentLevel.target - userLevel.mainWallet
                 ).toLocaleString()} more. Please Recharge`
-              : "Complete previous levels to unlock this level."}
+              : "Level already unlocked or current."}
           </Alert>
         )}
 

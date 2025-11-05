@@ -1,32 +1,32 @@
-import React, { useRef, useCallback, useEffect, useState } from "react"; 
-import { Flex, Text, Loader, Alert, Badge, Box, Progress, Button } from "@mantine/core";
+import React, { useRef, useCallback } from "react";
+import {
+  Flex,
+  Text,
+  Loader,
+  Alert,
+  Badge,
+  Box,
+  Progress,
+  Button,
+} from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Target, CheckCircle, ShoppingCart } from "lucide-react";
 import classes from "./Task.module.scss";
 import TaskItem from "../../components/TaskItem/TaskItem";
 import { useInfiniteTasksQuery } from "../../hooks/query/useGetTask.query";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store/store";
 
 const Task: React.FC = () => {
   const navigate = useNavigate();
-  const [userLevel, setUserLevel] = useState<any>(null);
+  const { userData } = useSelector((state: RootState) => state.auth);
 
-  // Get user level from localStorage or API
-  useEffect(() => {
-    const storedLevel = localStorage.getItem("userLevel");
-    if (storedLevel) {
-      try {
-        setUserLevel(JSON.parse(storedLevel));
-      } catch (error) {
-        console.error("Failed to parse user level:", error);
-        setUserLevel(null);
-      }
-    }
-  }, []);
+  const currentLevelName =
+    userData?.currentLevel && userData.currentLevel !== "null"
+      ? userData.currentLevel
+      : undefined;
 
-  // Safely get current level name, handle null/undefined cases
-  const currentLevelName = userLevel?.currentLevel && userLevel.currentLevel !== "null" 
-    ? userLevel.currentLevel 
-    : undefined;
+  const currentLevelNumber = userData?.currentLevelNumber ?? -1;
 
   const {
     data,
@@ -35,9 +35,9 @@ const Task: React.FC = () => {
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useInfiniteTasksQuery({ 
-    level: currentLevelName, 
-    limit: 10 
+  } = useInfiniteTasksQuery({
+    level: currentLevelName,
+    limit: 10,
   });
 
   const observer = useRef<IntersectionObserver | null>(null);
@@ -64,11 +64,9 @@ const Task: React.FC = () => {
   };
 
   const handlePurchaseLevel = () => {
-    // Navigate to level purchase page
     navigate("/level");
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <Flex justify="center" align="center" h="100vh">
@@ -77,23 +75,22 @@ const Task: React.FC = () => {
     );
   }
 
-  // Safely extract data with fallbacks
-  const allTasks = data?.pages?.flatMap((page) => page?.tasks || [])?.filter(Boolean) || [];
+  const allTasks =
+    data?.pages?.flatMap((page) => page?.tasks || [])?.filter(Boolean) || [];
   const stats = data?.pages?.[0]?.stats;
   const totalTasks = data?.pages?.[0]?.pagination?.totalTasks || 0;
-  const requiresLevelPurchase = data?.pages?.[0]?.requiresLevelPurchase || false;
+  const requiresLevelPurchase =
+    data?.pages?.[0]?.requiresLevelPurchase || false;
 
   const dailyLimit = stats?.dailyLimit || 0;
   const todayCompleted = stats?.todayCompleted || 0;
   const remainingTasks = stats?.remainingTasks || 0;
-  const progressPercentage = dailyLimit > 0 ? (todayCompleted / dailyLimit) * 100 : 0;
+  const progressPercentage =
+    dailyLimit > 0 ? (todayCompleted / dailyLimit) * 100 : 0;
 
-  // Check if user needs to purchase a level
-  const needsLevelPurchase = !currentLevelName || 
-    userLevel?.currentLevelNumber === -1 || 
-    requiresLevelPurchase;
+  const needsLevelPurchase =
+    !currentLevelName || currentLevelNumber === -1 || requiresLevelPurchase;
 
-  // Show level purchase prompt
   if (needsLevelPurchase) {
     return (
       <Flex className={classes.taskContainer} direction="column">
@@ -124,7 +121,8 @@ const Task: React.FC = () => {
             Purchase a Level to Access Tasks
           </Text>
           <Text size="sm" c="#868e96" ta="center" maw={400}>
-            You need to purchase a level before you can start completing tasks and earning rewards.
+            You need to purchase a level before you can start completing tasks
+            and earning rewards.
           </Text>
           <Button
             size="md"
@@ -169,8 +167,8 @@ const Task: React.FC = () => {
             variant="gradient"
             gradient={{ from: "blue", to: "cyan" }}
           >
-            {userLevel?.currentLevelNumber >= 0 
-              ? `Level ${userLevel.currentLevelNumber}` 
+            {currentLevelNumber >= 0
+              ? `Level ${currentLevelNumber}`
               : "No Level"}
           </Badge>
         </Flex>
@@ -230,11 +228,7 @@ const Task: React.FC = () => {
             <Text size="sm" c="dimmed" ta="center">
               Check back later for new tasks or upgrade your level
             </Text>
-            <Button
-              variant="light"
-              onClick={handlePurchaseLevel}
-              mt="md"
-            >
+            <Button variant="light" onClick={handlePurchaseLevel} mt="md">
               Upgrade Level
             </Button>
           </Flex>

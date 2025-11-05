@@ -88,7 +88,7 @@ export const luckyDrawUrls = {
   // 🟢 User routes
   ACTIVE: luckydrawPrefix + "/active",
   DETAILS: luckydrawPrefix + "/details/:drawId",
-  PARTICIPATE: luckydrawPrefix + "/participate/:drawId",
+  PARTICIPATE: luckydrawPrefix + "/participate",
 
   // 🟣 Admin routes
   UPLOAD_IMAGE: luckydrawPrefix + "/admin/upload-image",

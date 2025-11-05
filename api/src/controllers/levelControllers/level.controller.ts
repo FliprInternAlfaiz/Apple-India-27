@@ -175,29 +175,6 @@ export const upgradeUserLevel = async (
       });
     }
 
-    // Check if user has no level (first purchase)
-    const hasNoLevel = !user.currentLevel || user.currentLevelNumber === null || user.currentLevelNumber === undefined;
-
-    // First purchase must be AppleMini (levelNumber 0)
-    if (hasNoLevel && newLevelNumber !== 0) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "You must purchase AppleMini (Entry Level) first.",
-        title: "Purchase Level",
-      });
-    }
-
-    // Subsequent purchases must be sequential
-    if (!hasNoLevel && newLevelNumber !== user.currentLevelNumber + 1) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "You must purchase levels sequentially.",
-        title: "Purchase Level",
-      });
-    }
-
     // Balance check
     if (user.mainWallet < targetLevel.investmentAmount) {
       return JsonResponse(res, {
@@ -247,7 +224,7 @@ export const upgradeUserLevel = async (
   }
 };
 
-// Get single level details
+
 export const getLevelByName = async (
   req: Request,
   res: Response,

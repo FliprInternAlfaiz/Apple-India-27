@@ -25,6 +25,8 @@ interface UserResponse {
   referralCode?: string;
   totalReferrals: number;
   teamLevel:string;
+  currentLevel:string;
+  currentLevelNumber:number;
 }
 
 interface TServerResponse {

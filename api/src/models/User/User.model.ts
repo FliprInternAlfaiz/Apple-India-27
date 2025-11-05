@@ -59,10 +59,6 @@ const schema = new Schema<IUser>(
   { timestamps: true },
 );
 
-
-schema.index({ phone: 1 });
-schema.index({ referralCode: 1 });
-schema.index({ lastActiveDate: 1 });
 commonsUtils.dbUtils.handleDuplicates(schema, 'phone');
 
 async function generateUniqueReferralCode(this: any): Promise<string> {

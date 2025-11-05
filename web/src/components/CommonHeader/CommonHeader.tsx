@@ -1,7 +1,7 @@
 import React from "react";
 import { Flex, Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { FaLongArrowAltLeft } from "react-icons/fa";
+import { ArrowLeft } from "lucide-react";
 
 interface CommonHeaderProps {
   heading: string;
@@ -25,7 +25,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({ heading }) => {
        style={{cursor:"pointer"}}
         onClick={() => navigate(-1)}
       >
-        <FaLongArrowAltLeft size={20} />
+        <ArrowLeft size={20} />
       </div>
 
       <Text size="lg" fw={600} style={{ flex: 1, textAlign: "center" }}>

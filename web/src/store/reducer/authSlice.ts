@@ -46,6 +46,10 @@ interface UserData {
   totalReferrals: number;
 
   teamLevel: string | undefined;
+
+  currentLevel:string;
+
+  currentLevelNumber:number;
 }
 
 interface AuthData {

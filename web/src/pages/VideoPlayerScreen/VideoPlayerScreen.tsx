@@ -11,6 +11,7 @@ import classes from "./VideoPlayerScreen.module.scss";
 import { FiX, FiArrowLeft, FiAlertCircle } from "react-icons/fi";
 import { FaCoins, FaPlay } from "react-icons/fa";
 import { BsCheckCircleFill } from "react-icons/bs";
+import CommonHeader from "../../components/CommonHeader/CommonHeader";
 
 const VideoPlayerScreen: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -314,25 +315,7 @@ const VideoPlayerScreen: React.FC = () => {
   return (
     <div className={classes.videoPlayerContainer}>
       {/* Header */}
-      <div className={classes.header}>
-        <Button
-          variant="subtle"
-          color="gray"
-          onClick={() => navigate("/task")}
-          leftSection={<FiArrowLeft size={20} />}
-        >
-          Back
-        </Button>
-        <Text size="lg" fw={700} c="violet">
-          {task.level}
-        </Text>
-        <div className={classes.rewardBadge}>
-          <FaCoins size={16} />
-          <Text size="sm" fw={600}>
-            Rs {task.rewardPrice}
-          </Text>
-        </div>
-      </div>
+      <CommonHeader heading={task.level}/>
 
       {/* Video Section */}
       <div className={classes.videoSection}>
@@ -445,20 +428,19 @@ const VideoPlayerScreen: React.FC = () => {
         <div className={classes.modalContent}>
           <div className={classes.confettiBackground} />
           <div className={classes.successIconWrapper}>
-            <div className={classes.successIcon}>
-              <BsCheckCircleFill size={60} />
-            </div>
-          </div>
+              <BsCheckCircleFill size={40} />
 
-          <Text
-            size="2rem"
+               <Text
+            size="30px"
             fw={700}
-            mt="xl"
             ta="center"
             className={classes.congratsText}
           >
             Congratulations! 🎉
           </Text>
+            </div>
+
+         
 
           <div className={classes.rewardAmountCard}>
             <Text size="sm" c="dimmed" mb={8} ta="center">
@@ -472,19 +454,11 @@ const VideoPlayerScreen: React.FC = () => {
             </Flex>
           </div>
 
-          <Text size="md" c="dimmed" ta="center" mb="xl">
+          <Text size="md" c="dimmed" ta="center" my="20">
             Successfully credited to your wallet! 💰
           </Text>
 
           <div className={classes.statsGrid}>
-            <div className={classes.statCard}>
-              <Text size="xs" c="dimmed" mb={4}>
-                New Balance
-              </Text>
-              <Text size="xl" fw={700} c="blue">
-                ₹{rewardData?.newBalance || 0}
-              </Text>
-            </div>
             <div className={classes.statCard}>
               <Text size="xs" c="dimmed" mb={4}>
                 Today's Tasks

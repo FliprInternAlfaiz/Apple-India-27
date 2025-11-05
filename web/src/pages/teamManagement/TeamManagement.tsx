@@ -8,6 +8,7 @@ import {
   Button,
   Modal,
   Badge,
+  Center,
 } from "@mantine/core";
 import {
   FaCrown,
@@ -143,11 +144,11 @@ const TeamManagementScreen: React.FC = () => {
 
   if (teamLoading || referralLoading) {
     return (
-      <Flex justify="center" align="center" className={classes.fullScreen}>
-        <Text c="white" size="lg">
+      <Center>
+        <Text c="black" size="lg">
           Loading team data...
         </Text>
-      </Flex>
+      </Center>
     );
   }
 
