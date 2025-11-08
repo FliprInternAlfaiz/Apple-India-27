@@ -16,6 +16,7 @@ import {
   Stack,
   Paper,
   TextInput,
+  Center,
 } from "@mantine/core";
 import {
   useWalletInfoQuery,
@@ -633,9 +634,9 @@ const RechargeScreen: React.FC = () => {
 
   if (walletLoading || paymentLoading) {
     return (
-      <Flex justify="center" align="center" h="100vh">
+      <Center h="100vh">
         <Loader size="lg" />
-      </Flex>
+      </Center>
     );
   }
 

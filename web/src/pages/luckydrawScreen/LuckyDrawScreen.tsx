@@ -1,4 +1,4 @@
-    import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Title,
   Text,
@@ -13,7 +13,13 @@ import {
   Button,
   Group,
 } from "@mantine/core";
-import { IoRefresh, IoArrowBack, IoTrophy, IoCalendar, IoPeople } from "react-icons/io5";
+import {
+  IoRefresh,
+  IoArrowBack,
+  IoTrophy,
+  IoCalendar,
+  IoPeople,
+} from "react-icons/io5";
 import { notifications } from "@mantine/notifications";
 import classes from "./LuckyDrawScreen.module.scss";
 import {
@@ -43,24 +49,29 @@ const LuckyDrawScreen: React.FC = () => {
   const navigate = useNavigate();
 
   const { data, isLoading, refetch } = useActiveLuckyDrawsQuery();
-  const { mutate: participate, isPending: isParticipating } = useParticipateInLuckyDraw();
+  const { mutate: participate, isPending: isParticipating } =
+    useParticipateInLuckyDraw();
 
-const luckyDrawsList = useMemo<LuckyDraw[]>(() => {
-  return data?.data || [];
-}, [data]);
+  const luckyDrawsList = useMemo<LuckyDraw[]>(() => {
+    return data?.data || [];
+  }, [data]);
   const handleParticipate = (drawId: string) => {
     participate(drawId, {
       onSuccess: (response) => {
         notifications.show({
           title: "Success!",
-          message: response.message || "You've successfully participated in the lucky draw!",
+          message:
+            response.message ||
+            "You've successfully participated in the lucky draw!",
           color: "green",
         });
       },
       onError: (error: any) => {
         notifications.show({
           title: "Error",
-          message: error.response?.data?.message || "Failed to participate. Please try again.",
+          message:
+            error.response?.data?.message ||
+            "Failed to participate. Please try again.",
           color: "red",
         });
       },
@@ -78,7 +89,7 @@ const luckyDrawsList = useMemo<LuckyDraw[]>(() => {
 
   if (isLoading) {
     return (
-      <Center h="80vh">
+      <Center h="100vh">
         <Loader color="blue" size="lg" />
       </Center>
     );
@@ -128,7 +139,7 @@ const luckyDrawsList = useMemo<LuckyDraw[]>(() => {
         </Center>
       ) : (
         <div className={classes.grid}>
-          {luckyDrawsList.map((draw:LuckyDraw) => (
+          {luckyDrawsList.map((draw: LuckyDraw) => (
             <Card
               key={draw._id}
               shadow="md"
@@ -163,12 +174,23 @@ const luckyDrawsList = useMemo<LuckyDraw[]>(() => {
 
                 {/* Stats */}
                 <Group mt="md" gap="xs">
-                  <Badge leftSection={<IoPeople size={12} />} variant="light" color="blue">
+                  <Badge
+                    leftSection={<IoPeople size={12} />}
+                    variant="light"
+                    color="blue"
+                  >
                     {draw.participantCount}
-                    {draw.maxParticipants ? `/${draw.maxParticipants}` : ""} joined
+                    {draw.maxParticipants
+                      ? `/${draw.maxParticipants}`
+                      : ""}{" "}
+                    joined
                   </Badge>
                   {draw.winnerSelectionDate && (
-                    <Badge leftSection={<IoCalendar size={12} />} variant="light" color="grape">
+                    <Badge
+                      leftSection={<IoCalendar size={12} />}
+                      variant="light"
+                      color="grape"
+                    >
                       {formatDate(draw.winnerSelectionDate)}
                     </Badge>
                   )}

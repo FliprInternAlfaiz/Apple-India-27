@@ -80,7 +80,7 @@ const FinancialRecords: React.FC = () => {
   );
 
   const renderEmpty = (msg: string) => (
-    <Center py={60}>
+     <Center h="60vh">
       <Text c="dimmed" size="sm" fw={500}>
         {msg}
       </Text>
@@ -88,7 +88,7 @@ const FinancialRecords: React.FC = () => {
   );
 
   const renderLoading = () => (
-    <Center py={60}>
+  <Center h="100vh">
       <Loader color="yellow" size="lg" variant="dots" />
     </Center>
   );

@@ -10,6 +10,7 @@ import {
   Button,
   Badge,
   Modal,
+  Center,
 } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import { FaStar } from "react-icons/fa";
@@ -53,7 +54,7 @@ interface UserLevel {
 }
 
 const LevelTasksScreen: React.FC = () => {
-  const { data, isLoading, isError, refetch } = useGetAllLevelsQuery();
+  const { data, isLoading, isError, refetch } = useGetAllLevelsQuery(); 
   const levels: Level[] = data?.levels ?? [];
   const fetchedUserLevel: UserLevel | null = data?.userLevel ?? null;
   const upgradeMutation = useUpgradeUserLevelMutation();
@@ -112,9 +113,9 @@ const LevelTasksScreen: React.FC = () => {
 
   if (isLoading)
     return (
-      <Box ta="center" mih="400px" mt="xl">
+       <Center h="100vh">
         <Loader color="blue" size="lg" />
-      </Box>
+      </Center>
     );
 
   if (isError)
@@ -252,7 +253,7 @@ const LevelTasksScreen: React.FC = () => {
               {currentLevel.dailyTaskLimit}
             </Text>
             <Text size="xs" fw={600} className={classes.flex1Right}>
-              ₹{currentLevel.commission}
+              {currentLevel.commission}
             </Text>
           </Flex>
         </div>

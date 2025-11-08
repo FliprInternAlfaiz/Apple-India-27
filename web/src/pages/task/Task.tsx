@@ -8,6 +8,7 @@ import {
   Box,
   Progress,
   Button,
+  Center,
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { Trophy, Target, CheckCircle, ShoppingCart } from "lucide-react";
@@ -69,9 +70,9 @@ const Task: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Flex justify="center" align="center" h="100vh">
+  <Center h="100vh">
         <Loader size="lg" />
-      </Flex>
+      </Center>
     );
   }
 

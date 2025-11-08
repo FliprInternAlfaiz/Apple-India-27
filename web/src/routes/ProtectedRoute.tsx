@@ -15,7 +15,7 @@ const ProtectedRoute = () => {
 
   if (isLoading) {
     return (
-      <Center style={{ height: "100vh" }}>
+    <Center h="100vh">
         <Loader />
       </Center>
     );

@@ -13,7 +13,6 @@ export default async (req: Request, res: Response) => {
     const isProduction = process.env.NODE_ENV === "production";
     const { name, phone, password,referralCode } = req.body;
 
-    // Validate required fields
     if (!phone || !password || !name) {
       return JsonResponse(res, {
         status: "error",

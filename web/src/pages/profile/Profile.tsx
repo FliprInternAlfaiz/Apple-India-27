@@ -158,8 +158,8 @@ const Profile: React.FC = () => {
 
   if (isLoading || isLoggedIn === "loading") {
     return (
-      <Center h="100vh">
-        <Loader size="lg" color="#d4a017" />
+     <Center h="100vh">
+        <Loader size="lg" color="#8FABD4" />
       </Center>
     );
   }
@@ -203,7 +203,7 @@ const Profile: React.FC = () => {
                   width: 80,
                   height: 80,
                   borderRadius: "50%",
-                  background: "#d4a017",
+                  background: "#8FABD4",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -227,7 +227,7 @@ const Profile: React.FC = () => {
                   width: 80,
                   height: 80,
                   borderRadius: "50%",
-                  background: "#d4a017",
+                  background: "#8FABD4",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -249,7 +249,7 @@ const Profile: React.FC = () => {
                 mt={10}
                 px={10}
                 style={{
-                  background: "#d4a017",
+                  background: "#8FABD4",
                   borderRadius: 4,
                   color: "black",
                   fontSize: 14,
@@ -330,7 +330,7 @@ const Profile: React.FC = () => {
               flex={1}
               onClick={handleRecharge}
               style={{
-                background: "linear-gradient(135deg, #f9d77e 0%, #f0b944 100%)",
+                background: "linear-gradient(135deg, #8FABD4 0%, #8FABD4 100%)",
                 color: "#7e6227ff",
                 fontWeight: 600,
                 borderRadius: "100px",
@@ -343,7 +343,7 @@ const Profile: React.FC = () => {
               flex={1}
               onClick={handleWithdrawal}
               style={{
-                background: "linear-gradient(135deg, #f9d77e 0%, #f0b944 100%)",
+                background: "linear-gradient(135deg, #8FABD4 0%, #8FABD4 100%)",
                 color: "#7e6227ff",
                 fontWeight: 600,
                 borderRadius: "100px",
@@ -375,8 +375,8 @@ const Profile: React.FC = () => {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#d4a017",
-                      background: "#f9d77e20",
+                      color: "#8FABD4",
+                      background: "#eeeeee7b",
                     }}
                   >
                     {item.icon}

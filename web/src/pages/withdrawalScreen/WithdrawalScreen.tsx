@@ -16,6 +16,7 @@ import {
   ActionIcon,
   Divider,
   Alert,
+  Center,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -222,9 +223,9 @@ const WithdrawalScreen: React.FC = () => {
 
   if (walletLoading || bankLoading) {
     return (
-      <Flex justify="center" align="center" h="100vh">
+      <Center h="100vh">
         <Loader size="lg" />
-      </Flex>
+      </Center>
     );
   }
 

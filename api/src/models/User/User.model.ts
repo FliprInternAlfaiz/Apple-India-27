@@ -38,7 +38,7 @@ const schema = new Schema<IUser>(
      teamLevel: { 
     type: String, 
     enum: ['A', 'B', 'C'], 
-    default: null 
+    default: 'A'
   },
   directReferralsCount: { 
     type: Number, 

@@ -56,7 +56,7 @@ const ConferenceNewsScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Center h="80vh">
+     <Center h="100vh">
         <Loader color="blue" size="lg" />
       </Center>
     );

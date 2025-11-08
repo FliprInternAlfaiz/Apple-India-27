@@ -8,7 +8,7 @@ const PrivacyPolicy: React.FC = () => {
 
       <ScrollArea style={{ flex: 1, padding: 20 }}>
         <Box>
-          <Text c="#d4a017" fw={700} size="xl" mb="md">
+          <Text c="#8FABD4" fw={700} size="xl" mb="md">
             Privacy Policy
           </Text>
 
@@ -20,22 +20,22 @@ const PrivacyPolicy: React.FC = () => {
           </Text>
 
           <Text c="#333333" size="sm" lh={1.7} mt="md">
-            <b style={{ color: "#d4a017" }}>Data Collection:</b> We collect personal data that you provide directly to us,
+            <b style={{ color: "#8FABD4" }}>Data Collection:</b> We collect personal data that you provide directly to us,
             such as account information, payment details, and communication preferences.
           </Text>
 
           <Text c="#333333" size="sm" lh={1.7} mt="md">
-            <b style={{ color: "#d4a017" }}>Data Usage:</b> Personal data is used to provide and improve our services,
+            <b style={{ color: "#8FABD4" }}>Data Usage:</b> Personal data is used to provide and improve our services,
             personalize your experience, and ensure security and compliance with applicable laws.
           </Text>
 
           <Text c="#333333" size="sm" lh={1.7} mt="md">
-            <b style={{ color: "#d4a017" }}>Data Sharing:</b> We may share personal data with our affiliates,
+            <b style={{ color: "#8FABD4" }}>Data Sharing:</b> We may share personal data with our affiliates,
             service providers, and as required by law. We do not sell your personal information.
           </Text>
 
           <Text c="#333333" size="sm" lh={1.7} mt="md">
-            <b style={{ color: "#d4a017" }}>Your Rights:</b> You have rights to access, correct, or delete your personal data,
+            <b style={{ color: "#8FABD4" }}>Your Rights:</b> You have rights to access, correct, or delete your personal data,
             and to restrict or object to certain processing activities in accordance with applicable laws.
           </Text>
         </Box>

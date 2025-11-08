@@ -9,6 +9,7 @@ import {
   Modal,
   Badge,
   Center,
+  Loader,
 } from "@mantine/core";
 import {
   FaCrown,
@@ -144,10 +145,8 @@ const TeamManagementScreen: React.FC = () => {
 
   if (teamLoading || referralLoading) {
     return (
-      <Center>
-        <Text c="black" size="lg">
-          Loading team data...
-        </Text>
+        <Center h="100vh">
+       <Loader size="lg"/>
       </Center>
     );
   }
@@ -191,21 +190,21 @@ const TeamManagementScreen: React.FC = () => {
               <FaMedal
                 color={
                   userData?.teamLevel === "A"
-                    ? "#E5E4E2" // Platinum
+                    ? "#7F7F7F" // Dark Platinum
                     : userData?.teamLevel === "B"
-                    ? "rgb(212, 160, 23)" // Gold
-                    : "#C0C0C0" // Silver
+                    ? "#B8860B" // Deep Gold
+                    : "#A9A9A9" // Dark Silver
                 }
-                size={20}
+                size={22}
               />
               <Text
                 fw={600}
                 c={
                   userData?.teamLevel === "A"
-                    ? "#E5E4E2"
+                    ? "#7F7F7F" // Dark Platinum
                     : userData?.teamLevel === "B"
-                    ? "rgb(212, 160, 23)"
-                    : "#C0C0C0"
+                    ? "#B8860B" // Deep Gold
+                    : "#A9A9A9" // Dark Silver
                 }
               >
                 Your Level: {userData?.teamLevel}
@@ -247,6 +246,7 @@ const TeamManagementScreen: React.FC = () => {
         <Text ta="center" c="dimmed" mb="md" className={classes.referralLink}>
           {referralData?.data?.referralLink || "Loading..."}
         </Text>
+
         <Flex gap="sm" justify="center" wrap="wrap">
           <Button
             leftSection={<FaShare />}

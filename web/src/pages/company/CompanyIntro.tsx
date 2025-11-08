@@ -7,7 +7,7 @@ const CompanyIntro = () => {
       <CommonHeader heading="Company Introduction" />
 
       <ScrollArea style={{ flex: 1, padding: "1rem" }}>
-        <Text c="#d4a017" fw={700} size="xl" mb="md">
+        <Text c="#8FABD4" fw={700} size="xl" mb="md">
           The Apple Logo: History, Meaning, Design Influences, and Evolution
         </Text>
 
@@ -20,31 +20,31 @@ const CompanyIntro = () => {
         </Text>
 
         <Text mt="md" c="#333333" size="sm" lh={1.7}>
-          <b style={{ color: "#d4a017" }}>Founding and Early History:</b> Apple was founded in 1976, initially as Apple Computer, Inc., by Steve Jobs, 
+          <b style={{ color: "#8FABD4" }}>Founding and Early History:</b> Apple was founded in 1976, initially as Apple Computer, Inc., by Steve Jobs, 
           Steve Wozniak, and Ronald Wayne. The company incorporated the following year. Its early history includes 
           the development of the Apple II personal computer, which was a commercial success.
         </Text>
 
         <Text mt="md" c="#333333" size="sm" lh={1.7}>
-          <b style={{ color: "#d4a017" }}>Key Products and Services:</b> The company's product line has expanded significantly over the years to 
+          <b style={{ color: "#8FABD4" }}>Key Products and Services:</b> The company's product line has expanded significantly over the years to 
           include the iPhone, iPad, Apple Watch, Apple TV, and Mac computers. It also develops and sells associated 
           software and online services, including the iOS and macOS operating systems.
         </Text>
 
         <Text mt="md" c="#333333" size="sm" lh={1.7}>
-          <b style={{ color: "#d4a017" }}>Company Evolution:</b> Apple changed its name from Apple Computer, Inc. to Apple Inc. in 2007 to reflect 
+          <b style={{ color: "#8FABD4" }}>Company Evolution:</b> Apple changed its name from Apple Computer, Inc. to Apple Inc. in 2007 to reflect 
           its expansion from computers to other consumer electronics, such as the iPhone. Under the leadership of 
           CEO Tim Cook, the company has continued to grow and innovate, solidifying its position as one of the 
           world's largest technology companies by revenue.
         </Text>
 
         <Text mt="md" c="#333333" size="sm" lh={1.7}>
-          <b style={{ color: "#d4a017" }}>Stock and Market Presence:</b> Apple Inc. is a publicly traded company on the NASDAQ stock exchange (AAPL) 
+          <b style={{ color: "#8FABD4" }}>Stock and Market Presence:</b> Apple Inc. is a publicly traded company on the NASDAQ stock exchange (AAPL) 
           and is a component of the Dow Jones Industrial Average and the NASDAQ-100.
         </Text>
 
         <Text mt="md" c="#333333" size="sm" lh={1.7}>
-          <b style={{ color: "#d4a017" }}>Headquarters:</b> The company is headquartered in Cupertino, California, in the heart of Silicon Valley.
+          <b style={{ color: "#8FABD4" }}>Headquarters:</b> The company is headquartered in Cupertino, California, in the heart of Silicon Valley.
         </Text>
       </ScrollArea>
     </Flex>
