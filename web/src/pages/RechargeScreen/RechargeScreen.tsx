@@ -189,7 +189,7 @@ const RechargeScreen: React.FC = () => {
         <Group>
           <div>
             <Text size="xs" c="dimmed">
-              Main Wallet
+              prime wallet
             </Text>
             <Text size="xl" fw={700} c="blue">
               ₹{walletInfo?.mainWallet?.toFixed(2) || 0}
@@ -197,7 +197,7 @@ const RechargeScreen: React.FC = () => {
           </div>
           <div>
             <Text size="xs" c="dimmed">
-              Commission Wallet
+              Task Wallet
             </Text>
             <Text size="xl" fw={700} c="green">
               ₹{walletInfo?.commissionWallet?.toFixed(2) || 0}

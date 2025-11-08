@@ -311,12 +311,12 @@ const Profile: React.FC = () => {
           />
           <Divider />
           <StatItem
-            label="Main Wallet"
+            label="Prime wallet"
             value={formatCurrency(userData.mainWallet)}
           />
           <Divider />
           <StatItem
-            label="Commission Wallet"
+            label="Task Wallet"
             value={formatCurrency(userData.commissionWallet)}
           />
           <Divider />

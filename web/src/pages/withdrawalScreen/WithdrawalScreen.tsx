@@ -252,11 +252,11 @@ const WithdrawalScreen: React.FC = () => {
           <Group>
             <Radio
               value="mainWallet"
-              label={`Main Wallet: ₹${walletInfo?.mainWallet?.toFixed(2) || 0}`}
+              label={`Prime wallet: ₹${walletInfo?.mainWallet?.toFixed(2) || 0}`}
             />
             <Radio
               value="commissionWallet"
-              label={`Commission Wallet: ₹${walletInfo?.commissionWallet?.toFixed(2) || 0}`}
+              label={`Task Wallet: ₹${walletInfo?.commissionWallet?.toFixed(2) || 0}`}
             />
           </Group>
         </Radio.Group>
