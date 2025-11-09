@@ -4,6 +4,7 @@ import Login from "../pages/auth/login/Login";
 import Dashboard from "../pages/dashboard/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import AllUsers from "../pages/allUsers/AllUsers";
+import TaskManagement from "../pages/TaskManagement/TaskManagement";
 
 export const appRouter = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ export const appRouter = createBrowserRouter([
       {
         path: ROUTES.ALL_USERS,
         element: <AllUsers />,
+      },
+      {
+        path: ROUTES.TASKS,
+        element: <TaskManagement />,
       },
     ],
   },

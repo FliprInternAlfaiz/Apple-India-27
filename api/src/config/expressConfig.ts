@@ -12,6 +12,8 @@ import { TeamRoutes } from '../routes/team/team.routes';
 import { verificationRoutes } from '../routes/verification/verification.route';
 import { ConferenceNewsRoutes } from '../routes/conferenceNews/conferenceNews.route';
 import { luckydrawRoutes } from '../routes/luckydraw/luckydraw.route';
+import { userManagementRoutes } from '../routes/userManagement/userManagment.routes';
+import { AdminTaskRoutes } from '../routes/adminTask/adminTask.routes';
 
 class ExpressConfig {
   app: express.Application;
@@ -36,7 +38,9 @@ class ExpressConfig {
       new TeamRoutes(this.app),
       new verificationRoutes(this.app),
       new ConferenceNewsRoutes(this.app),
-      new luckydrawRoutes(this.app)
+      new luckydrawRoutes(this.app),
+      new userManagementRoutes(this.app),
+      new AdminTaskRoutes(this.app),
     ];
 
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);

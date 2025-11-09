@@ -3,12 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "localdev": "vite --mode localdev",
-    "dev": "vite --mode development",
+   "scripts": {
+    "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:localdev": "vite build --mode localdev",
-    "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview"
   },
