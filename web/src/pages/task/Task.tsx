@@ -70,7 +70,7 @@ const Task: React.FC = () => {
 
   if (isLoading) {
     return (
-  <Center h="100vh">
+      <Center h="100vh">
         <Loader size="lg" />
       </Center>
     );
@@ -91,6 +91,24 @@ const Task: React.FC = () => {
 
   const needsLevelPurchase =
     !currentLevelName || currentLevelNumber === -1 || requiresLevelPurchase;
+
+  const today = new Date();
+  const isSunday = today.getDay() === 0;
+
+  if (isSunday) {
+    return (
+      <Center h="100vh" p="xl" style={{ textAlign: "center" }}>
+        <Flex direction="column" align="center" gap="md">
+          <Text size="xl" fw={700} c="gray">
+            Today is Sunday ☀️
+          </Text>
+          <Text size="md" c="dimmed">
+            No tasks available today. Please check back tomorrow!
+          </Text>
+        </Flex>
+      </Center>
+    );
+  }
 
   if (needsLevelPurchase) {
     return (

@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import userAuthQueries from './userAuth.queries';
 import { JsonResponse } from '../../utils/jsonResponse';
 import { CommonRoutesConfig } from '../../lib/CommonRoutesConfig';
-
+import adminAuthQueries from './adminAuth.queries';
 
 export class AuthRoutes extends CommonRoutesConfig {
   constructor(app: express.Application) {
@@ -21,6 +21,7 @@ export class AuthRoutes extends CommonRoutesConfig {
     });
 
     userAuthQueries(router);
+    adminAuthQueries(router);
     return this.app;
   }
 }

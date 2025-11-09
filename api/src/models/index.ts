@@ -10,6 +10,7 @@ import levelModel from "./Level/Level.model";
 import TeamReferral from "./teamReferral/teamReferral.model";
 import ConferenceNewsModel from "./ConferenceNews/ConferenceNews.model";
 import { LuckyDraw, LuckyDrawParticipant } from "./Luckydraw/LuckyDraw.model";
+import { AdminModel } from "./admin/admin.model";
 
 const models = {
   User: UserModel,
@@ -25,6 +26,7 @@ const models = {
   ConferenceNews:ConferenceNewsModel,
   LuckyDraw: LuckyDraw,
   LuckyDrawParticipant: LuckyDrawParticipant,
+  Admin:AdminModel,
 };
 
 export default models;

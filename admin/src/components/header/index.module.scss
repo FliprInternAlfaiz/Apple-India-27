@@ -1,0 +1,29 @@
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 80px 10px 40px;
+  background: #ffffff;
+}
+
+.logo {
+  width: 134px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+}
+
+.adminName {
+  font-weight: 600;
+  color: #03045e;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 10px 15px;
+  }
+}

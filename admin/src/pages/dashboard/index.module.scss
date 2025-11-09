@@ -1,0 +1,62 @@
+.container {
+  background-color: red;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.pageTitle {
+  font-weight: 800;
+  color: #1a1b1e;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.statCard {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.cardTitle {
+  font-weight: 600;
+  color: #1a1b1e;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4776e6;
+  margin: 0.5rem 0;
+}
+
+.statLabel {
+  color: #868e96;
+  font-size: 0.9rem;
+}
+
+.locationItem {
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
+}
