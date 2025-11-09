@@ -1,6 +1,5 @@
 import React from "react";
 import { Flex, Text } from "@mantine/core";
-import MImage from "../../@ui/MImage";
 import SidebarMenuItem from "./SidebarMenuItem";
 import { navs } from "./navs";
 import classes from "./sidebar.module.scss";

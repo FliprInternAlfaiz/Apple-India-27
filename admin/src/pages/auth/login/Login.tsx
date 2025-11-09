@@ -1,7 +1,5 @@
 import {
   Button,
-  Flex,
-  Image,
   PasswordInput,
   Text,
   TextInput,
