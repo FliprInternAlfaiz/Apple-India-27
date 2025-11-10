@@ -1,138 +1,136 @@
-  // controllers/level.controller.ts - UPDATED with No Initial Level
-  import { Request, Response, NextFunction } from "express";
-  import commonsUtils from "../../utils";
-  import models from "../../models";
-  import mongoose from "mongoose";
+// controllers/levelControllers/level.controller.ts - COMPLETE VERSION
+import { Request, Response, NextFunction } from "express";
+import commonsUtils from "../../utils";
+import models from "../../models";
+import mongoose from "mongoose";
 
-  const { JsonResponse } = commonsUtils;
+const { JsonResponse } = commonsUtils;
 
-  // Get all levels with user progress
-  export const getAllLevels = async (
-    req: Request,
-    res: Response,
-    __: NextFunction
-  ) => {
-    try {
-      const userId = res.locals.userId;
+// ==================== USER ENDPOINTS ====================
 
-      const levels = await models.level
-        .find({ isActive: true })
-        .sort({ order: 1, levelNumber: 1 })
-        .lean();
+// Get all levels with user progress (USER)
+export const getAllLevels = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
 
-      let userCurrentLevel = null;
-      let userTaskStats = null;
+    const levels = await models.level
+      .find({ isActive: true })
+      .sort({ order: 1, levelNumber: 1 })
+      .lean();
 
-      if (userId) {
-        const user = await models.User.findById(userId).select(
-          "currentLevel currentLevelNumber investmentAmount todayTasksCompleted mainWallet"
-        );
+    let userCurrentLevel = null;
+    let userTaskStats = null;
 
-        if (user) {
-          userCurrentLevel = {
-            currentLevel: user.currentLevel,
-            currentLevelNumber: user.currentLevelNumber,
-            investmentAmount: user.investmentAmount || 0,
-            todayTasksCompleted: user.todayTasksCompleted || 0,
-            mainWallet: user.mainWallet || 0,
-            hasLevel: user.currentLevel !== null && user.currentLevel !== undefined,
+    if (userId) {
+      const user = await models.User.findById(userId).select(
+        "currentLevel currentLevelNumber investmentAmount todayTasksCompleted mainWallet"
+      );
+
+      if (user) {
+        userCurrentLevel = {
+          currentLevel: user.currentLevel,
+          currentLevelNumber: user.currentLevelNumber,
+          investmentAmount: user.investmentAmount || 0,
+          todayTasksCompleted: user.todayTasksCompleted || 0,
+          mainWallet: user.mainWallet || 0,
+          hasLevel: user.currentLevel !== null && user.currentLevel !== undefined,
+        };
+
+        if (userCurrentLevel.hasLevel) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const completedToday = await models.taskCompletion.countDocuments({
+            userId,
+            completedAt: { $gte: today },
+          });
+
+          userTaskStats = {
+            completedToday,
           };
-
-          // Get tasks completed for current level (only if user has a level)
-          if (userCurrentLevel.hasLevel) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const completedToday = await models.taskCompletion.countDocuments({
-              userId,
-              completedAt: { $gte: today },
-            });
-
-            userTaskStats = {
-              completedToday,
-            };
-          }
         }
       }
-
-      // Format levels for frontend
-      const formattedLevels = levels.map((level) => {
-        const isUserLevel = userCurrentLevel?.currentLevelNumber === level.levelNumber;
-        const tasksCompleted = isUserLevel ? (userTaskStats?.completedToday || 0) : 0;
-        const tasksRemaining = level.dailyTaskLimit - tasksCompleted;
-
-        // User can purchase:
-        // 1. If no level: only AppleMini (levelNumber 0)
-        // 2. If has level: next sequential level if they have enough balance
-        const canPurchase = userCurrentLevel
-          ? !userCurrentLevel.hasLevel
-            ? level.levelNumber === 0 && userCurrentLevel.mainWallet >= level.investmentAmount
-            : level.levelNumber === userCurrentLevel.currentLevelNumber + 1 && 
-              userCurrentLevel.mainWallet >= level.investmentAmount
-          : false;
-
-        return {
-          level: level.levelName,
-          levelNumber: level.levelNumber,
-          remaining: Math.max(0, tasksRemaining),
-          completed: tasksCompleted,
-          target: level.investmentAmount,
-          purchasePrice: level.investmentAmount,
-          dailyTasks: `${Math.floor(level.dailyTaskLimit * 0.5)}-${level.dailyTaskLimit}`,
-          commission: `₹${level.rewardPerTask * Math.floor(level.dailyTaskLimit * 0.5)}-₹${level.rewardPerTask * level.dailyTaskLimit}`,
-          rewardPerTask: level.rewardPerTask,
-          dailyTaskLimit: level.dailyTaskLimit,
-          icon: level.icon,
-          description: level.description,
-          isUnlocked: userCurrentLevel 
-            ? userCurrentLevel.hasLevel 
-              ? level.levelNumber <= userCurrentLevel.currentLevelNumber
-              : false
-            : false,
-          isCurrent: isUserLevel,
-          canPurchase,
-          invitations: [
-            {
-              method: "Invite A-level to join",
-              rate: `${level.aLevelCommissionRate}%`,
-              amount: ((level.investmentAmount * level.aLevelCommissionRate) / 100).toFixed(2),
-            },
-            {
-              method: "Invite B-level to join",
-              rate: `${level.bLevelCommissionRate}%`,
-              amount: ((level.investmentAmount * level.bLevelCommissionRate) / 100).toFixed(2),
-            },
-            {
-              method: "Invite C-level to join",
-              rate: `${level.cLevelCommissionRate}%`,
-              amount: ((level.investmentAmount * level.cLevelCommissionRate) / 100).toFixed(2),
-            },
-          ],
-        };
-      });
-
-      return JsonResponse(res, {
-        status: "success",
-        statusCode: 200,
-        title: "Levels",
-        message: "Levels retrieved successfully.",
-        data: {
-          levels: formattedLevels,
-          userLevel: userCurrentLevel,
-          requiresLevelPurchase: userCurrentLevel ? !userCurrentLevel.hasLevel : true,
-        },
-      });
-    } catch (error) {
-      console.error("Error fetching levels:", error);
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 500,
-        message: "An error occurred while fetching levels.",
-        title: "Levels",
-      });
     }
-  };
 
+    const formattedLevels = levels.map((level) => {
+      const isUserLevel = userCurrentLevel?.currentLevelNumber === level.levelNumber;
+      const tasksCompleted = isUserLevel ? (userTaskStats?.completedToday || 0) : 0;
+      const tasksRemaining = level.dailyTaskLimit - tasksCompleted;
+
+      const canPurchase = userCurrentLevel
+        ? !userCurrentLevel.hasLevel
+          ? level.levelNumber === 0 && userCurrentLevel.mainWallet >= level.investmentAmount
+          : level.levelNumber === userCurrentLevel.currentLevelNumber + 1 && 
+            userCurrentLevel.mainWallet >= level.investmentAmount
+        : false;
+
+      return {
+        level: level.levelName,
+        levelNumber: level.levelNumber,
+        remaining: Math.max(0, tasksRemaining),
+        completed: tasksCompleted,
+        target: level.investmentAmount,
+        purchasePrice: level.investmentAmount,
+        dailyTasks: `${Math.floor(level.dailyTaskLimit * 0.5)}-${level.dailyTaskLimit}`,
+        commission: `₹${level.rewardPerTask * Math.floor(level.dailyTaskLimit * 0.5)}-₹${level.rewardPerTask * level.dailyTaskLimit}`,
+        rewardPerTask: level.rewardPerTask,
+        dailyTaskLimit: level.dailyTaskLimit,
+        icon: level.icon,
+        description: level.description,
+        isUnlocked: userCurrentLevel 
+          ? userCurrentLevel.hasLevel 
+            ? level.levelNumber <= userCurrentLevel.currentLevelNumber
+            : false
+          : false,
+        isCurrent: isUserLevel,
+        canPurchase,
+        invitations: [
+          {
+            method: "Invite A-level to join",
+            rate: `${level.aLevelCommissionRate}%`,
+            amount: ((level.investmentAmount * level.aLevelCommissionRate) / 100).toFixed(2),
+          },
+          {
+            method: "Invite B-level to join",
+            rate: `${level.bLevelCommissionRate}%`,
+            amount: ((level.investmentAmount * level.bLevelCommissionRate) / 100).toFixed(2),
+          },
+          {
+            method: "Invite C-level to join",
+            rate: `${level.cLevelCommissionRate}%`,
+            amount: ((level.investmentAmount * level.cLevelCommissionRate) / 100).toFixed(2),
+          },
+        ],
+      };
+    });
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Levels",
+      message: "Levels retrieved successfully.",
+      data: {
+        levels: formattedLevels,
+        userLevel: userCurrentLevel,
+        requiresLevelPurchase: userCurrentLevel ? !userCurrentLevel.hasLevel : true,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching levels:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while fetching levels.",
+      title: "Levels",
+    });
+  }
+};
+
+// Upgrade user level (USER)
 export const upgradeUserLevel = async (
   req: Request,
   res: Response,
@@ -175,7 +173,6 @@ export const upgradeUserLevel = async (
       });
     }
 
-    // Balance check
     if (user.mainWallet < targetLevel.investmentAmount) {
       return JsonResponse(res, {
         status: "error",
@@ -185,7 +182,6 @@ export const upgradeUserLevel = async (
       });
     }
 
-    // Deduct and update
     user.mainWallet -= targetLevel.investmentAmount;
     user.investmentAmount = (user.investmentAmount || 0) + targetLevel.investmentAmount;
     user.currentLevel = targetLevel.levelName;
@@ -224,7 +220,7 @@ export const upgradeUserLevel = async (
   }
 };
 
-
+// Get level by name (USER)
 export const getLevelByName = async (
   req: Request,
   res: Response,
@@ -265,7 +261,7 @@ export const getLevelByName = async (
   }
 };
 
-// Get level by number
+// Get level by number (USER)
 export const getLevelByNumber = async (
   req: Request,
   res: Response,
@@ -306,7 +302,114 @@ export const getLevelByNumber = async (
   }
 };
 
-// Create new level (Admin only)
+// ==================== ADMIN ENDPOINTS ====================
+
+// Get all levels for admin with pagination and statistics (ADMIN)
+export const getAllLevelsAdmin = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      isActive = ""
+    } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter
+    const filter: any = {};
+
+    if (search) {
+      filter.$or = [
+        { levelName: { $regex: search, $options: "i" } },
+        { levelNumber: isNaN(Number(search)) ? undefined : Number(search) }
+      ].filter(Boolean);
+    }
+
+    if (isActive !== "" && isActive !== "all") {
+      filter.isActive = isActive === "true";
+    }
+
+    // Fetch levels
+    const [levels, totalCount] = await Promise.all([
+      models.level.find(filter)
+        .sort({ order: 1, levelNumber: 1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      models.level.countDocuments(filter)
+    ]);
+
+    // Get statistics
+    const stats = await models.level.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalLevels: { $sum: 1 },
+          activeLevels: {
+            $sum: { $cond: ["$isActive", 1, 0] }
+          },
+          totalInvestment: { $sum: "$investmentAmount" }
+        }
+      }
+    ]);
+
+    // Get user count per level
+    const userStats = await models.User.aggregate([
+      {
+        $group: {
+          _id: "$currentLevelNumber",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Merge user counts with levels
+    const levelsWithUserCount = levels.map((level: any) => {
+      const userStat = userStats.find((s: any) => s._id === level.levelNumber);
+      return {
+        ...level,
+        userCount: userStat?.count || 0
+      };
+    });
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Levels Retrieved",
+      message: "Levels fetched successfully.",
+      data: {
+        levels: levelsWithUserCount,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalCount / limitNum),
+          totalCount,
+          limit: limitNum
+        },
+        statistics: {
+          ...stats[0],
+          totalUsers: userStats.reduce((acc: number, curr: any) => acc + curr.count, 0)
+        }
+      }
+    });
+  } catch (err) {
+    console.error("💥 Get all levels error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch levels.",
+    });
+  }
+};
+
+// Create new level (ADMIN)
 export const createLevel = async (
   req: Request,
   res: Response,
@@ -328,7 +431,7 @@ export const createLevel = async (
     } = req.body;
 
     // Validation
-    if (!levelNumber || !levelName || rewardPerTask === undefined || !dailyTaskLimit) {
+    if (levelNumber === undefined || !levelName || rewardPerTask === undefined || !dailyTaskLimit) {
       return JsonResponse(res, {
         status: "error",
         statusCode: 400,
@@ -362,7 +465,7 @@ export const createLevel = async (
       cLevelCommissionRate: cLevelCommissionRate || 0,
       icon: icon || '🍎',
       description: description || '',
-      order: order || levelNumber,
+      order: order !== undefined ? order : levelNumber,
       isActive: true,
     });
 
@@ -394,7 +497,7 @@ export const createLevel = async (
   }
 };
 
-// Update level (Admin only)
+// Update level (ADMIN)
 export const updateLevel = async (
   req: Request,
   res: Response,
@@ -462,11 +565,78 @@ export const updateLevel = async (
   }
 };
 
+// Delete level (ADMIN)
+export const deleteLevel = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const { levelId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(levelId)) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Invalid level ID.",
+        title: "Delete Level",
+      });
+    }
+
+    const level = await models.level.findById(levelId);
+
+    if (!level) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "Level not found.",
+        title: "Delete Level",
+      });
+    }
+
+    // Check if any users are using this level
+    const usersCount = await models.User.countDocuments({
+      currentLevelNumber: level.levelNumber
+    });
+
+    if (usersCount > 0) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: `Cannot delete level. ${usersCount} users are currently using this level.`,
+        title: "Delete Level",
+      });
+    }
+
+    await models.level.findByIdAndDelete(levelId);
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Delete Level",
+      message: "Level deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Error deleting level:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while deleting the level.",
+      title: "Delete Level",
+    });
+  }
+};
+
 export default {
+  // User endpoints
   getAllLevels,
   getLevelByName,
   getLevelByNumber,
+  upgradeUserLevel,
+  
+  // Admin endpoints
+  getAllLevelsAdmin,
   createLevel,
   updateLevel,
-  upgradeUserLevel,
+  deleteLevel,
 };

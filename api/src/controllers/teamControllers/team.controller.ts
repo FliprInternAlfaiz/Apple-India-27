@@ -1,10 +1,14 @@
-// controllers/teamControllers/team.controller.ts
+// controllers/teamControllers/team.controller.ts - COMPLETE VERSION
 import { Request, Response } from "express";
 import models from "../../models";
 import commonsUtils from "../../utils";
+import mongoose from "mongoose";
 
 const { JsonResponse } = commonsUtils;
 
+// ==================== USER ENDPOINTS ====================
+
+// Get team stats (USER)
 const getTeamStats = async (req: Request, res: Response) => {
   try {
     const userId = res.locals.userId;
@@ -67,6 +71,7 @@ const getTeamStats = async (req: Request, res: Response) => {
   }
 };
 
+// Get referral link (USER)
 const getReferralLink = async (req: Request, res: Response) => {
   try {
     const userId = res.locals.userId;
@@ -117,6 +122,7 @@ const getReferralLink = async (req: Request, res: Response) => {
   }
 };
 
+// Get team members by level (USER)
 const getTeamMembersByLevel = async (req: Request, res: Response) => {
   try {
     const userId = res.locals.userId;
@@ -144,7 +150,7 @@ const getTeamMembersByLevel = async (req: Request, res: Response) => {
       userId, 
       level 
     })
-      .populate('referredUserId', 'name phone createdAt')
+      .populate('referredUserId', 'name phone createdAt investmentAmount currentLevel')
       .lean();
 
     const members = teamReferrals.map((ref: any) => ({
@@ -152,8 +158,8 @@ const getTeamMembersByLevel = async (req: Request, res: Response) => {
       name: ref.referredUserId.name,
       phone: ref.referredUserId.phone,
       joinedAt: ref.referredUserId.createdAt,
-      currentLevel: level,
-      investmentAmount: 0, // Add investment logic if needed
+      currentLevel: ref.referredUserId.currentLevel || 'No Level',
+      investmentAmount: ref.referredUserId.investmentAmount || 0,
     }));
 
     return JsonResponse(res, {
@@ -178,8 +184,230 @@ const getTeamMembersByLevel = async (req: Request, res: Response) => {
   }
 };
 
+// ==================== ADMIN ENDPOINTS ====================
+
+// Get all team referrals for admin (ADMIN)
+const getAllTeamReferrals = async (req: Request, res: Response) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      level = ""
+    } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter
+    const filter: any = {};
+
+    if (level && level !== "all") {
+      filter.level = level;
+    }
+
+    // Apply search if provided
+    let userIds: any[] = [];
+    if (search) {
+      const users = await models.User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } }
+        ]
+      }).select('_id');
+
+      userIds = users.map(u => u._id);
+      filter.$or = [
+        { userId: { $in: userIds } },
+        { referredUserId: { $in: userIds } }
+      ];
+    }
+
+    // Fetch referrals with user details
+    const [referrals, totalCount] = await Promise.all([
+      models.TeamReferral.find(filter)
+        .populate('userId', 'name phone picture createdAt')
+        .populate('referredUserId', 'name phone picture createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      models.TeamReferral.countDocuments(filter)
+    ]);
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Team Referrals",
+      message: "Team referrals fetched successfully.",
+      data: {
+        referrals,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalCount / limitNum),
+          totalCount,
+          limit: limitNum
+        }
+      }
+    });
+  } catch (err) {
+    console.error("💥 Get all team referrals error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch team referrals.",
+    });
+  }
+};
+
+// Get team statistics (ADMIN)
+const getTeamStatistics = async (req: Request, res: Response) => {
+  try {
+    const stats = await models.TeamReferral.aggregate([
+      {
+        $group: {
+          _id: "$level",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const levelACount = stats.find(s => s._id === 'A')?.count || 0;
+    const levelBCount = stats.find(s => s._id === 'B')?.count || 0;
+    const levelCCount = stats.find(s => s._id === 'C')?.count || 0;
+    const totalReferrals = levelACount + levelBCount + levelCCount;
+
+    // Get top referrers
+    const topReferrers = await models.TeamReferral.aggregate([
+      {
+        $group: {
+          _id: "$userId",
+          totalReferrals: { $sum: 1 }
+        }
+      },
+      { $sort: { totalReferrals: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const referrerIds = topReferrers.map(r => r._id);
+    const referrers = await models.User.find({
+      _id: { $in: referrerIds }
+    }).select('name phone picture');
+
+    const topReferrersWithDetails = topReferrers.map(ref => {
+      const user = referrers.find(u => u._id.toString() === ref._id.toString());
+      return {
+        userId: ref._id,
+        user,
+        totalReferrals: ref.totalReferrals
+      };
+    });
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Team Statistics",
+      message: "Statistics fetched successfully.",
+      data: {
+        totalReferrals,
+        levelACount,
+        levelBCount,
+        levelCCount,
+        topReferrers: topReferrersWithDetails
+      }
+    });
+  } catch (err) {
+    console.error("💥 Get team statistics error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch team statistics.",
+    });
+  }
+};
+
+// Get referral tree for a user (ADMIN)
+const getReferralTree = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Invalid user ID.",
+        title: "Referral Tree",
+      });
+    }
+
+    const user = await models.User.findById(userId).select('name phone picture');
+
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "User not found.",
+        title: "Referral Tree",
+      });
+    }
+
+    // Get all referrals for this user
+    const referrals = await models.TeamReferral.find({ userId })
+      .populate('referredUserId', 'name phone picture')
+      .sort({ level: 1, createdAt: -1 })
+      .lean();
+
+    // Group by level
+    const levelA = referrals.filter(r => r.level === 'A');
+    const levelB = referrals.filter(r => r.level === 'B');
+    const levelC = referrals.filter(r => r.level === 'C');
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Referral Tree",
+      message: "Referral tree fetched successfully.",
+      data: {
+        user,
+        tree: {
+          levelA: {
+            count: levelA.length,
+            members: levelA.map(r => r.referredUserId)
+          },
+          levelB: {
+            count: levelB.length,
+            members: levelB.map(r => r.referredUserId)
+          },
+          levelC: {
+            count: levelC.length,
+            members: levelC.map(r => r.referredUserId)
+          }
+        },
+        totalReferrals: referrals.length
+      }
+    });
+  } catch (err) {
+    console.error("💥 Get referral tree error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch referral tree.",
+    });
+  }
+};
+
 export default {
+  // User endpoints
   getTeamStats,
   getReferralLink,
   getTeamMembersByLevel,
+  
+  // Admin endpoints
+  getAllTeamReferrals,
+  getTeamStatistics,
+  getReferralTree,
 };

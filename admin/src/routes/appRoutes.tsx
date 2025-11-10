@@ -5,6 +5,8 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import AllUsers from "../pages/allUsers/AllUsers";
 import TaskManagement from "../pages/TaskManagement/TaskManagement";
+import TeamManagement from "../pages/TeamManagment/TeamManagment";
+import LevelManagement from "../pages/LevelManagment/LevelManagment";
 
 export const appRouter = createBrowserRouter([
   {
@@ -22,6 +24,14 @@ export const appRouter = createBrowserRouter([
       {
         path: ROUTES.TASKS,
         element: <TaskManagement />,
+      },
+      {
+        path: ROUTES.TEAMS,
+        element: <TeamManagement />,
+      },
+      {
+        path: ROUTES.LEVELS,
+        element: <LevelManagement />,
       },
     ],
   },

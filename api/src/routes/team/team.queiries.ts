@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { commonsMiddleware } from '../../middleware';
 import teamController from '../../controllers/teamControllers/team.controller';
 
-const { getTeamStats, getReferralLink, getTeamMembersByLevel } = teamController;
+const { getTeamStats, getReferralLink, getTeamMembersByLevel,getAllTeamReferrals,getReferralTree,getTeamStatistics } = teamController;
 
 export default (router: Router) => {
 
@@ -18,5 +18,23 @@ export default (router: Router) => {
     '/members/:level',
     commonsMiddleware.checkUserAuth,
     getTeamMembersByLevel,
+  );
+
+   router.get(
+    '/admin/team/referrals',
+    commonsMiddleware.checkAdminAuth,
+    getAllTeamReferrals
+  );
+
+  router.get(
+    '/admin/team/statistics',
+    commonsMiddleware.checkAdminAuth,
+    getTeamStatistics
+  );
+
+  router.get(
+    '/admin/team/tree/:userId',
+    commonsMiddleware.checkAdminAuth,
+    getReferralTree
   );
 };

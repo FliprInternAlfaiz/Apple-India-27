@@ -3,6 +3,10 @@ const authPrefix = "/auth/admin";
 const userPrefix = "/admin";
 const adminPrefix = "/admin";
 
+const LevelPrefix = "/level/admin";
+
+const teamPrefix = "/team/admin"
+
 export const authUrls = {
   LOGIN: authPrefix + "/login",
   PROFILE: authPrefix + "/profile",
@@ -27,4 +31,11 @@ export const adminUrls = {
   TASK_BY_ID: (taskId: string) => `${adminPrefix}/tasks/${taskId}`,
   TOGGLE_TASK_STATUS: (taskId: string) =>
     `${adminPrefix}/tasks/${taskId}/toggle-status`,
+
+  LEVELS: `${LevelPrefix}/levels`,
+  LEVEL_BY_ID: (levelId: string) => `${LevelPrefix}/levels/${levelId}`,
+
+   TEAM_REFERRALS: `${teamPrefix}/team/referrals`,      
+  TEAM_STATISTICS: `${teamPrefix}/team/statistics`,     
+  TEAM_TREE_BY_USER: (userId: string) => `${teamPrefix}/team/tree/${userId}`,
 };
