@@ -1,11 +1,18 @@
 const authPrefix = "/auth/admin";
 
 const userPrefix = "/admin";
+
 const adminPrefix = "/admin";
 
 const LevelPrefix = "/level/admin";
 
-const teamPrefix = "/team/admin"
+const teamPrefix = "/team/admin";
+
+const paymentPrefix = "/payment/admin";
+
+const rechargePrefix = "/recharge/admin";
+
+const withdrawalPrefix = "/withdrawal/admin";
 
 export const authUrls = {
   LOGIN: authPrefix + "/login",
@@ -35,7 +42,31 @@ export const adminUrls = {
   LEVELS: `${LevelPrefix}/levels`,
   LEVEL_BY_ID: (levelId: string) => `${LevelPrefix}/levels/${levelId}`,
 
-   TEAM_REFERRALS: `${teamPrefix}/team/referrals`,      
-  TEAM_STATISTICS: `${teamPrefix}/team/statistics`,     
+  TEAM_REFERRALS: `${teamPrefix}/team/referrals`,
+  TEAM_STATISTICS: `${teamPrefix}/team/statistics`,
   TEAM_TREE_BY_USER: (userId: string) => `${teamPrefix}/team/tree/${userId}`,
+};
+
+export const paymentUrls = {
+  PAYMENT_METHODS: paymentPrefix + "/payment-methods",
+  PAYMENT_METHOD_BY_ID: (methodId: string) =>
+    `${paymentPrefix}/payment-methods/${methodId}`,
+};
+
+export const rechargeUrls = {
+  RECHARGES: rechargePrefix + "/recharges",
+  RECHARGE_STATISTICS: rechargePrefix + "/recharges/statistics",
+  APPROVE_RECHARGE: (orderId: string) =>
+    `${rechargePrefix}/recharges/approve/${orderId}`,
+  REJECT_RECHARGE: (orderId: string) =>
+    `${rechargePrefix}/recharges/reject/${orderId}`,
+};
+
+export const withdrawalUrls = {
+  WITHDRAWALS: withdrawalPrefix + "/withdrawals",
+  WITHDRAWAL_STATISTICS: withdrawalPrefix + "/withdrawals/statistics",
+  APPROVE_WITHDRAWAL: (withdrawalId: string) =>
+    `${withdrawalPrefix}/withdrawals/approve/${withdrawalId}`,
+  REJECT_WITHDRAWAL: (withdrawalId: string) =>
+    `${withdrawalPrefix}/withdrawals/reject/${withdrawalId}`,
 };

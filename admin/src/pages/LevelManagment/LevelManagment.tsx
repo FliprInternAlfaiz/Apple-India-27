@@ -228,14 +228,6 @@ const LevelManagement = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <Flex justify="center" align="center" style={{ height: '400px' }}>
-        <Loader size="lg" />
-      </Flex>
-    );
-  }
-
   if (error) {
     return (
       <Alert icon={<FiAlertCircle />} title="Error" color="red">
@@ -392,26 +384,39 @@ const LevelManagement = () => {
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Level</Table.Th>
-                <Table.Th>Investment</Table.Th>
-                <Table.Th>Reward/Task</Table.Th>
-                <Table.Th>Daily Tasks</Table.Th>
-                <Table.Th>Commission Rates</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Actions</Table.Th>
+                <Table.Th ta="center">Level</Table.Th>
+                <Table.Th ta="center">Investment</Table.Th>
+                <Table.Th ta="center">Reward/Task</Table.Th>
+                <Table.Th ta="center">Daily Tasks</Table.Th>
+                <Table.Th ta="center">Commission Rates</Table.Th>
+                <Table.Th ta="center">Status</Table.Th>
+                <Table.Th ta="center">Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>
-            <Table.Tbody>
-              {rows.length > 0 ? rows : (
-                <Table.Tr>
-                  <Table.Td colSpan={7}>
-                    <Text ta="center" c="dimmed" py="xl">
-                      No levels found
-                    </Text>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-            </Table.Tbody>
+              <Table.Tbody>
+                          {isLoading ? (
+                            <Table.Tr>
+                              <Table.Td colSpan={9}>
+                                <Flex justify="center"  direction="column" align="center" py="xl">
+                                  <Loader size="lg" />
+                                  <Text c="dimmed" ml="sm">
+                                    Loading Level...
+                                  </Text>
+                                </Flex>
+                              </Table.Td>
+                            </Table.Tr>
+                          ) : rows.length > 0 ? (
+                            rows
+                          ) : (
+                            <Table.Tr>
+                              <Table.Td colSpan={9}>
+                                <Text ta="center" c="dimmed" py="xl">
+                                  No Level found
+                                </Text>
+                              </Table.Td>
+                            </Table.Tr>
+                          )}
+                        </Table.Tbody>
           </Table>
         </Table.ScrollContainer>
 

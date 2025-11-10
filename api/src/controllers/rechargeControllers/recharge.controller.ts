@@ -1,12 +1,14 @@
-// controllers/rechargeControllers/recharge.controller.ts
+// controllers/rechargeControllers/recharge.controller.ts - COMPLETE VERSION
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
-import models from "../../models";
 import QRCode from 'qrcode';
+import models from "../../models";
 
 const { JsonResponse } = commonsUtils;
 
-// Get wallet info
+// ==================== USER ENDPOINTS ====================
+
+// Get wallet info (USER)
 export const getWalletInfo = async (
   req: Request,
   res: Response,
@@ -49,7 +51,7 @@ export const getWalletInfo = async (
   }
 };
 
-// Get payment methods
+// Get payment methods (USER)
 export const getPaymentMethods = async (
   req: Request,
   res: Response,
@@ -80,12 +82,12 @@ export const getPaymentMethods = async (
   }
 };
 
+// Create recharge order (USER)
 export const createRechargeOrder = async (req: Request, res: Response) => {
   try {
     const { amount, paymentMethodId } = req.body;
     const userId = res.locals.userId;
 
-    // 🔹 Validate payment method
     const paymentMethod = await models.paymentMethod.findById(paymentMethodId);
     if (!paymentMethod || !paymentMethod.isActive) {
       return res.status(404).json({
@@ -94,7 +96,6 @@ export const createRechargeOrder = async (req: Request, res: Response) => {
       });
     }
 
-    // 🔹 Generate QR code (for UPI)
     let dynamicQRCode = null;
     if (paymentMethod.methodType === "upi" && paymentMethod.upiId) {
       const upiString = `upi://pay?pa=${paymentMethod.upiId}&pn=${encodeURIComponent(
@@ -146,65 +147,65 @@ export const createRechargeOrder = async (req: Request, res: Response) => {
   }
 };
 
-
+// Generate UPI QR Code (USER)
 export const generateUPIQRCode = async (req: Request, res: Response) => {
-    try {
-      const { amount, paymentMethodId } = req.body;
+  try {
+    const { amount, paymentMethodId } = req.body;
 
-      const paymentMethod = await models.paymentMethod.findById(paymentMethodId);
-      
-      if (!paymentMethod || !paymentMethod.isActive) {
-        return res.status(404).json({
-          success: false,
-          message: "Payment method not found or inactive",
-        });
-      }
-
-      let qrCodeData = "";
-
-      if (paymentMethod.methodType === "upi" && paymentMethod.upiId) {
-        const upiString = `upi://pay?pa=${paymentMethod.upiId}&pn=${encodeURIComponent(
-          paymentMethod.accountName || "Merchant"
-        )}&am=${amount}&cu=INR&tn=${encodeURIComponent(
-          `Recharge Order ${Date.now()}`
-        )}`;
-
-        const qrCodeImage = await QRCode.toDataURL(upiString, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: "#000000",
-            light: "#FFFFFF",
-          },
-        });
-
-        qrCodeData = qrCodeImage;
-      } 
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          qrCode: qrCodeData,
-          amount,
-          upiId: paymentMethod.upiId,
-          paymentMethod: {
-            _id: paymentMethod._id,
-            methodName: paymentMethod.methodName,
-            methodType: paymentMethod.methodType,
-          },
-        },
-      });
-    } catch (error: any) {
-      console.error("Error generating QR code:", error);
-      return res.status(500).json({
+    const paymentMethod = await models.paymentMethod.findById(paymentMethodId);
+    
+    if (!paymentMethod || !paymentMethod.isActive) {
+      return res.status(404).json({
         success: false,
-        message: "Failed to generate QR code",
-        error: error.message,
+        message: "Payment method not found or inactive",
       });
     }
-  };
 
-// Verify payment and complete recharge
+    let qrCodeData = "";
+
+    if (paymentMethod.methodType === "upi" && paymentMethod.upiId) {
+      const upiString = `upi://pay?pa=${paymentMethod.upiId}&pn=${encodeURIComponent(
+        paymentMethod.accountName || "Merchant"
+      )}&am=${amount}&cu=INR&tn=${encodeURIComponent(
+        `Recharge Order ${Date.now()}`
+      )}`;
+
+      const qrCodeImage = await QRCode.toDataURL(upiString, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
+
+      qrCodeData = qrCodeImage;
+    } 
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        qrCode: qrCodeData,
+        amount,
+        upiId: paymentMethod.upiId,
+        paymentMethod: {
+          _id: paymentMethod._id,
+          methodName: paymentMethod.methodName,
+          methodType: paymentMethod.methodType,
+        },
+      },
+    });
+  } catch (error: any) {
+    console.error("Error generating QR code:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate QR code",
+      error: error.message,
+    });
+  }
+};
+
+// Verify payment and complete recharge (USER)
 export const verifyRechargePayment = async (
   req: Request,
   res: Response,
@@ -215,7 +216,6 @@ export const verifyRechargePayment = async (
     const { orderId, transactionId } = req.body;
     const paymentProof = req.file?.path || null;
 
-    // Validate transaction ID
     if (!transactionId || transactionId.trim().length < 10) {
       return JsonResponse(res, {
         status: "error",
@@ -225,7 +225,6 @@ export const verifyRechargePayment = async (
       });
     }
 
-    // Find the recharge order
     const rechargeOrder = await models.recharge.findOne({
       _id: orderId,
       userId,
@@ -249,7 +248,6 @@ export const verifyRechargePayment = async (
       });
     }
 
-    // Check for duplicate transaction ID
     const existingTransaction = await models.recharge.findOne({
       transactionId: transactionId.trim(),
       status: { $in: ["processing", "completed"] },
@@ -264,7 +262,6 @@ export const verifyRechargePayment = async (
       });
     }
 
-    // Update recharge order with transaction details
     rechargeOrder.transactionId = transactionId.trim();
     rechargeOrder.paymentProof = paymentProof ?? undefined;
     rechargeOrder.status = "processing";
@@ -298,7 +295,204 @@ export const verifyRechargePayment = async (
   }
 };
 
-// Admin: Approve recharge (add amount to wallet)
+// Get recharge history (USER)
+export const getRechargeHistory = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
+    const { page = 1, limit = 10, status } = req.query;
+
+    const query: any = { userId };
+    if (status) {
+      query.status = status;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const recharges = await models.recharge
+      .find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .select("-__v")
+      .lean();
+
+    const totalRecharges = await models.recharge.countDocuments(query);
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Recharge History",
+      message: "Recharge history retrieved successfully.",
+      data: {
+        recharges,
+        pagination: {
+          currentPage: Number(page),
+          totalPages: Math.ceil(totalRecharges / Number(limit)),
+          totalRecharges,
+          limit: Number(limit),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching recharge history:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while fetching recharge history.",
+      title: "Recharge History",
+    });
+  }
+};
+
+// ==================== ADMIN ENDPOINTS ====================
+
+// Get all recharges (ADMIN)
+export const getAllRecharges = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      status = ""
+    } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter
+    const filter: any = {};
+
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    let userIds: any[] = [];
+    if (search) {
+      const users = await models.User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } }
+        ]
+      }).select('_id');
+
+      console.log(users)
+
+      userIds = users.map(u => u._id);
+      
+      filter.$or = [
+        { orderId: { $regex: search, $options: "i" } },
+        { userId: { $in: userIds } }
+      ];
+    }
+
+    const [recharges, totalCount] = await Promise.all([
+      models.recharge.find(filter)
+        .populate('userId', 'name phone')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      models.recharge.countDocuments(filter)
+    ]);
+
+    const stats = await models.recharge.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const statistics = {
+      totalAmount: stats.reduce((acc, curr) => acc + curr.totalAmount, 0),
+      pendingCount: stats.find(s => s._id === 'pending')?.count || 0,
+      processingCount: stats.find(s => s._id === 'processing')?.count || 0,
+      completedCount: stats.find(s => s._id === 'completed')?.count || 0,
+      rejectedCount: stats.find(s => s._id === 'rejected')?.count || 0
+    };
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Recharges Retrieved",
+      message: "Recharges fetched successfully.",
+      data: {
+        recharges,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalCount / limitNum),
+          totalCount,
+          limit: limitNum
+        },
+        statistics
+      }
+    });
+  } catch (err) {
+    console.error("💥 Get all recharges error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch recharges.",
+    });
+  }
+};
+
+// Get recharge statistics (ADMIN)
+export const getRechargeStatistics = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const stats = await models.recharge.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const statistics = {
+      totalAmount: stats.reduce((acc, curr) => acc + curr.totalAmount, 0),
+      pendingCount: stats.find(s => s._id === 'pending')?.count || 0,
+      processingCount: stats.find(s => s._id === 'processing')?.count || 0,
+      completedCount: stats.find(s => s._id === 'completed')?.count || 0,
+      rejectedCount: stats.find(s => s._id === 'rejected')?.count || 0
+    };
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Statistics",
+      message: "Statistics retrieved successfully.",
+      data: statistics
+    });
+  } catch (err) {
+    console.error("💥 Get recharge statistics error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch statistics.",
+    });
+  }
+};
+
+// Approve recharge (ADMIN)
 export const approveRecharge = async (
   req: Request,
   res: Response,
@@ -328,7 +522,6 @@ export const approveRecharge = async (
       });
     }
 
-    // Update user wallet
     const user = await models.User.findById(rechargeOrder.userId);
     if (!user) {
       return JsonResponse(res, {
@@ -339,11 +532,9 @@ export const approveRecharge = async (
       });
     }
 
-    // Add amount to main wallet
     user.mainWallet = (user.mainWallet || 0) + rechargeOrder.amount;
     await user.save();
 
-    // Update recharge order status
     rechargeOrder.status = "completed";
     rechargeOrder.approvedAt = new Date();
     rechargeOrder.remarks = remarks || "Payment verified successfully";
@@ -369,7 +560,7 @@ export const approveRecharge = async (
   }
 };
 
-// Admin: Reject recharge
+// Reject recharge (ADMIN)
 export const rejectRecharge = async (
   req: Request,
   res: Response,
@@ -423,66 +614,19 @@ export const rejectRecharge = async (
     });
   }
 };
-// Get recharge history
-export const getRechargeHistory = async (
-  req: Request,
-  res: Response,
-  __: NextFunction
-) => {
-  try {
-    const userId = res.locals.userId;
-    const { page = 1, limit = 10, status } = req.query;
-
-    const query: any = { userId };
-    if (status) {
-      query.status = status;
-    }
-
-    const skip = (Number(page) - 1) * Number(limit);
-
-    const recharges = await models.recharge
-      .find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit))
-      .select("-__v")
-      .lean();
-
-    const totalRecharges = await models.recharge.countDocuments(query);
-
-    return JsonResponse(res, {
-      status: "success",
-      statusCode: 200,
-      title: "Recharge History",
-      message: "Recharge history retrieved successfully.",
-      data: {
-        recharges,
-        pagination: {
-          currentPage: Number(page),
-          totalPages: Math.ceil(totalRecharges / Number(limit)),
-          totalRecharges,
-          limit: Number(limit),
-        },
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching recharge history:", error);
-    return JsonResponse(res, {
-      status: "error",
-      statusCode: 500,
-      message: "An error occurred while fetching recharge history.",
-      title: "Recharge History",
-    });
-  }
-};
 
 export default {
+  // User endpoints
   getWalletInfo,
   getPaymentMethods,
   createRechargeOrder,
   verifyRechargePayment,
   generateUPIQRCode,
+  getRechargeHistory,
+  
+  // Admin endpoints
+  getAllRecharges,
+  getRechargeStatistics,
   approveRecharge,
   rejectRecharge,
-  getRechargeHistory,
 };

@@ -11,10 +11,11 @@ const SidebarMenu: React.FC<Iprops> = ({ showLogo }) => {
   return (
     <Flex
       direction={"column"}
-      gap={10}
+      gap={8}
       justify={"center"}
       align={"center"}
       w={"100%"}
+      className={classes.scrollContainer} 
     >
       {showLogo && (
         <Flex

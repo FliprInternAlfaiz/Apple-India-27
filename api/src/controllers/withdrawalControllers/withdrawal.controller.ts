@@ -512,7 +512,259 @@ export const setWithdrawalPassword = async (
       title: "Withdrawal Password",
     });
   }
+}
+
+  const getAllWithdrawals = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      status = "",
+      walletType = ""
+    } = req.query;
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter: any = {};
+
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+
+    if (walletType && walletType !== "all") {
+      filter.walletType = walletType;
+    }
+
+    let userIds: any[] = [];
+    if (search) {
+      const users = await models.User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } }
+        ]
+      }).select('_id');
+
+      userIds = users.map(u => u._id);
+      filter.userId = { $in: userIds };
+    }
+
+    const [withdrawals, totalCount] = await Promise.all([
+      models.withdrawal.find(filter)
+        .populate('userId', 'name phone')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      models.withdrawal.countDocuments(filter)
+    ]);
+
+    const stats = await models.withdrawal.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const statistics = {
+      totalAmount: stats.reduce((acc, curr) => acc + curr.totalAmount, 0),
+      pendingCount: stats.find(s => s._id === 'pending')?.count || 0,
+      completedCount: stats.find(s => s._id === 'completed')?.count || 0,
+      rejectedCount: stats.find(s => s._id === 'rejected')?.count || 0
+    };
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Withdrawals Retrieved",
+      message: "Withdrawals fetched successfully.",
+      data: {
+        withdrawals,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalCount / limitNum),
+          totalCount,
+          limit: limitNum
+        },
+        statistics
+      }
+    });
+  } catch (err) {
+    console.error("💥 Get all withdrawals error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch withdrawals.",
+    });
+  }
 };
+
+// Get withdrawal statistics (ADMIN)
+ const getWithdrawalStatistics = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const stats = await models.withdrawal.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$amount" }
+        }
+      }
+    ]);
+
+    const statistics = {
+      totalAmount: stats.reduce((acc, curr) => acc + curr.totalAmount, 0),
+      pendingCount: stats.find(s => s._id === 'pending')?.count || 0,
+      completedCount: stats.find(s => s._id === 'completed')?.count || 0,
+      rejectedCount: stats.find(s => s._id === 'rejected')?.count || 0
+    };
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Statistics",
+      message: "Statistics retrieved successfully.",
+      data: statistics
+    });
+  } catch (err) {
+    console.error("💥 Get withdrawal statistics error:", err);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: "Failed to fetch statistics.",
+    });
+  }
+};
+
+// Approve withdrawal (ADMIN)
+ const approveWithdrawal = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const { withdrawalId } = req.params;
+    const { transactionId, remarks } = req.body;
+
+    const withdrawal = await models.withdrawal.findById(withdrawalId);
+
+    if (!withdrawal) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "Withdrawal not found.",
+        title: "Withdrawal",
+      });
+    }
+
+    if (withdrawal.status !== "pending") {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "This withdrawal has already been processed.",
+        title: "Withdrawal",
+      });
+    }
+
+    withdrawal.status = "completed";
+    withdrawal.transactionId = transactionId;
+    await withdrawal.save();
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Withdrawal",
+      message: "Withdrawal approved successfully.",
+      data: { withdrawal },
+    });
+  } catch (error) {
+    console.error("Error approving withdrawal:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while approving withdrawal.",
+      title: "Withdrawal",
+    });
+  }
+};
+
+// Reject withdrawal (ADMIN)
+ const rejectWithdrawal = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const { withdrawalId } = req.params;
+
+    const withdrawal = await models.withdrawal.findById(withdrawalId);
+
+    if (!withdrawal) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "Withdrawal not found.",
+        title: "Withdrawal",
+      });
+    }
+
+    if (withdrawal.status !== "pending") {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "This withdrawal has already been processed.",
+        title: "Withdrawal",
+      });
+    }
+
+    const user = await models.User.findById(withdrawal.userId);
+    if (user) {
+      if (withdrawal.walletType === "mainWallet") {
+        user.mainWallet += withdrawal.amount;
+      } else {
+        user.commissionWallet += withdrawal.amount;
+      }
+      user.totalWithdrawals -= withdrawal.amount;
+      await user.save();
+    }
+
+    withdrawal.status = "rejected";
+    await withdrawal.save();
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Withdrawal",
+      message: "Withdrawal rejected and amount refunded.",
+      data: { withdrawal },
+    });
+  } catch (error) {
+    console.error("Error rejecting withdrawal:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while rejecting withdrawal.",
+      title: "Withdrawal",
+    });
+  }
+};
+
+
 
 export default {
   getBankAccounts,
@@ -523,4 +775,10 @@ export default {
   createWithdrawal,
   getWithdrawalHistory,
   setWithdrawalPassword,
+
+
+  getAllWithdrawals,
+  getWithdrawalStatistics,
+  approveWithdrawal,
+  rejectWithdrawal,
 };

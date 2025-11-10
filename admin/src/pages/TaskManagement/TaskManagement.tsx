@@ -589,7 +589,7 @@ const TaskManagement = () => {
               {isLoading ? (
                 <Table.Tr>
                   <Table.Td colSpan={9}>
-                    <Flex justify="center" align="center" py="xl">
+                    <Flex justify="center"  direction="column" align="center" py="xl">
                       <Loader size="lg" />
                       <Text c="dimmed" ml="sm">
                         Loading task...

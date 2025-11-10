@@ -3,7 +3,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IRecharge extends Document {
-  userId: mongoose.Types.ObjectId;
+userId: { type: Schema.Types.ObjectId, ref: 'user' }
   orderId: string;
   amount: number;
   paymentMethodId: mongoose.Types.ObjectId;
@@ -32,7 +32,7 @@ const rechargeSchema = new Schema<IRecharge>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
       required: true,
       index: true,
     },

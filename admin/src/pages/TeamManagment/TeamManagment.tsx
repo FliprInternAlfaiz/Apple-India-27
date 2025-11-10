@@ -1,13 +1,13 @@
 // pages/admin/TeamManagement.tsx
-import React, { useState } from 'react';
-import { 
-  Text, 
-  Group, 
-  Flex, 
-  Table, 
-  Badge, 
-  ActionIcon, 
-  TextInput, 
+import React, { useState } from "react";
+import {
+  Text,
+  Group,
+  Flex,
+  Table,
+  Badge,
+  ActionIcon,
+  TextInput,
   Select,
   Pagination,
   Loader,
@@ -17,29 +17,29 @@ import {
   Avatar,
   Card,
   Grid,
-  Tabs
-} from '@mantine/core';
-import { 
-  FiSearch, 
+  Tabs,
+} from "@mantine/core";
+import {
+  FiSearch,
   FiUsers,
   FiAlertCircle,
   FiTrendingUp,
   FiEye,
   FiAward,
-  FiUserCheck
-} from 'react-icons/fi';
+  FiUserCheck,
+} from "react-icons/fi";
 import {
   useAllTeamReferrals,
-  useTeamStatistics
-} from '../../hooks/query/team.query';
-import classes from './index.module.scss';
+  useTeamStatistics,
+} from "../../hooks/query/team.query";
+import classes from "./index.module.scss";
 
 const TeamManagement = () => {
   // Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [levelFilter, setLevelFilter] = useState<string>("all");
   const [activePage, setActivePage] = useState(1);
-  const [activeTab, setActiveTab] = useState<string | null>('overview');
+  const [activeTab, setActiveTab] = useState<string | null>("overview");
   const itemsPerPage = 10;
 
   // Fetch team data
@@ -47,7 +47,7 @@ const TeamManagement = () => {
     page: activePage,
     limit: itemsPerPage,
     search: searchQuery,
-    level: levelFilter !== 'all' ? levelFilter : undefined
+    level: levelFilter !== "all" ? levelFilter : undefined,
   });
 
   // Fetch statistics
@@ -58,29 +58,25 @@ const TeamManagement = () => {
   const statistics = statsData || {};
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
 
   const getLevelBadge = (level: string) => {
     const colors: any = {
-      'A': 'green',
-      'B': 'blue',
-      'C': 'orange'
+      A: "green",
+      B: "blue",
+      C: "orange",
     };
-    return <Badge color={colors[level] || 'gray'} size="sm">Level {level}</Badge>;
-  };
-
-  if (isLoading) {
     return (
-      <Flex justify="center" align="center" style={{ height: '400px' }}>
-        <Loader size="lg" />
-      </Flex>
+      <Badge color={colors[level] || "gray"} size="sm">
+        Level {level}
+      </Badge>
     );
-  }
+  };
 
   if (error) {
     return (
@@ -98,8 +94,12 @@ const TeamManagement = () => {
             {referral.userId?.name?.charAt(0).toUpperCase()}
           </Avatar>
           <div>
-            <Text size="sm" fw={500}>{referral.userId?.name || 'N/A'}</Text>
-            <Text size="xs" c="dimmed">{referral.userId?.phone || 'N/A'}</Text>
+            <Text size="sm" fw={500}>
+              {referral.userId?.name || "N/A"}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {referral.userId?.phone || "N/A"}
+            </Text>
           </div>
         </Group>
       </Table.Td>
@@ -109,14 +109,16 @@ const TeamManagement = () => {
             {referral.referredUserId?.name?.charAt(0).toUpperCase()}
           </Avatar>
           <div>
-            <Text size="sm" fw={500}>{referral.referredUserId?.name || 'N/A'}</Text>
-            <Text size="xs" c="dimmed">{referral.referredUserId?.phone || 'N/A'}</Text>
+            <Text size="sm" fw={500}>
+              {referral.referredUserId?.name || "N/A"}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {referral.referredUserId?.phone || "N/A"}
+            </Text>
           </div>
         </Group>
       </Table.Td>
-      <Table.Td>
-        {getLevelBadge(referral.level)}
-      </Table.Td>
+      <Table.Td>{getLevelBadge(referral.level)}</Table.Td>
       <Table.Td>
         <Text size="sm">{referral.referralChain?.length || 0}</Text>
       </Table.Td>
@@ -146,41 +148,75 @@ const TeamManagement = () => {
             <Group>
               <FiUsers size={32} color="white" />
               <div>
-                <Text size="xs" c="white" opacity={0.9}>Total Referrals</Text>
-                <Text size="xl" fw={700} c="white">{statistics.totalReferrals || 0}</Text>
+                <Text size="xs" c="white" opacity={0.9}>
+                  Total Referrals
+                </Text>
+                <Text size="xl" fw={700} c="white">
+                  {statistics.totalReferrals || 0}
+                </Text>
               </div>
             </Group>
           </Paper>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Paper p="md" shadow="xs" style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' }}>
+          <Paper
+            p="md"
+            shadow="xs"
+            style={{
+              background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+            }}
+          >
             <Group>
               <FiAward size={32} color="white" />
               <div>
-                <Text size="xs" c="white" opacity={0.9}>A-Level</Text>
-                <Text size="xl" fw={700} c="white">{statistics.levelACount || 0}</Text>
+                <Text size="xs" c="white" opacity={0.9}>
+                  A-Level
+                </Text>
+                <Text size="xl" fw={700} c="white">
+                  {statistics.levelACount || 0}
+                </Text>
               </div>
             </Group>
           </Paper>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Paper p="md" shadow="xs" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+          <Paper
+            p="md"
+            shadow="xs"
+            style={{
+              background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            }}
+          >
             <Group>
               <FiUserCheck size={32} color="white" />
               <div>
-                <Text size="xs" c="white" opacity={0.9}>B-Level</Text>
-                <Text size="xl" fw={700} c="white">{statistics.levelBCount || 0}</Text>
+                <Text size="xs" c="white" opacity={0.9}>
+                  B-Level
+                </Text>
+                <Text size="xl" fw={700} c="white">
+                  {statistics.levelBCount || 0}
+                </Text>
               </div>
             </Group>
           </Paper>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Paper p="md" shadow="xs" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+          <Paper
+            p="md"
+            shadow="xs"
+            style={{
+              background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+            }}
+          >
             <Group>
               <FiTrendingUp size={32} color="white" />
               <div>
-                <Text size="xs" c="white" opacity={0.9}>C-Level</Text>
-                <Text size="xl" fw={700} c="white">{statistics.levelCCount || 0}</Text>
+                <Text size="xs" c="white" opacity={0.9}>
+                  C-Level
+                </Text>
+                <Text size="xl" fw={700} c="white">
+                  {statistics.levelCCount || 0}
+                </Text>
               </div>
             </Group>
           </Paper>
@@ -191,7 +227,9 @@ const TeamManagement = () => {
       <Paper p="md" shadow="xs" className={classes.header}>
         <Group justify="space-between" mb="md">
           <Flex gap="xs" direction="column" align="flex-start">
-            <Text size="xl" fw={700} className={classes.title}>Team Management</Text>
+            <Text size="xl" fw={700} className={classes.title}>
+              Team Management
+            </Text>
             <Text size="sm" c="dimmed" className={classes.subtitle}>
               Monitor referral network and team hierarchy
             </Text>
@@ -214,14 +252,14 @@ const TeamManagement = () => {
           <Select
             placeholder="Filter by Level"
             data={[
-              { value: 'all', label: 'All Levels' },
-              { value: 'A', label: 'Level A' },
-              { value: 'B', label: 'Level B' },
-              { value: 'C', label: 'Level C' }
+              { value: "all", label: "All Levels" },
+              { value: "A", label: "Level A" },
+              { value: "B", label: "Level B" },
+              { value: "C", label: "Level C" },
             ]}
             value={levelFilter}
             onChange={(value) => {
-              setLevelFilter(value || 'all');
+              setLevelFilter(value || "all");
               setActivePage(1);
             }}
             clearable
@@ -261,11 +299,29 @@ const TeamManagement = () => {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {rows.length > 0 ? rows : (
+                  {isLoading ? (
                     <Table.Tr>
-                      <Table.Td colSpan={6}>
+                      <Table.Td colSpan={9}>
+                        <Flex
+                          justify="center"
+                          direction="column"
+                          align="center"
+                          py="xl"
+                        >
+                          <Loader size="lg" />
+                          <Text c="dimmed" ml="sm">
+                            Loading Referral...
+                          </Text>
+                        </Flex>
+                      </Table.Td>
+                    </Table.Tr>
+                  ) : rows.length > 0 ? (
+                    rows
+                  ) : (
+                    <Table.Tr>
+                      <Table.Td colSpan={9}>
                         <Text ta="center" c="dimmed" py="xl">
-                          No referrals found
+                          No Referral found
                         </Text>
                       </Table.Td>
                     </Table.Tr>
@@ -287,38 +343,54 @@ const TeamManagement = () => {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {referrals.filter((r: any) => r.level === 'A').map((referral: any) => (
-                    <Table.Tr key={referral._id}>
-                      <Table.Td>
-                        <Group gap="sm">
-                          <Avatar radius="xl" size="md">
-                            {referral.userId?.name?.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={500}>{referral.userId?.name}</Text>
-                            <Text size="xs" c="dimmed">{referral.userId?.phone}</Text>
-                          </div>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="sm">
-                          <Avatar radius="xl" size="md">
-                            {referral.referredUserId?.name?.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={500}>{referral.referredUserId?.name}</Text>
-                            <Text size="xs" c="dimmed">{referral.referredUserId?.phone}</Text>
-                          </div>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{referral.referralChain?.length || 0}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="xs" c="dimmed">{formatDate(referral.createdAt)}</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
+                  {referrals
+                    .filter((r: any) => r.level === "A")
+                    .map((referral: any) => (
+                      <Table.Tr key={referral._id}>
+                        <Table.Td>
+                          <Group gap="sm">
+                            <Avatar radius="xl" size="md">
+                              {referral.userId?.name?.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text size="sm" fw={500}>
+                                {referral.userId?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {referral.userId?.phone}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="sm">
+                            <Avatar radius="xl" size="md">
+                              {referral.referredUserId?.name
+                                ?.charAt(0)
+                                .toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text size="sm" fw={500}>
+                                {referral.referredUserId?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {referral.referredUserId?.phone}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">
+                            {referral.referralChain?.length || 0}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed">
+                            {formatDate(referral.createdAt)}
+                          </Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
                 </Table.Tbody>
               </Table>
             </Table.ScrollContainer>
@@ -336,38 +408,54 @@ const TeamManagement = () => {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {referrals.filter((r: any) => r.level === 'B').map((referral: any) => (
-                    <Table.Tr key={referral._id}>
-                      <Table.Td>
-                        <Group gap="sm">
-                          <Avatar radius="xl" size="md">
-                            {referral.userId?.name?.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={500}>{referral.userId?.name}</Text>
-                            <Text size="xs" c="dimmed">{referral.userId?.phone}</Text>
-                          </div>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="sm">
-                          <Avatar radius="xl" size="md">
-                            {referral.referredUserId?.name?.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={500}>{referral.referredUserId?.name}</Text>
-                            <Text size="xs" c="dimmed">{referral.referredUserId?.phone}</Text>
-                          </div>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{referral.referralChain?.length || 0}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="xs" c="dimmed">{formatDate(referral.createdAt)}</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
+                  {referrals
+                    .filter((r: any) => r.level === "B")
+                    .map((referral: any) => (
+                      <Table.Tr key={referral._id}>
+                        <Table.Td>
+                          <Group gap="sm">
+                            <Avatar radius="xl" size="md">
+                              {referral.userId?.name?.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text size="sm" fw={500}>
+                                {referral.userId?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {referral.userId?.phone}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="sm">
+                            <Avatar radius="xl" size="md">
+                              {referral.referredUserId?.name
+                                ?.charAt(0)
+                                .toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text size="sm" fw={500}>
+                                {referral.referredUserId?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {referral.referredUserId?.phone}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">
+                            {referral.referralChain?.length || 0}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed">
+                            {formatDate(referral.createdAt)}
+                          </Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
                 </Table.Tbody>
               </Table>
             </Table.ScrollContainer>
@@ -385,38 +473,54 @@ const TeamManagement = () => {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {referrals.filter((r: any) => r.level === 'C').map((referral: any) => (
-                    <Table.Tr key={referral._id}>
-                      <Table.Td>
-                        <Group gap="sm">
-                          <Avatar radius="xl" size="md">
-                            {referral.userId?.name?.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={500}>{referral.userId?.name}</Text>
-                            <Text size="xs" c="dimmed">{referral.userId?.phone}</Text>
-                          </div>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Group gap="sm">
-                          <Avatar radius="xl" size="md">
-                            {referral.referredUserId?.name?.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <div>
-                            <Text size="sm" fw={500}>{referral.referredUserId?.name}</Text>
-                            <Text size="xs" c="dimmed">{referral.referredUserId?.phone}</Text>
-                          </div>
-                        </Group>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="sm">{referral.referralChain?.length || 0}</Text>
-                      </Table.Td>
-                      <Table.Td>
-                        <Text size="xs" c="dimmed">{formatDate(referral.createdAt)}</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
+                  {referrals
+                    .filter((r: any) => r.level === "C")
+                    .map((referral: any) => (
+                      <Table.Tr key={referral._id}>
+                        <Table.Td>
+                          <Group gap="sm">
+                            <Avatar radius="xl" size="md">
+                              {referral.userId?.name?.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text size="sm" fw={500}>
+                                {referral.userId?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {referral.userId?.phone}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="sm">
+                            <Avatar radius="xl" size="md">
+                              {referral.referredUserId?.name
+                                ?.charAt(0)
+                                .toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text size="sm" fw={500}>
+                                {referral.referredUserId?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {referral.referredUserId?.phone}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">
+                            {referral.referralChain?.length || 0}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed">
+                            {formatDate(referral.createdAt)}
+                          </Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
                 </Table.Tbody>
               </Table>
             </Table.ScrollContainer>

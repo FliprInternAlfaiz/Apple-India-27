@@ -51,15 +51,27 @@ export default (router: Router) => {
   // 🔸 Admin Routes
   // =========================
 
-  // 🔹 Approve recharge order
+  router.get(
+    "/admin/recharges",
+    commonsMiddleware.checkAdminAuth,
+    rechargeController.getAllRecharges
+  );
+
+  router.get(
+    "/admin/recharges/statistics",
+    commonsMiddleware.checkAdminAuth,
+    rechargeController.getRechargeStatistics
+  );
+
   router.patch(
-    "/admin/approve/:orderId",
+    "/admin/recharges/approve/:orderId",
+    commonsMiddleware.checkAdminAuth,
     rechargeController.approveRecharge
   );
 
-  // 🔹 Reject recharge order
   router.patch(
-    "/admin/reject/:orderId",
+    "/admin/recharges/reject/:orderId",
+    commonsMiddleware.checkAdminAuth,
     rechargeController.rejectRecharge
   );
 
