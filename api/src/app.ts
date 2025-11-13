@@ -1,23 +1,27 @@
-import { config } from 'dotenv';
+import dotenv from 'dotenv';
 import express from 'express';
 
 import ExpressConfig from './config/expressConfig';
 import Config from './config/serverConfig';
-import cookieParser from 'cookie-parser';
-import "./crons/autoApproveRecharge"; 
-import "./crons/taskCleanup";
-import dotenv from "dotenv";
 dotenv.config();
-if (process.env.NODE_ENV === 'test') config({ path: '.env.test' });
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test' });
+}
 
 const PORT = process.env.PORT ?? 4000;
 const app = express();
-app.use(cookieParser());
 
 const serverConfig = new Config();
 const experssApp = new ExpressConfig(app, PORT);
-//cronInit();
-serverConfig.start();
-const serverApp = experssApp.start();
-export default serverApp;
- 
+
+(async () => {
+  try {
+    await serverConfig.start();
+    experssApp.start();
+  } catch (e) {
+    console.error('Startup failed:', e);
+    process.exit(1);
+  }
+})();
+
+export default app;

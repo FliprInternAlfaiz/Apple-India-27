@@ -1,8 +1,8 @@
-import cron from 'node-cron';
+import { initAutoApproveRecharge } from './autoApproveRecharge';
+import { initTaskCleanup } from './taskCleanup';
 
 export const cronInit = () => {
-  cron.schedule('*/10 * * * *', async () => {
-  });
-  cron.schedule('0 0 * * *', async () => {
-  });
+  // Initialize individual cron jobs
+  initAutoApproveRecharge();
+  initTaskCleanup();
 };

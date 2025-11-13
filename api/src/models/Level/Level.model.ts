@@ -1,4 +1,3 @@
-// models/level.model.ts
 import { Schema, model } from "mongoose";
 import { ILevel ,ILevelMethods } from "../../interface/level.interface";
 
@@ -74,9 +73,8 @@ const schema = new Schema<ILevel>(
 );
 
 schema.index({ levelNumber: 1, isActive: 1 });
-schema.index({ levelName: 1 });
 schema.index({ order: 1 });
 
 const levelModel: ILevelMethods = model<ILevel, ILevelMethods>("level", schema);
 
-export default levelModel;
+export default levelModel;
