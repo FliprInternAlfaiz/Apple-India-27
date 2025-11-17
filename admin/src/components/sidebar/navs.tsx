@@ -27,9 +27,19 @@ export const navs: NavProps[] = [
   { icon: IconCash, label: "Recharge", to: ROUTES.RECHARGE },
   { icon: IconWallet, label: "Withdrawals", to: ROUTES.WITHDRAWAL },
   {
+    icon: IconWallet,
+    label: "Withdrawals-config",
+    to: ROUTES.WITHDRAWAL_CONFIG,
+  },
+  {
     icon: IconCurrencyRupee,
     label: "Payment Methods",
     to: ROUTES.PAYMENT_METHOD,
+  },
+  {
+    icon: IconListDetails,
+    label: "Conference News",
+    to: ROUTES.CONFERENCE_NEWS,
   },
   { icon: IconSettings, label: "Settings", to: ROUTES.SETTINGS },
 ];

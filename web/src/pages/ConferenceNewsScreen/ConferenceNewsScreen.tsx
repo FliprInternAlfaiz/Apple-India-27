@@ -1,156 +1,181 @@
-import React, { useState, useMemo } from "react";
-import {
-  Container,
-  Title,
-  Text,
-  Card,
-  Center,
-  Loader,
-  Image,
-  Pagination,
-  Box,
-  Flex,
-  ActionIcon,
-} from "@mantine/core";
-import { IoRefresh, IoArrowBack } from "react-icons/io5";
-import classes from "./ConferenceNewsScreen.module.scss";
-import { useAllConferenceNewsQuery } from "../../hooks/query/conferenceNews.query";
-import ConferenceNewsModal from "../../components/ConferenceNewsModal/conferenceNewsModel";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Modal, Image, Text, Button, Group, Box, ActionIcon } from "@mantine/core";
+import { IoClose, IoOpenOutline } from "react-icons/io5";
+import { useActiveConferenceNewsQuery, useCloseConferenceNews } from "../../hooks/query/conferenceNews.query";
 
-interface ConferenceNews {
-  _id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  createdAt?: string;
-  updatedAt?: string;
-  clickUrl?: string;
-}
+const ConferenceNewsModal: React.FC = () => {
+  const [opened, setOpened] = useState(false);
+  const [hasShownOnce, setHasShownOnce] = useState(false);
+  
+  const { data, isLoading } = useActiveConferenceNewsQuery();
+  const closeNewsMutation = useCloseConferenceNews();
+  
+  const news = data?.data;
 
-interface ConferenceNewsResponse {
-  conferenceNews: ConferenceNews[];
-  pagination?: {
-    totalPages: number;
-    page: number;
-  };
-}
+  useEffect(() => {
+    // Show modal only once per session when news is available
+    if (news && !hasShownOnce) {
+      const timer = setTimeout(() => {
+        setOpened(true);
+        setHasShownOnce(true);
+      }, 1500); // Show after 1.5 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [news, hasShownOnce]);
 
-const ConferenceNewsScreen: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [limit] = useState(9);
-  const [selectedNews, setSelectedNews] = useState<ConferenceNews | null>(null);
-  const navigate = useNavigate();
-
-  const { data, isLoading, refetch } = useAllConferenceNewsQuery(
-    page,
-    limit
-  ) as {
-    data?: ConferenceNewsResponse;
-    isLoading: boolean;
-    refetch: () => void;
+  const handleClose = async () => {
+    if (news) {
+      try {
+        await closeNewsMutation.mutateAsync(news._id);
+      } catch (error) {
+        console.error("Failed to track close:", error);
+      }
+    }
+    setOpened(false);
   };
 
-  const newsList = useMemo(() => data?.conferenceNews || [], [data]);
-  const totalPages = useMemo(() => data?.pagination?.totalPages || 1, [data]);
+  const handleClickUrl = () => {
+    if (news?.clickUrl) {
+      window.open(news.clickUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
-  if (isLoading) {
-    return (
-     <Center h="100vh">
-        <Loader color="blue" size="lg" />
-      </Center>
-    );
-  }
+  if (isLoading || !news) return null;
 
   return (
-    <Container size="lg" className={classes.wrapper}>
-      {/* Header Section */}
-      <Flex justify="space-between" align="center" className={classes.header}>
-        <Flex align="center" gap="md">
-          <ActionIcon
-            variant="light"
-            color="white"
-            size="lg"
-            radius="xl"
-            onClick={() => navigate(-1)}
-          >
-            <IoArrowBack size={22} />
-          </ActionIcon>
-          <Title order={2} className={classes.headerTitle}>
-            Conference News
-          </Title>
-        </Flex>
-
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      size="lg"
+      padding={0}
+      centered
+      withCloseButton={false}
+      overlayProps={{
+        opacity: 0.7,
+        blur: 4,
+      }}
+      styles={{
+        body: { padding: 0 },
+        content: {
+          borderRadius: 16,
+          overflow: "hidden",
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+        },
+      }}
+    >
+      <Box style={{ position: "relative" }}>
+        {/* Close Button */}
         <ActionIcon
-          variant="light"
-          color="white"
+          variant="filled"
+          color="dark"
           size="lg"
           radius="xl"
-          title="Refresh"
-          onClick={() => refetch()}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            zIndex: 10,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(10px)",
+          }}
+          onClick={handleClose}
         >
-          <IoRefresh size={22} />
+          <IoClose size={20} color="white" />
         </ActionIcon>
-      </Flex>
 
-      {/* News Grid */}
-      {newsList.length === 0 ? (
-        <Center h="60vh">
-          <Text c="dimmed">No conference news available.</Text>
-        </Center>
-      ) : (
-        <div className={classes.grid}>
-          {newsList.map((news) => (
-            <Card
-              key={news._id}
-              shadow="md"
-              radius="lg"
-              className={classes.card}
-              onClick={() => setSelectedNews(news)}
-            >
-              <Card.Section>
-                <Image
-                  src={news.imageUrl}
-                  height={180}
-                  alt={news.title}
-                  className={classes.image}
-                />
-              </Card.Section>
-
-              <Box mt="md">
-                <Text fw={600} size="lg" lineClamp={1}>
-                  {news.title}
-                </Text>
-                <Text c="dimmed" size="sm" mt="xs" lineClamp={2}>
-                  {news.description}
-                </Text>
-              </Box>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Center mt="xl">
-          <Pagination
-            total={totalPages}
-            value={page}
-            onChange={setPage}
-            color="blue"
+        {/* Image Section */}
+        <Box style={{ position: "relative", backgroundColor: "#000" }}>
+          <Image
+            src={news.imageUrl}
+            alt={news.title}
+            height={400}
+            fit="contain"
+            style={{
+              width: "100%",
+            }}
           />
-        </Center>
-      )}
+          
+          {/* Gradient Overlay at Bottom */}
+          <Box
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 120,
+              background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent)",
+            }}
+          />
+        </Box>
 
-      {/* Modal */}
-      {selectedNews && (
-        <ConferenceNewsModal
-          news={selectedNews}
-          onClose={() => setSelectedNews(null)}
-        />
-      )}
-    </Container>
+        {/* Content Section */}
+        <Box
+          p="xl"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
+        >
+          <Text
+            size="xl"
+            fw={700}
+            mb="sm"
+            style={{ color: "white", lineHeight: 1.3 }}
+          >
+            {news.title}
+          </Text>
+          
+          <Text
+            size="sm"
+            mb="xl"
+            style={{ 
+              color: "rgba(255, 255, 255, 0.9)",
+              lineHeight: 1.6,
+            }}
+          >
+            {news.description}
+          </Text>
+
+          <Group justify="space-between" align="center">
+            <Group gap="xs">
+              <Text size="xs" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                👁️ {news.viewCount} views
+              </Text>
+              {news.closeCount > 0 && (
+                <>
+                  <Text size="xs" style={{ color: "rgba(255, 255, 255, 0.5)" }}>
+                    •
+                  </Text>
+                  <Text size="xs" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                    ❌ {news.closeCount} closed
+                  </Text>
+                </>
+              )}
+            </Group>
+
+            {news.clickUrl && (
+              <Button
+                variant="white"
+                size="md"
+                radius="xl"
+                rightSection={<IoOpenOutline size={18} />}
+                onClick={handleClickUrl}
+                styles={{
+                  root: {
+                    fontWeight: 600,
+                    paddingLeft: 24,
+                    paddingRight: 24,
+                  },
+                }}
+              >
+                Learn More
+              </Button>
+            )}
+          </Group>
+        </Box>
+      </Box>
+    </Modal>
   );
 };
 
-export default ConferenceNewsScreen;
+export default ConferenceNewsModal;

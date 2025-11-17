@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { Request, Response, NextFunction } from "express";
-import { ObjectId } from "mongodb";
+import { Types } from "mongoose"
 import commonsUtils from "../../utils";
 import models from "../../models";
 import { jwtConfig } from "../../services";
@@ -61,7 +61,7 @@ export default async (req: Request, res: Response, __: NextFunction) => {
     });
 
     const authToken = await models.token.createToken({
-      userId: new ObjectId(user.id as string),
+      userId: new Types.ObjectId(user.id as string),
       token,
     });
 

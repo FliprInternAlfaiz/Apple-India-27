@@ -764,6 +764,306 @@ export const setWithdrawalPassword = async (
   }
 };
 
+export const checkWithdrawalAvailability = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
+
+    const user = await models.User.findById(userId);
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "User not found.",
+        title: "Withdrawal",
+      });
+    }
+
+    const today = new Date();
+    const dayOfWeek = today.getDay(); 
+    const currentTime = `${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`;
+
+    // Get today's configuration
+    const config = await models.withdrawalConfig.findOne({ dayOfWeek });
+
+    if (!config || !config.isActive) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: "Withdrawals are not allowed today.",
+        title: "Withdrawal",
+        data: {
+          canWithdraw: false,
+          reason: "Day not active",
+          dayOfWeek,
+        },
+      });
+    }
+
+    const userLevel = user.currentLevelNumber;
+    if (!config.allowedLevels.includes(userLevel)) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: `Apple Level ${userLevel} cannot withdraw today. Please check your withdrawal schedule.`,
+        title: "Withdrawal",
+        data: {
+          canWithdraw: false,
+          reason: "Level not allowed",
+          userLevel,
+          allowedLevels: config.allowedLevels,
+        },
+      });
+    }
+
+    // Check time range
+    if (currentTime < config.startTime || currentTime > config.endTime) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: `Withdrawals are only allowed between ${config.startTime} and ${config.endTime}.`,
+        title: "Withdrawal",
+        data: {
+          canWithdraw: false,
+          reason: "Outside time range",
+          startTime: config.startTime,
+          endTime: config.endTime,
+        },
+      });
+    }
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Withdrawal",
+      message: "You can make a withdrawal now.",
+      data: {
+        canWithdraw: true,
+        startTime: config.startTime,
+        endTime: config.endTime,
+      },
+    });
+  } catch (error) {
+    console.error("Error checking withdrawal availability:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "Failed to check withdrawal availability.",
+      title: "Withdrawal",
+    });
+  }
+};
+export const getWithdrawalSchedule = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
+
+    const user = await models.User.findById(userId);
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "User not found.",
+        title: "Withdrawal Schedule",
+      });
+    }
+
+    const userLevel = user.currentLevelNumber;
+    const configs = await models.withdrawalConfig.find().sort({ dayOfWeek: 1 }).lean();
+
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const schedule = configs.map((config: any) => ({
+      day: dayNames[config.dayOfWeek],
+      dayOfWeek: config.dayOfWeek,
+      isActive: config.isActive,
+      canWithdraw: config.isActive && config.allowedLevels.includes(userLevel),
+      startTime: config.startTime,
+      endTime: config.endTime,
+      allowedLevels: config.allowedLevels,
+    }));
+
+    // Get current day status
+    const today = new Date().getDay();
+    const todaySchedule = schedule.find(s => s.dayOfWeek === today);
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Withdrawal Schedule",
+      message: "Schedule retrieved successfully.",
+      data: {
+        userLevel,
+        schedule,
+        today: todaySchedule,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching withdrawal schedule:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "Failed to fetch withdrawal schedule.",
+      title: "Withdrawal Schedule",
+    });
+  }
+};
+
+export const createWithdrawalWithDayCheck = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
+    const { walletType, amount, bankAccountId, withdrawalPassword } = req.body;
+
+    if (isNaN(amount) || amount < 280) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Minimum withdrawal amount is Rs 280.",
+        title: "Withdrawal",
+      });
+    }
+
+    const user = await models.User.findById(userId)
+      .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals appleLevel");
+
+    if (!user) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "User not found.",
+        title: "Withdrawal",
+      });
+    }
+
+    // Check day and time availability
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const currentTime = `${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`;
+
+    const config = await models.withdrawalConfig.findOne({ dayOfWeek });
+
+    if (!config || !config.isActive) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: "Withdrawals are not allowed today.",
+        title: "Withdrawal",
+      });
+    }
+
+    const userLevel = user.currentLevelNumber;
+    if (!config.allowedLevels.includes(userLevel)) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: `Apple Level ${userLevel} cannot withdraw today. Please check your withdrawal schedule.`,
+        title: "Withdrawal",
+      });
+    }
+
+    if (currentTime < config.startTime || currentTime > config.endTime) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 403,
+        message: `Withdrawals are only allowed between ${config.startTime} and ${config.endTime}.`,
+        title: "Withdrawal",
+      });
+    }
+
+    user.mainWallet = Number(user.mainWallet) || 0;
+    user.commissionWallet = Number(user.commissionWallet) || 0;
+    user.totalWithdrawals = Number(user.totalWithdrawals) || 0;
+
+    if (user.withdrawalPassword) {
+      const isPasswordValid = await bcrypt.compare(withdrawalPassword, user.withdrawalPassword);
+      if (!isPasswordValid) {
+        return JsonResponse(res, {
+          status: "error",
+          statusCode: 401,
+          message: "Invalid withdrawal password.",
+          title: "Withdrawal",
+        });
+      }
+    }
+
+    // Check wallet balance
+    const walletBalance = walletType === "mainWallet" ? user.mainWallet : user.commissionWallet;
+    if (walletBalance < amount) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Insufficient wallet balance.",
+        title: "Withdrawal",
+      });
+    }
+
+    // Get bank account
+    const bankAccount = await models.bankAccount.findOne({
+      _id: bankAccountId,
+      userId,
+      isActive: true,
+    });
+
+    if (!bankAccount) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 404,
+        message: "Bank account not found.",
+        title: "Withdrawal",
+      });
+    }
+
+    // Deduct from wallet
+    if (walletType === "mainWallet") {
+      user.mainWallet -= amount;
+    } else {
+      user.commissionWallet -= amount;
+    }
+
+    user.totalWithdrawals += amount;
+    await user.save();
+
+    // Create withdrawal request
+    const withdrawal = await models.withdrawal.create({
+      userId,
+      walletType,
+      amount,
+      bankAccountId,
+      ifscCode: bankAccount.ifscCode,
+      accountNumber: bankAccount.accountNumber,
+      accountHolderName: bankAccount.accountHolderName,
+      bankName: bankAccount.bankName,
+      status: "pending",
+    });
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 201,
+      title: "Withdrawal",
+      message: "Withdrawal request created successfully.",
+      data: { withdrawal },
+    });
+
+  } catch (error) {
+    console.error("Error creating withdrawal:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while creating withdrawal request.",
+      title: "Withdrawal",
+    });
+  }
+};
+
 
 
 export default {
@@ -775,7 +1075,9 @@ export default {
   createWithdrawal,
   getWithdrawalHistory,
   setWithdrawalPassword,
-
+  checkWithdrawalAvailability,
+  getWithdrawalSchedule,
+  createWithdrawalWithDayCheck,
 
   getAllWithdrawals,
   getWithdrawalStatistics,

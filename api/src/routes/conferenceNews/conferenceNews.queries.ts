@@ -17,32 +17,51 @@ const {
 } = ConferenceNewsController;
 
 export default (router: Router) => {
+  // Public API: anyone can get active news
   router.get('/active', getActiveConferenceNews);
 
+  // Admin-only: Upload image
   router.post(
     '/upload-image',
-    commonsMiddleware.checkUserAuth,
+    commonsMiddleware.checkAdminAuth,
     uploadConferenceNews,
     handleMulterError,
-    uploadConferenceNewsImage,
+    uploadConferenceNewsImage
   );
 
-  router.post('/create', createConferenceNews);
+  // Admin-only: Create news
+  router.post(
+    '/create',
+    commonsMiddleware.checkAdminAuth,
+    createConferenceNews
+  );
 
-  router.get('/all', commonsMiddleware.checkUserAuth, getAllConferenceNews);
+  // Admin-only: Get all news
+  router.get(
+    '/all',
+    commonsMiddleware.checkAdminAuth,
+    getAllConferenceNews
+  );
 
-  router.post('/close/:newsId', closeConferenceNews);
+  // Admin-only: Close news
+  router.post(
+    '/close/:newsId',
+    commonsMiddleware.checkAdminAuth,
+    closeConferenceNews
+  );
 
+  // Admin-only: Delete news
   router.delete(
     '/delete/:newsId',
-    commonsMiddleware.checkUserAuth,
-    deleteConferenceNews,
+    commonsMiddleware.checkAdminAuth,
+    deleteConferenceNews
   );
 
+  // Admin-only: Toggle status
   router.patch(
     '/toggle-status/:newsId',
-    commonsMiddleware.checkUserAuth,
-    toggleConferenceNewsStatus,
+    commonsMiddleware.checkAdminAuth,
+    toggleConferenceNewsStatus
   );
 
   return router;

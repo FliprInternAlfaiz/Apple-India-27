@@ -8,7 +8,6 @@ import {
   FaEnvelope,
   FaUsers,
   FaTicketAlt,
-  FaMoneyBillWave,
   FaUniversity,
   FaIdCard,
 } from "react-icons/fa";
@@ -24,7 +23,6 @@ const menuItems = [
   { icon: <FaEnvelope />, title: "Management Positions", path: "/management-positions" },
   { icon: <FaUsers />, title: "Team Expansion", path: "/team-expansion" },
   { icon: <FaTicketAlt />, title: "Lucky Draw", path: "/lucky-draw" },
-  { icon: <FaMoneyBillWave />, title: "Financial Management Fund", path: "/finance-fund" },
   { icon: <FaUniversity />, title: "Recharge", path: "/recharge" },
   { icon: <FaIdCard />, title: "Identity Authentication", path: "/identity-verification" },
 ];
@@ -36,7 +34,6 @@ const Home: React.FC = () => {
 
   return (
     <>
-      {/* Header Section */}
       <Box
         style={{
           background: `url(${IMAGES.Home_Page}) center/cover no-repeat`,

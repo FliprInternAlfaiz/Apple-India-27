@@ -11,6 +11,8 @@ import TeamReferral from "./teamReferral/teamReferral.model";
 import ConferenceNewsModel from "./ConferenceNews/ConferenceNews.model";
 import { LuckyDraw, LuckyDrawParticipant } from "./Luckydraw/LuckyDraw.model";
 import { AdminModel } from "./admin/admin.model";
+import TeamReferralHistory from "./teamReferral/teamReferralHistory.model";
+import withdrawalConfigModel from "./withdrawalConfig/withdrawalConfig.model";
 
 const models = {
   User: UserModel,
@@ -27,6 +29,8 @@ const models = {
   LuckyDraw: LuckyDraw,
   LuckyDrawParticipant: LuckyDrawParticipant,
   Admin:AdminModel,
+  TeamReferralHistory:TeamReferralHistory,
+  withdrawalConfig:withdrawalConfigModel,
 };
 
 export default models;

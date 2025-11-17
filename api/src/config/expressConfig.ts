@@ -14,6 +14,7 @@ import { ConferenceNewsRoutes } from '../routes/conferenceNews/conferenceNews.ro
 import { luckydrawRoutes } from '../routes/luckydraw/luckydraw.route';
 import { userManagementRoutes } from '../routes/userManagement/userManagment.routes';
 import { AdminTaskRoutes } from '../routes/adminTask/adminTask.routes';
+import { WithdrawalConfigRoutes } from '../routes/withdrawalCofig/withdrawalConfig.route';
 
 class ExpressConfig {
   app: express.Application;
@@ -41,6 +42,7 @@ class ExpressConfig {
       new luckydrawRoutes(this.app),
       new userManagementRoutes(this.app),
       new AdminTaskRoutes(this.app),
+      new WithdrawalConfigRoutes(this.app),
     ];
 
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);

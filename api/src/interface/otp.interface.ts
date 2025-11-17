@@ -1,8 +1,7 @@
-import { ObjectId } from "mongodb";
-import { Document, Model } from "mongoose";
+import { Document, Model, Types} from "mongoose";
 
 export interface IOtp extends Document {
-  userId?: ObjectId;
+  userId?: Types.ObjectId;
   phone?: string;
   otp: string;
   createdAt?: Date;

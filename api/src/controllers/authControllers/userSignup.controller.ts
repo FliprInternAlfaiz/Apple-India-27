@@ -3,7 +3,7 @@ import models from "../../models";
 import encryptPassword from "../../utils/encryptPassword";
 import commonsUtils from "../../utils";
 import { jwtConfig } from "../../services";
-import { ObjectId } from 'mongodb';
+import { Types } from "mongoose"
 import createTeamReferrals from "./referral.controller";
 
 const { JsonResponse } = commonsUtils;
@@ -84,7 +84,7 @@ export default async (req: Request, res: Response) => {
     });
 
     const authToken = await models.token.createToken({
-      userId: new ObjectId(newUser.id as string),
+      userId: new Types.ObjectId(newUser.id as string),
       token,
     });
 

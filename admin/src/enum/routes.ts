@@ -15,7 +15,11 @@ export const ROUTES = {
 
   WITHDRAWAL: "/withdrawal",
 
+  WITHDRAWAL_CONFIG: "/withdrawal-config",
+
   PAYMENT_METHOD: "payment-method",
+
+  CONFERENCE_NEWS: "conference-News",
 
   SETTINGS: "/settings",
 

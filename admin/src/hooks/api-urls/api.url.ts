@@ -12,6 +12,8 @@ const paymentPrefix = "/payment/admin";
 
 const rechargePrefix = "/recharge/admin";
 
+const conferenceNews = "/conferenceNews";
+
 const withdrawalPrefix = "/withdrawal/admin";
 
 export const authUrls = {
@@ -69,4 +71,20 @@ export const withdrawalUrls = {
     `${withdrawalPrefix}/withdrawals/approve/${withdrawalId}`,
   REJECT_WITHDRAWAL: (withdrawalId: string) =>
     `${withdrawalPrefix}/withdrawals/reject/${withdrawalId}`,
+
+   WITHDRAWAL_CONFIGS: "/withdrawalConfig/withdrawal-configs",
+  UPDATE_WITHDRAWAL_CONFIG: (dayOfWeek: number) =>
+    `//withdrawalConfig/withdrawal-configs/${dayOfWeek}`,
+  BULK_UPDATE_CONFIGS: "/withdrawalConfig/withdrawal-configs/bulk",
+};
+
+
+export const conferenceNewsUrls = {
+  ACTIVE: conferenceNews + "/active",
+  ALL: conferenceNews + "/all",
+  CREATE: conferenceNews + "/create",
+  UPLOAD_IMAGE: conferenceNews + "/upload-image",
+  CLOSE: conferenceNews + "/close",
+  DELETE: conferenceNews + "/delete",
+  TOGGLE_STATUS: conferenceNews + "/toggle-status",
 };

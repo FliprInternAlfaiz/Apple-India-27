@@ -3,6 +3,8 @@ import models from "../../models";
 
 async function createTeamReferrals(referrerId: ObjectId, newUserId: ObjectId) {
   try {
+    const newUser = await models.User.findById(newUserId).select('name phone');
+    
     await models.TeamReferral.create({
       userId: referrerId,
       referredUserId: newUserId,
@@ -38,6 +40,18 @@ async function createTeamReferrals(referrerId: ObjectId, newUserId: ObjectId) {
           (referrerUser.commissionWallet || 0) + commission;
 
         await referrerUser.save();
+
+        await models.TeamReferralHistory.create({
+          userId: referrerId,
+          referredUserId: newUserId,
+          referrerUserId: referrerId,
+          level: "A",
+          amount: commission,
+          transactionType: 'signup_bonus',
+          status: 'completed',
+          description: `Level A commission: ${newUser?.name || 'User'} (${newUser?.phone || 'N/A'}) joined using your referral code. Commission: ${commissionRate}% of ₹${investmentAmount}`,
+          referralChain: [referrerId, newUserId],
+        });
 
         console.log(
           `💰 Commission of ₹${commission} added to ${referrerUser.name}'s wallet (Level ${currentTeamLevel})`
@@ -94,6 +108,18 @@ async function createTeamReferrals(referrerId: ObjectId, newUserId: ObjectId) {
 
           await levelBUser.save();
 
+          await models.TeamReferralHistory.create({
+            userId: referrerUser.referredBy,
+            referredUserId: newUserId,
+            referrerUserId: referrerId,
+            level: "B",
+            amount: commission,
+            transactionType: 'signup_bonus',
+            status: 'completed',
+            description: `Level B commission: ${newUser?.name || 'User'} (${newUser?.phone || 'N/A'}) joined through ${referrerUser.name}'s referral. Commission: ${commissionRate}% of ₹${investmentAmount}`,
+            referralChain: [referrerUser.referredBy, referrerId, newUserId],
+          });
+
           console.log(
             `💰 Commission of ₹${commission} added to ${levelBUser.name}'s wallet (Level B)`
           );
@@ -131,6 +157,24 @@ async function createTeamReferrals(referrerId: ObjectId, newUserId: ObjectId) {
               (levelCUser.commissionWallet || 0) + commission;
 
             await levelCUser.save();
+
+            // CREATE HISTORY ENTRY FOR LEVEL C
+            await models.TeamReferralHistory.create({
+              userId: levelBUser.referredBy,
+              referredUserId: newUserId,
+              referrerUserId: referrerId,
+              level: "C",
+              amount: commission,
+              transactionType: 'signup_bonus',
+              status: 'completed',
+              description: `Level C commission: ${newUser?.name || 'User'} (${newUser?.phone || 'N/A'}) joined through ${levelBUser.name}'s network. Commission: ${commissionRate}% of ₹${investmentAmount}`,
+              referralChain: [
+                levelBUser.referredBy,
+                referrerUser.referredBy,
+                referrerId,
+                newUserId,
+              ],
+            });
 
             console.log(
               `💰 Commission of ₹${commission} added to ${levelCUser.name}'s wallet (Level C)`

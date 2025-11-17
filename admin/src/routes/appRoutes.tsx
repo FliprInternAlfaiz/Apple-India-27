@@ -10,6 +10,8 @@ import LevelManagement from "../pages/LevelManagment/LevelManagment";
 import RechargeManagement from "../pages/RechargeManagement/RechargeManagement";
 import WithdrawalManagement from "../pages/WithdrawalManagment/WithdrawalManagment";
 import PaymentMethodManagement from "../pages/PaymentMethodManagement/PaymentMethodManagement";
+import WithdrawalConfigPage from "../pages/WithdrawalConfig/WithDrawalConfigPage";
+import ConferenceNewsManagement from "../pages/conferenceNewsManagment/conferenceNewsManagement";
 
 export const appRouter = createBrowserRouter([
   {
@@ -43,6 +45,14 @@ export const appRouter = createBrowserRouter([
       {
         path: ROUTES.WITHDRAWAL,
         element: <WithdrawalManagement />,
+      },
+      {
+        path: ROUTES.WITHDRAWAL_CONFIG,
+        element: <WithdrawalConfigPage />,
+      },
+      {
+        path: ROUTES.CONFERENCE_NEWS,
+        element: <ConferenceNewsManagement />,
       },
       {
         path: ROUTES.PAYMENT_METHOD,

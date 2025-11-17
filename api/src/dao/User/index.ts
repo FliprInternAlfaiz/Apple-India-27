@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
 
 import {
   IUser,
@@ -20,6 +20,6 @@ export default {
     this: IUserMethods,
     { id, password }: { id: IUser['id']; password: IUser['password'] },
   ) {
-    return this.findByIdAndUpdate(new ObjectId(id), { password });
+    return this.findByIdAndUpdate(new Types.ObjectId(id), { password });
   },
 };

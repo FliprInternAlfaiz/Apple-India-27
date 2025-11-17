@@ -1,5 +1,5 @@
 // pages/admin/LevelManagement.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Text, 
   Group, 
@@ -17,7 +17,6 @@ import {
   Tooltip,
   NumberInput,
   Switch,
-  Card,
   Grid
 } from '@mantine/core';
 import { 
@@ -59,7 +58,6 @@ interface LevelFormData {
 const LevelManagement = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [activePage, setActivePage] = useState(1);
   const itemsPerPage = 10;
 
@@ -90,7 +88,7 @@ const LevelManagement = () => {
     page: activePage,
     limit: itemsPerPage,
     search: searchQuery,
-    isActive: statusFilter !== 'all' ? statusFilter === 'active' : undefined
+    isActive: true
   });
 
   // Mutations

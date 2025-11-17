@@ -1,9 +1,8 @@
-import { ObjectId } from 'mongodb';
-import { Model, Query } from 'mongoose';
+import { Model, Query, Types } from 'mongoose';
 
 export interface IAuthToken extends Document {
   token: string;
-  userId: ObjectId;
+  userId: Types.ObjectId;
   purpose: 'login' | 'forget-password';
   id?: string;
 }

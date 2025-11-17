@@ -400,11 +400,96 @@ const getReferralTree = async (req: Request, res: Response) => {
   }
 };
 
+const getTeamReferralHistory = async (req: Request, res: Response) => {
+  try {
+    const userId = res.locals.userId;
+    const { page = 1, limit = 10, level = "", transactionType = "" } = req.query;
+
+    if (!userId) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 401,
+        title: "Unauthorized",
+        message: "User not authenticated",
+      });
+    }
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build filter
+    const filter: any = { userId };
+
+    if (level && level !== "all") {
+      filter.level = level;
+    }
+
+    if (transactionType && transactionType !== "all") {
+      filter.transactionType = transactionType;
+    }
+
+    // Fetch history with pagination
+    const [history, totalCount] = await Promise.all([
+      models.TeamReferralHistory.find(filter)
+        .populate('referredUserId', 'name phone picture')
+        .populate('referrerUserId', 'name phone')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      models.TeamReferralHistory.countDocuments(filter)
+    ]);
+
+    // Calculate total earnings
+    const totalEarnings = await models.TeamReferralHistory.aggregate([
+      { 
+        $match: { 
+          userId: new mongoose.Types.ObjectId(userId), 
+          status: 'completed' 
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' } 
+        } 
+      }
+    ]);
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "Team Referral History",
+      message: "Referral history retrieved successfully",
+      data: {
+        history,
+        totalEarnings: totalEarnings[0]?.total || 0,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalCount / limitNum),
+          totalCount,
+          limit: limitNum
+        }
+      },
+    });
+  } catch (error: any) {
+    console.error('Get team referral history error:', error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: error.message || "Failed to retrieve referral history",
+    });
+  }
+};
+
 export default {
   // User endpoints
   getTeamStats,
   getReferralLink,
   getTeamMembersByLevel,
+  getTeamReferralHistory,
   
   // Admin endpoints
   getAllTeamReferrals,

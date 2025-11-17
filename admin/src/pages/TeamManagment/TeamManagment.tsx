@@ -1,5 +1,5 @@
 // pages/admin/TeamManagement.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Text,
   Group,
@@ -15,7 +15,6 @@ import {
   Alert,
   Tooltip,
   Avatar,
-  Card,
   Grid,
   Tabs,
 } from "@mantine/core";

@@ -261,3 +261,40 @@ export const useSetWithdrawalPasswordMutation = () => {
     },
   });
 };
+
+const checkWithdrawalAvailability = async () => {
+  const response = await request({
+    url: withdrawalUrls.CHECK_AVAILABILITY,
+    method: "GET",
+  });
+  return response?.data;
+};
+
+export const useCheckWithdrawalAvailability = () => {
+  return useQuery({
+    queryKey: ["withdrawal-availability"],
+    queryFn: checkWithdrawalAvailability,
+    refetchOnWindowFocus: true,
+    refetchInterval: 60000, 
+    staleTime: 1000 * 60,
+    retry: 2,
+  });
+};
+
+const getWithdrawalSchedule = async () => {
+  const response = await request({
+    url: withdrawalUrls.WITHDRAWAL_SCHEDULE,
+    method: "GET",
+  });
+  return response?.data;
+};
+
+export const useWithdrawalSchedule = () => {
+  return useQuery({
+    queryKey: ["withdrawal-schedule"],
+    queryFn: getWithdrawalSchedule,
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 10, 
+    retry: 2,
+  });
+};

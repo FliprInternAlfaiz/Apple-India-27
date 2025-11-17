@@ -1,93 +1,95 @@
-  import { Router } from "express";
-  import { commonsMiddleware } from "../../middleware";
-  import withdrawalController from "../../controllers/withdrawalControllers/withdrawal.controller";
+import { Router } from 'express';
+import { commonsMiddleware } from '../../middleware';
+import withdrawalController from '../../controllers/withdrawalControllers/withdrawal.controller';
 
-  const {
+const {
+  getBankAccounts,
+  addBankAccount,
+  deleteBankAccount,
+  setDefaultAccount,
+  getWalletInfo,
+  createWithdrawal,
+  getWithdrawalHistory,
+  setWithdrawalPassword,
+  approveWithdrawal,
+  getAllWithdrawals,
+  getWithdrawalStatistics,
+  rejectWithdrawal,
+  checkWithdrawalAvailability,
+  createWithdrawalWithDayCheck,
+  getWithdrawalSchedule,
+} = withdrawalController;
+
+export default (router: Router) => {
+  router.get(
+    '/bank-accounts',
+    commonsMiddleware.checkUserAuth,
     getBankAccounts,
+  );
+
+  router.post(
+    '/bank-accounts',
+    commonsMiddleware.checkUserAuth,
     addBankAccount,
+  );
+
+  router.delete(
+    '/bank-accounts/:accountId',
+    commonsMiddleware.checkUserAuth,
     deleteBankAccount,
+  );
+
+  router.patch(
+    '/bank-accounts/:accountId/set-default',
+    commonsMiddleware.checkUserAuth,
     setDefaultAccount,
-    getWalletInfo,
-    createWithdrawal,
-    getWithdrawalHistory,
-    setWithdrawalPassword,
-    approveWithdrawal,
-    getAllWithdrawals,
-    getWithdrawalStatistics,
-    rejectWithdrawal
-  } = withdrawalController;
+  );
 
-  export default (router: Router) => {
-    router.get(
-      "/bank-accounts",
-      commonsMiddleware.checkUserAuth,
-      getBankAccounts
-    );
+  router.get('/wallet-info', commonsMiddleware.checkUserAuth, getWalletInfo);
 
-    router.post(
-      "/bank-accounts",
-      commonsMiddleware.checkUserAuth,
-      addBankAccount
-    );
+  router.post('/create', commonsMiddleware.checkUserAuth, createWithdrawal);
 
-    router.delete(
-      "/bank-accounts/:accountId",
-      commonsMiddleware.checkUserAuth,
-      deleteBankAccount
-    );
-
-    router.patch(
-      "/bank-accounts/:accountId/set-default",
-      commonsMiddleware.checkUserAuth,
-      setDefaultAccount
-    );
-
-    router.get(
-      "/wallet-info",
-      commonsMiddleware.checkUserAuth,
-      getWalletInfo
-    );
-
-    router.post(
-      "/create",
-      commonsMiddleware.checkUserAuth,
-      createWithdrawal
-    );
-
-    router.get(
-      "/history",
-      commonsMiddleware.checkUserAuth,
-      getWithdrawalHistory
-    );
-
-    router.post(
-      "/set-password",
-      commonsMiddleware.checkUserAuth,
-      setWithdrawalPassword
-    );
-
-     router.get(
-    "/admin/withdrawals",
-    commonsMiddleware.checkAdminAuth,
-    getAllWithdrawals
+  router.get(
+    '/check-availability',
+    commonsMiddleware.checkUserAuth,
+    checkWithdrawalAvailability,
   );
 
   router.get(
-    "/admin/withdrawals/statistics",
+    '/schedule',
+    commonsMiddleware.checkUserAuth,
+    getWithdrawalSchedule,
+  );
+
+  router.get('/history', commonsMiddleware.checkUserAuth, getWithdrawalHistory);
+
+  router.post(
+    '/set-password',
+    commonsMiddleware.checkUserAuth,
+    setWithdrawalPassword,
+  );
+
+  router.get(
+    '/admin/withdrawals',
     commonsMiddleware.checkAdminAuth,
-    getWithdrawalStatistics
+    getAllWithdrawals,
+  );
+
+  router.get(
+    '/admin/withdrawals/statistics',
+    commonsMiddleware.checkAdminAuth,
+    getWithdrawalStatistics,
   );
 
   router.patch(
-    "/admin/withdrawals/approve/:withdrawalId",
+    '/admin/withdrawals/approve/:withdrawalId',
     commonsMiddleware.checkAdminAuth,
-    approveWithdrawal
+    approveWithdrawal,
   );
 
   router.patch(
-    "/admin/withdrawals/reject/:withdrawalId",
+    '/admin/withdrawals/reject/:withdrawalId',
     commonsMiddleware.checkAdminAuth,
-    rejectWithdrawal
+    rejectWithdrawal,
   );
-
-  };
+};

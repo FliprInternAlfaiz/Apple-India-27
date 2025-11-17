@@ -1,11 +1,11 @@
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
-import { ObjectId } from 'mongodb';
 import CONSTANTS from '../../constants/CONSTANTS';
 import models from '../../models';
 import { adminDao } from '../../dao/admin';
 import { JsonResponse } from '../../utils/jsonResponse';
 import { jwtConfig } from '../../services';
+import { Types } from "mongoose"
 
 export const adminLogin = async (req: Request, res: Response) => {
   try {
@@ -46,7 +46,7 @@ export const adminLogin = async (req: Request, res: Response) => {
     });
 
     const authToken = await models.token.createToken({
-      userId: new ObjectId(adminDetails.id as string),
+      userId: new Types.ObjectId(adminDetails.id as string),
       token: token,
     });
 

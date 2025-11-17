@@ -28,6 +28,7 @@ export const teamUrls = {
   TEAM_STATS: teamPrefix + "/stats",
   REFERRAL_LINK: teamPrefix + "/referral-link",
   TEAM_MEMBERS: (level: string) => `${teamPrefix}/members/${level}`,
+  REFERRAL_HISTORY : teamPrefix + "/referral-history",
 };
 
 export const taskUrls = {
@@ -44,6 +45,8 @@ export const withdrawalUrls = {
   CREATE_WITHDRAWAL: withdrawalPrefix + "/create",
   WITHDRAWAL_HISTORY: withdrawalPrefix + "/history",
   SET_PASSWORD: withdrawalPrefix + "/set-password",
+   CHECK_AVAILABILITY: withdrawalPrefix + "/check-availability",
+  WITHDRAWAL_SCHEDULE: withdrawalPrefix + "/schedule",
 };
 
 export const rechargeUrls = {
@@ -85,12 +88,9 @@ export const conferenceNewsUrls = {
 
 
 export const luckyDrawUrls = {
-  // 🟢 User routes
   ACTIVE: luckydrawPrefix + "/active",
   DETAILS: luckydrawPrefix + "/details/:drawId",
   PARTICIPATE: luckydrawPrefix + "/participate",
-
-  // 🟣 Admin routes
   UPLOAD_IMAGE: luckydrawPrefix + "/admin/upload-image",
   CREATE: luckydrawPrefix + "/admin/create",
   ALL: luckydrawPrefix + "/admin/all",
