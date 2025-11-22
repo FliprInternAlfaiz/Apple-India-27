@@ -1,12 +1,10 @@
 import mongoose from 'mongoose';
-import { seedLevelsData } from '../script/seedLevels';
 import { cronInit } from '../crons';
 
 class Config {
   async start() {
     try {
       await this.dbConnect(process.env.MONGO_URI ?? '');
-      await seedLevelsData();
       cronInit();
     } catch (error: any) {
       console.error('DB connection error : ', error);
