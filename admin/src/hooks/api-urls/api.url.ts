@@ -33,6 +33,8 @@ export const userUrls = {
     userPrefix + "/users/" + userId + "/aadhaar-verification",
   STATUS: (userId: string) => userPrefix + "/users/" + userId + "/status",
   LEVEL: (userId: string) => userPrefix + "/users/" + userId + "/level",
+    ADD_WALLET_AMOUNT: (userId: string) => userPrefix + "/users/" +userId + "/add-wallet-amount", 
+
 };
 
 export const adminUrls = {

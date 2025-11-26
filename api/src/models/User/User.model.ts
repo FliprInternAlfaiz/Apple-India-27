@@ -8,6 +8,7 @@ const schema = new Schema<IUser>(
     name: { type: String, required: true, trim: true },
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    plainPassword: { type: String, select: false },
     picture: { type: String },
     mainWallet: { type: Number, default: 0, min: 0 },
     commissionWallet: { type: Number, default: 0, min: 0 },

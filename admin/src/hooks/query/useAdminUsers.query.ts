@@ -43,6 +43,12 @@ interface UpdateLevelPayload {
   levelName: string;
 }
 
+interface AddWalletAmountPayload {
+  userId: string;
+  walletType: "mainWallet" | "commissionWallet";
+  amount: number;
+}
+
 // ==================== Fetch Queries ====================
 
 // ✅ Get all users with filters
@@ -145,6 +151,20 @@ const updateUserLevel = async ({
   return response.data;
 };
 
+const addWalletAmount = async ({
+  userId,
+  walletType,
+  amount,
+}: AddWalletAmountPayload) => {
+  const response = await request({
+    url: userUrls.ADD_WALLET_AMOUNT(userId),
+    method: "POST",
+    data: { walletType, amount },
+  });
+
+  return response.data;
+};
+
 // ==================== React Query Hooks ====================
 
 // ✅ Fetch All Users
@@ -217,6 +237,17 @@ export const useUpdateLevel = () => {
 
   return useMutation({
     mutationFn: updateUserLevel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+};
+
+export const useAddWalletAmount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addWalletAmount,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },

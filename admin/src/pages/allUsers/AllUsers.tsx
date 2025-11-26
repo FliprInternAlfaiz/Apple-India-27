@@ -17,6 +17,7 @@ import {
   Paper,
   Alert,
   Tooltip,
+  NumberInput,
 } from "@mantine/core";
 import {
   FiSearch,
@@ -28,6 +29,7 @@ import {
   FiAlertCircle,
   FiUsers,
   FiTrendingUp,
+  FiDollarSign,
 } from "react-icons/fi";
 import { notifications } from "@mantine/notifications";
 import {
@@ -36,6 +38,7 @@ import {
   useUpdateVerification,
   useUpdateAadhaar,
   useToggleStatus,
+  useAddWalletAmount,
 } from "../../hooks/query/useAdminUsers.query";
 import classes from "./index.module.scss";
 
@@ -55,6 +58,13 @@ const AllUsers = () => {
   const [aadhaarStatus, setAadhaarStatus] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
+  // Add these new modal states
+  const [walletModal, setWalletModal] = useState(false);
+  const [walletType, setWalletType] = useState<
+    "mainWallet" | "commissionWallet"
+  >("mainWallet");
+  const [walletAmount, setWalletAmount] = useState<number>(0);
+
   // Fetch users with filters
   const { data, isLoading, error } = useAllUsers({
     page: activePage,
@@ -71,6 +81,7 @@ const AllUsers = () => {
   const updateVerificationMutation = useUpdateVerification();
   const updateAadhaarMutation = useUpdateAadhaar();
   const toggleStatusMutation = useToggleStatus();
+  const addWalletAmountMutation = useAddWalletAmount();
 
   const users = data?.users || [];
   const pagination = data?.pagination || {};
@@ -81,6 +92,51 @@ const AllUsers = () => {
     setSelectedUser(user);
     setResetPasswordModal(true);
     setNewPassword("");
+  };
+
+  const handleAddWallet = (user: any) => {
+    setSelectedUser(user);
+    setWalletModal(true);
+    setWalletType("mainWallet");
+    setWalletAmount(0);
+  };
+
+  const confirmAddWalletAmount = async () => {
+    if (!walletAmount || walletAmount <= 0) {
+      notifications.show({
+        title: "Invalid Amount",
+        message: "Amount must be greater than 0",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+      return;
+    }
+
+    try {
+      await addWalletAmountMutation.mutateAsync({
+        userId: selectedUser._id,
+        walletType,
+        amount: walletAmount,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: `₹${walletAmount} added to ${selectedUser.name}'s ${
+          walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
+        }`,
+        color: "green",
+        icon: <FiCheckCircle />,
+      });
+
+      setWalletModal(false);
+    } catch (error: any) {
+      notifications.show({
+        title: "Error",
+        message: error.response?.data?.message || "Failed to add amount",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+    }
   };
 
   const confirmResetPassword = async () => {
@@ -319,6 +375,13 @@ const AllUsers = () => {
         <Text size="sm">₹{user.mainWallet?.toLocaleString() || 0}</Text>
       </Table.Td>
       <Table.Td>
+        <Tooltip label={user.plainPassword || "N/A"}>
+          <Text size="xs" c="dimmed" style={{ cursor: "pointer" }}>
+            {user.plainPassword ? user.plainPassword : "N/A"}
+          </Text>
+        </Tooltip>
+      </Table.Td>
+      <Table.Td>
         <Text size="sm">
           {user.totalReferrals || 0} / {user.directReferralsCount || 0}
         </Text>
@@ -340,6 +403,16 @@ const AllUsers = () => {
           <Tooltip label="View Details">
             <ActionIcon variant="light" color="blue" size="sm">
               <FiEye size={14} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Add Amount">
+            <ActionIcon
+              variant="light"
+              color="green"
+              size="sm"
+              onClick={() => handleAddWallet(user)}
+            >
+              <FiDollarSign size={14} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Reset Password">
@@ -490,6 +563,7 @@ const AllUsers = () => {
                 <Table.Th ta="center">Status</Table.Th>
                 <Table.Th ta="center">Aadhaar</Table.Th>
                 <Table.Th ta="center">Wallet</Table.Th>
+                <Table.Th ta="center">Password</Table.Th>
                 <Table.Th ta="center">Referrals</Table.Th>
                 <Table.Th ta="center">Active</Table.Th>
                 <Table.Th ta="center">Actions</Table.Th>
@@ -499,7 +573,12 @@ const AllUsers = () => {
               {isLoading ? (
                 <Table.Tr>
                   <Table.Td colSpan={9}>
-                    <Flex justify="center" direction="column" align="center" py="xl">
+                    <Flex
+                      justify="center"
+                      direction="column"
+                      align="center"
+                      py="xl"
+                    >
                       <Loader size="lg" />
                       <Text c="dimmed" ml="sm">
                         Loading users...
@@ -574,6 +653,93 @@ const AllUsers = () => {
                 leftSection={<FiKey />}
               >
                 Reset Password
+              </Button>
+            </Group>
+          </Flex>
+        )}
+      </Modal>
+
+      <Modal
+        opened={walletModal}
+        onClose={() => setWalletModal(false)}
+        title="Add Amount to Wallet"
+        centered
+      >
+        {selectedUser && (
+          <Flex direction="column" gap="md">
+            <Text size="sm" c="dimmed">
+              User: <strong>{selectedUser.name}</strong>
+            </Text>
+            <Text size="sm" c="dimmed">
+              Phone: {selectedUser.phone}
+            </Text>
+
+            <Flex gap="md" align="flex-end">
+              <Paper p="sm" withBorder style={{ flex: 1 }}>
+                <Text size="xs" c="dimmed">
+                  Prime Wallet
+                </Text>
+                <Text size="lg" fw={600}>
+                  ₹{selectedUser.mainWallet?.toLocaleString() || 0}
+                </Text>
+              </Paper>
+              <Paper p="sm" withBorder style={{ flex: 1 }}>
+                <Text size="xs" c="dimmed">
+                  Task Wallet
+                </Text>
+                <Text size="lg" fw={600}>
+                  ₹{selectedUser.taskWallet?.toLocaleString() || 0}
+                </Text>
+              </Paper>
+            </Flex>
+
+            <Select
+              label="Select Wallet"
+              placeholder="Choose wallet type"
+              data={[
+                { value: "mainWallet", label: "Prime Wallet" },
+                { value: "commissionWallet", label: "Task Wallet" },
+              ]}
+              value={walletType}
+              onChange={(value) =>
+                setWalletType(value as "mainWallet" | "commissionWallet")
+              }
+              required
+            />
+
+            <NumberInput
+              label="Amount"
+              placeholder="Enter amount to add"
+              value={walletAmount}
+              onChange={(value) => setWalletAmount(Number(value))}
+              min={0}
+              step={100}
+              prefix="₹"
+              thousandSeparator=","
+              required
+              description="Enter the amount you want to add"
+            />
+
+            <Alert icon={<FiAlertCircle />} color="blue" variant="light">
+              This will add ₹{walletAmount.toLocaleString()} to the selected
+              wallet
+            </Alert>
+
+            <Group justify="flex-end" gap="sm">
+              <Button
+                variant="subtle"
+                onClick={() => setWalletModal(false)}
+                disabled={addWalletAmountMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="green"
+                onClick={confirmAddWalletAmount}
+                loading={addWalletAmountMutation.isPending}
+                leftSection={<FiDollarSign />}
+              >
+                Add Amount
               </Button>
             </Group>
           </Flex>

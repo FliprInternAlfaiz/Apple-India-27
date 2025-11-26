@@ -1,21 +1,27 @@
-import bcrypt from "bcrypt";
-import { Request, Response, NextFunction } from "express";
-import commonsUtils from "../../utils";
-import models from "../../models";
+import bcrypt from 'bcrypt';
+import { Request, Response, NextFunction } from 'express';
+import commonsUtils from '../../utils';
+import models from '../../models';
+import { IUser } from '../../interface/user.interface';
 
 const { JsonResponse } = commonsUtils;
+
+interface AddWalletAmountBody {
+  walletType: 'mainWallet' | 'commissionWallet';
+  amount: number;
+}
 
 const getAllUsers = async (req: Request, res: Response, __: NextFunction) => {
   try {
     const {
       page = 1,
       limit = 10,
-      search = "",
-      verificationStatus = "all",
-      userLevel = "all",
-      teamLevel = "all",
-      sortBy = "createdAt",
-      sortOrder = "desc"
+      search = '',
+      verificationStatus = 'all',
+      userLevel = 'all',
+      teamLevel = 'all',
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
     } = req.query;
 
     const pageNum = parseInt(page as string);
@@ -28,40 +34,40 @@ const getAllUsers = async (req: Request, res: Response, __: NextFunction) => {
     // Search filter
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } }
+        { name: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
       ];
     }
 
     // Verification filter
-    if (verificationStatus !== "all") {
-      filter.isVerified = verificationStatus === "verified";
+    if (verificationStatus !== 'all') {
+      filter.isVerified = verificationStatus === 'verified';
     }
 
     // User level filter
-    if (userLevel !== "all") {
+    if (userLevel !== 'all') {
       filter.currentLevel = userLevel;
     }
 
     // Team level filter
-    if (teamLevel !== "all") {
+    if (teamLevel !== 'all') {
       filter.teamLevel = teamLevel;
     }
 
     // Sorting
     const sort: any = {};
-    sort[sortBy as string] = sortOrder === "desc" ? -1 : 1;
+    sort[sortBy as string] = sortOrder === 'desc' ? -1 : 1;
 
     // Execute query
     const [users, totalCount] = await Promise.all([
       models.User.find(filter)
-        .select("-password -withdrawalPassword")
+        .select('-password -withdrawalPassword +plainPassword')
         .sort(sort)
         .skip(skip)
         .limit(limitNum)
         .lean(),
-      models.User.countDocuments(filter)
+      models.User.countDocuments(filter),
     ]);
 
     // Get statistics
@@ -71,46 +77,46 @@ const getAllUsers = async (req: Request, res: Response, __: NextFunction) => {
           _id: null,
           totalUsers: { $sum: 1 },
           verifiedUsers: {
-            $sum: { $cond: ["$isVerified", 1, 0] }
+            $sum: { $cond: ['$isVerified', 1, 0] },
           },
           activeUsers: {
-            $sum: { $cond: ["$isActive", 1, 0] }
+            $sum: { $cond: ['$isActive', 1, 0] },
           },
-          totalWalletBalance: { $sum: "$mainWallet" },
-          totalCommissions: { $sum: "$commissionWallet" }
-        }
-      }
+          totalWalletBalance: { $sum: '$mainWallet' },
+          totalCommissions: { $sum: '$commissionWallet' },
+        },
+      },
     ]);
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "Users Retrieved",
-      message: "Users fetched successfully.",
+      title: 'Users Retrieved',
+      message: 'Users fetched successfully.',
       data: {
         users,
         pagination: {
           currentPage: pageNum,
           totalPages: Math.ceil(totalCount / limitNum),
           totalCount,
-          limit: limitNum
+          limit: limitNum,
         },
         statistics: stats[0] || {
           totalUsers: 0,
           verifiedUsers: 0,
           activeUsers: 0,
           totalWalletBalance: 0,
-          totalCommissions: 0
-        }
-      }
+          totalCommissions: 0,
+        },
+      },
     });
   } catch (err) {
-    console.error("💥 Get all users error:", err);
+    console.error('💥 Get all users error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to fetch users.",
+      title: 'Server Error',
+      message: 'Failed to fetch users.',
     });
   }
 };
@@ -123,41 +129,41 @@ const getUserById = async (req: Request, res: Response, __: NextFunction) => {
     const { userId } = req.params;
 
     const user = await models.User.findById(userId)
-      .select("-password -withdrawalPassword")
-      .populate("referredBy", "name phone")
+      .select('-password -withdrawalPassword')
+      .populate('referredBy', 'name phone')
       .lean();
 
     if (!user) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 404,
-        message: "User not found.",
-        title: "User Details"
+        message: 'User not found.',
+        title: 'User Details',
       });
     }
 
     // Get user's referrals
     const referrals = await models.User.find({ referredBy: userId })
-      .select("name phone userLevel isVerified createdAt")
+      .select('name phone userLevel isVerified createdAt')
       .lean();
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "User Details",
-      message: "User details fetched successfully.",
+      title: 'User Details',
+      message: 'User details fetched successfully.',
       data: {
         user,
-        referrals
-      }
+        referrals,
+      },
     });
   } catch (err) {
-    console.error("💥 Get user by ID error:", err);
+    console.error('💥 Get user by ID error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to fetch user details.",
+      title: 'Server Error',
+      message: 'Failed to fetch user details.',
     });
   }
 };
@@ -165,17 +171,21 @@ const getUserById = async (req: Request, res: Response, __: NextFunction) => {
 /**
  * Reset user password
  */
-const resetUserPassword = async (req: Request, res: Response, __: NextFunction) => {
+const resetUserPassword = async (
+  req: Request,
+  res: Response,
+  __: NextFunction,
+) => {
   try {
     const { userId } = req.params;
     const { newPassword } = req.body;
 
     if (!newPassword || newPassword.length < 6) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 400,
-        message: "Password must be at least 6 characters long.",
-        title: "Password Reset"
+        message: 'Password must be at least 6 characters long.',
+        title: 'Password Reset',
       });
     }
 
@@ -183,16 +193,17 @@ const resetUserPassword = async (req: Request, res: Response, __: NextFunction) 
 
     if (!user) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 404,
-        message: "User not found.",
-        title: "Password Reset"
+        message: 'User not found.',
+        title: 'Password Reset',
       });
     }
 
     // Hash new password
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
     user.password = hashedPassword;
+    user.plainPassword = newPassword;
     await user.save();
 
     // Optional: Log password reset action
@@ -204,18 +215,18 @@ const resetUserPassword = async (req: Request, res: Response, __: NextFunction) 
     // });
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "Password Reset",
-      message: `Password reset successfully for user ${user.name}.`
+      title: 'Password Reset',
+      message: `Password reset successfully for user ${user.name}.`,
     });
   } catch (err) {
-    console.error("💥 Reset password error:", err);
+    console.error('💥 Reset password error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to reset password.",
+      title: 'Server Error',
+      message: 'Failed to reset password.',
     });
   }
 };
@@ -223,7 +234,11 @@ const resetUserPassword = async (req: Request, res: Response, __: NextFunction) 
 /**
  * Update user verification status
  */
-const updateUserVerification = async (req: Request, res: Response, __: NextFunction) => {
+const updateUserVerification = async (
+  req: Request,
+  res: Response,
+  __: NextFunction,
+) => {
   try {
     const { userId } = req.params;
     const { isVerified } = req.body;
@@ -232,10 +247,10 @@ const updateUserVerification = async (req: Request, res: Response, __: NextFunct
 
     if (!user) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 404,
-        message: "User not found.",
-        title: "Update Verification"
+        message: 'User not found.',
+        title: 'Update Verification',
       });
     }
 
@@ -243,19 +258,19 @@ const updateUserVerification = async (req: Request, res: Response, __: NextFunct
     await user.save();
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "Verification Updated",
+      title: 'Verification Updated',
       message: `User verification status updated successfully.`,
-      data: { user }
+      data: { user },
     });
   } catch (err) {
-    console.error("💥 Update verification error:", err);
+    console.error('💥 Update verification error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to update verification status.",
+      title: 'Server Error',
+      message: 'Failed to update verification status.',
     });
   }
 };
@@ -263,17 +278,21 @@ const updateUserVerification = async (req: Request, res: Response, __: NextFunct
 /**
  * Update Aadhaar verification status
  */
-const updateAadhaarVerification = async (req: Request, res: Response, __: NextFunction) => {
+const updateAadhaarVerification = async (
+  req: Request,
+  res: Response,
+  __: NextFunction,
+) => {
   try {
     const { userId } = req.params;
     const { status, rejectionReason } = req.body;
 
-    if (!["approved", "rejected", "pending"].includes(status)) {
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 400,
-        message: "Invalid status. Must be approved, rejected, or pending.",
-        title: "Aadhaar Verification"
+        message: 'Invalid status. Must be approved, rejected, or pending.',
+        title: 'Aadhaar Verification',
       });
     }
 
@@ -281,38 +300,39 @@ const updateAadhaarVerification = async (req: Request, res: Response, __: NextFu
 
     if (!user) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 404,
-        message: "User not found.",
-        title: "Aadhaar Verification"
+        message: 'User not found.',
+        title: 'Aadhaar Verification',
       });
     }
 
     user.aadhaarVerificationStatus = status;
-    
-    if (status === "approved") {
+
+    if (status === 'approved') {
       user.aadhaarVerifiedAt = new Date();
       user.aadhaarRejectionReason = null;
-    } else if (status === "rejected") {
-      user.aadhaarRejectionReason = rejectionReason || "Document verification failed";
+    } else if (status === 'rejected') {
+      user.aadhaarRejectionReason =
+        rejectionReason || 'Document verification failed';
     }
 
     await user.save();
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "Aadhaar Verification",
+      title: 'Aadhaar Verification',
       message: `Aadhaar verification status updated to ${status}.`,
-      data: { user }
+      data: { user },
     });
   } catch (err) {
-    console.error("💥 Update Aadhaar verification error:", err);
+    console.error('💥 Update Aadhaar verification error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to update Aadhaar verification.",
+      title: 'Server Error',
+      message: 'Failed to update Aadhaar verification.',
     });
   }
 };
@@ -320,7 +340,11 @@ const updateAadhaarVerification = async (req: Request, res: Response, __: NextFu
 /**
  * Update user active status
  */
-const toggleUserStatus = async (req: Request, res: Response, __: NextFunction) => {
+const toggleUserStatus = async (
+  req: Request,
+  res: Response,
+  __: NextFunction,
+) => {
   try {
     const { userId } = req.params;
     const { isActive } = req.body;
@@ -329,10 +353,10 @@ const toggleUserStatus = async (req: Request, res: Response, __: NextFunction) =
 
     if (!user) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 404,
-        message: "User not found.",
-        title: "Toggle Status"
+        message: 'User not found.',
+        title: 'Toggle Status',
       });
     }
 
@@ -340,19 +364,19 @@ const toggleUserStatus = async (req: Request, res: Response, __: NextFunction) =
     await user.save();
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "Status Updated",
-      message: `User ${isActive ? "activated" : "deactivated"} successfully.`,
-      data: { user }
+      title: 'Status Updated',
+      message: `User ${isActive ? 'activated' : 'deactivated'} successfully.`,
+      data: { user },
     });
   } catch (err) {
-    console.error("💥 Toggle user status error:", err);
+    console.error('💥 Toggle user status error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to update user status.",
+      title: 'Server Error',
+      message: 'Failed to update user status.',
     });
   }
 };
@@ -360,7 +384,11 @@ const toggleUserStatus = async (req: Request, res: Response, __: NextFunction) =
 /**
  * Update user level
  */
-const updateUserLevel = async (req: Request, res: Response, __: NextFunction) => {
+const updateUserLevel = async (
+  req: Request,
+  res: Response,
+  __: NextFunction,
+) => {
   try {
     const { userId } = req.params;
     const { userLevel, currentLevel, levelName } = req.body;
@@ -369,10 +397,10 @@ const updateUserLevel = async (req: Request, res: Response, __: NextFunction) =>
 
     if (!user) {
       return JsonResponse(res, {
-        status: "error",
+        status: 'error',
         statusCode: 404,
-        message: "User not found.",
-        title: "Update Level"
+        message: 'User not found.',
+        title: 'Update Level',
       });
     }
 
@@ -383,23 +411,97 @@ const updateUserLevel = async (req: Request, res: Response, __: NextFunction) =>
     await user.save();
 
     return JsonResponse(res, {
-      status: "success",
+      status: 'success',
       statusCode: 200,
-      title: "Level Updated",
+      title: 'Level Updated',
       message: `User level updated successfully to ${levelName}.`,
-      data: { user }
+      data: { user },
     });
   } catch (err) {
-    console.error("💥 Update user level error:", err);
+    console.error('💥 Update user level error:', err);
     return JsonResponse(res, {
-      status: "error",
+      status: 'error',
       statusCode: 500,
-      title: "Server Error",
-      message: "Failed to update user level.",
+      title: 'Server Error',
+      message: 'Failed to update user level.',
     });
   }
 };
 
+const addWalletAmount = async (
+  req: Request<{ userId: string }, {}, AddWalletAmountBody>,
+  res: Response,
+  __: NextFunction,
+) => {
+  console.log('💡 Add wallet amount request body:', req.body);
+  try {
+    const { userId } = req.params;
+    const { walletType, amount } = req.body;
+
+    if (
+      !walletType ||
+      !['mainWallet', 'commissionWallet'].includes(walletType)
+    ) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 400,
+        message: 'Invalid wallet type. Must be mainWallet or commissionWallet.',
+        title: 'Add Wallet Amount',
+      });
+    }
+
+    if (!amount || Number(amount) <= 0) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 400,
+        message: 'Amount must be greater than 0.',
+        title: 'Add Wallet Amount',
+      });
+    }
+
+    const user = await models.User.findById(userId);
+    if (!user) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 404,
+        message: 'User not found.',
+        title: 'Add Wallet Amount',
+      });
+    }
+
+    const key = walletType as 'mainWallet' | 'commissionWallet';
+    const previousBalance = Number((user as IUser)[key] ?? 0);
+    const newBalance = previousBalance + Number(amount);
+    (user as IUser)[key] = newBalance;
+
+    await user.save();
+
+    return JsonResponse(res, {
+      status: 'success',
+      statusCode: 200,
+      title: 'Amount Added',
+      message: `₹${amount} added successfully to ${
+        walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
+      }.`,
+      data: {
+        userId: user._id,
+        walletType,
+        amountAdded: Number(amount),
+        previousBalance,
+        newBalance,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (err) {
+    console.error('💥 Add wallet amount error:', err);
+    return JsonResponse(res, {
+      status: 'error',
+      statusCode: 500,
+      title: 'Server Error',
+      message: 'Failed to add amount to wallet.',
+    });
+  }
+};
 export default {
   updateAadhaarVerification,
   updateUserLevel,
@@ -408,4 +510,5 @@ export default {
   resetUserPassword,
   getAllUsers,
   getUserById,
+  addWalletAmount,
 };

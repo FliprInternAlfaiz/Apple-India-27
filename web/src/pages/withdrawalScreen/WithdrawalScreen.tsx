@@ -26,7 +26,6 @@ import {
   useSetDefaultAccountMutation,
   useCreateWithdrawalMutation,
   useWithdrawalSchedule,
-  useCheckWithdrawalAvailability,
 } from "../../hooks/query/useWithdrawal.query";
 import classes from "./WithdrawalScreen.module.scss";
 import {
@@ -64,7 +63,6 @@ const WithdrawalScreen: React.FC = () => {
     150000,
   ];
 
-  // Queries & Mutations
   const {
     data: walletInfo,
     isLoading: walletLoading,
@@ -78,8 +76,6 @@ const WithdrawalScreen: React.FC = () => {
 
   const { data: scheduleData, isLoading: scheduleLoading } =
     useWithdrawalSchedule();
-  const { data: availabilityData, isLoading: availabilityLoading } =
-    useCheckWithdrawalAvailability();
 
   const bankAccounts = bankData?.accounts ?? [];
 
@@ -88,7 +84,6 @@ const WithdrawalScreen: React.FC = () => {
   const setDefaultMutation = useSetDefaultAccountMutation();
   const createWithdrawalMutation = useCreateWithdrawalMutation();
 
-  const canWithdraw = availabilityData?.canWithdraw || false;
   const schedule = scheduleData?.schedule || [];
   const userLevel = scheduleData?.userLevel;
   const todaySchedule = scheduleData?.today;
@@ -227,20 +222,8 @@ const WithdrawalScreen: React.FC = () => {
       : walletInfo?.commissionWallet || 0;
   };
 
-  const canSubmitWithdrawal = () => {
-    const amount = customAmount || selectedAmount;
-    return (
-      isTodayAllowed &&
-      canWithdraw &&
-      amount &&
-      amount >= 280 &&
-      selectedAccount &&
-      withdrawalPassword &&
-      amount <= getSelectedWalletBalance()
-    );
-  };
 
-  if (walletLoading || bankLoading || scheduleLoading || availabilityLoading) {
+  if (walletLoading || bankLoading || scheduleLoading) {
     return (
       <Center h="100vh">
         <Loader size="lg" />
@@ -478,7 +461,6 @@ const WithdrawalScreen: React.FC = () => {
             mt="md"
             onClick={handleWithdrawal}
             loading={createWithdrawalMutation.isPending}
-            disabled={!canSubmitWithdrawal()}
           >
             {`Submit Withdrawal Request ${
               customAmount || selectedAmount

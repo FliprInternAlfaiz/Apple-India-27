@@ -10,16 +10,13 @@ const {
   updateAadhaarVerification,
   toggleUserStatus,
   updateUserLevel,
+  addWalletAmount,
 } = userManagementController;
 
 export default (router: Router) => {
   router.get('/users', commonsMiddleware.checkAdminAuth, getAllUsers);
 
-  router.get(
-    '/users/:userId',
-    commonsMiddleware.checkAdminAuth,
-    getUserById,
-  );
+  router.get('/users/:userId', commonsMiddleware.checkAdminAuth, getUserById);
 
   router.post(
     '/users/:userId/reset-password',
@@ -49,5 +46,11 @@ export default (router: Router) => {
     '/users/:userId/level',
     commonsMiddleware.checkAdminAuth,
     updateUserLevel,
+  );
+
+  router.post(
+    '/users/:userId/add-wallet-amount',
+    commonsMiddleware.checkAdminAuth,
+    addWalletAmount,
   );
 };
