@@ -12,7 +12,6 @@ const adminAuth = async () => {
     withCredentials: true,
   });
 
-  console.log(response)
   const pathName = location.pathname;
   if (response?.status === "success" && unProtectedRoute.includes(pathName)) {
     location.replace(ROUTES.DASHBOARD);

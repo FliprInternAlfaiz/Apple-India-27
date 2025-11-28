@@ -26,8 +26,6 @@ async function createTeamReferrals(referrerId: ObjectId, newUserId: ObjectId) {
         const commission = (investmentAmount * commissionRate) / 100;
 
         referrerUser.mainWallet = (referrerUser.mainWallet || 0) + commission;
-        referrerUser.commissionWallet =
-          (referrerUser.commissionWallet || 0) + commission;
 
         await referrerUser.save();
 

@@ -11,6 +11,7 @@ const {
   toggleUserStatus,
   updateUserLevel,
   addWalletAmount,
+  deductWalletAmount
 } = userManagementController;
 
 export default (router: Router) => {
@@ -52,5 +53,11 @@ export default (router: Router) => {
     '/users/:userId/add-wallet-amount',
     commonsMiddleware.checkAdminAuth,
     addWalletAmount,
+  );
+
+    router.post(
+    '/users/:userId/deduct-wallet-amount',
+    commonsMiddleware.checkAdminAuth,
+    deductWalletAmount,
   );
 };

@@ -49,6 +49,14 @@ interface AddWalletAmountPayload {
   amount: number;
 }
 
+interface DeductWalletAmountPayload {
+  userId: string;
+  walletType: "mainWallet" | "commissionWallet";
+  amount: number;
+  reason?: string;
+}
+
+
 // ==================== Fetch Queries ====================
 
 // ✅ Get all users with filters
@@ -165,6 +173,21 @@ const addWalletAmount = async ({
   return response.data;
 };
 
+const deductWalletAmount = async ({
+  userId,
+  walletType,
+  amount,
+  reason,
+}: DeductWalletAmountPayload) => {
+  const response = await request({
+    url: userUrls.DEDUCT_WALLET_AMOUNT(userId),
+    method: "POST",
+    data: { walletType, amount, reason },
+  });
+
+  return response.data;
+};
+
 // ==================== React Query Hooks ====================
 
 // ✅ Fetch All Users
@@ -248,6 +271,17 @@ export const useAddWalletAmount = () => {
 
   return useMutation({
     mutationFn: addWalletAmount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+};
+
+export const useDeductWalletAmount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deductWalletAmount,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },

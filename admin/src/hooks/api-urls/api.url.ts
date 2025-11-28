@@ -33,8 +33,10 @@ export const userUrls = {
     userPrefix + "/users/" + userId + "/aadhaar-verification",
   STATUS: (userId: string) => userPrefix + "/users/" + userId + "/status",
   LEVEL: (userId: string) => userPrefix + "/users/" + userId + "/level",
-    ADD_WALLET_AMOUNT: (userId: string) => userPrefix + "/users/" +userId + "/add-wallet-amount", 
-
+  ADD_WALLET_AMOUNT: (userId: string) =>
+    userPrefix + "/users/" + userId + "/add-wallet-amount",
+  DEDUCT_WALLET_AMOUNT : (userId:string) => 
+    userPrefix + "/users/" + userId + "/deduct-wallet-amount",
 };
 
 export const adminUrls = {
@@ -74,12 +76,11 @@ export const withdrawalUrls = {
   REJECT_WITHDRAWAL: (withdrawalId: string) =>
     `${withdrawalPrefix}/withdrawals/reject/${withdrawalId}`,
 
-   WITHDRAWAL_CONFIGS: "/withdrawalConfig/withdrawal-configs",
+  WITHDRAWAL_CONFIGS: "/withdrawalConfig/withdrawal-configs",
   UPDATE_WITHDRAWAL_CONFIG: (dayOfWeek: number) =>
     `//withdrawalConfig/withdrawal-configs/${dayOfWeek}`,
   BULK_UPDATE_CONFIGS: "/withdrawalConfig/withdrawal-configs/bulk",
 };
-
 
 export const conferenceNewsUrls = {
   ACTIVE: conferenceNews + "/active",

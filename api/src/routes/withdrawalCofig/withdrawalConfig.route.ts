@@ -6,7 +6,7 @@ import withdrawlConfigQueries from './withdrawlConfig.queries';
 
 export class WithdrawalConfigRoutes extends CommonRoutesConfig {
   constructor(app: express.Application) {
-    super(app, 'Withdrawal Config Auth Routes');
+    super(app, 'Withdrawal Routes');
     this.app.use('/withdrawalConfig', this.router);
   }
 

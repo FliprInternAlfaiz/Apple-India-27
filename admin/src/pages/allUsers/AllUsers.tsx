@@ -18,6 +18,8 @@ import {
   Alert,
   Tooltip,
   NumberInput,
+  Textarea,
+  SegmentedControl,
 } from "@mantine/core";
 import {
   FiSearch,
@@ -29,7 +31,8 @@ import {
   FiAlertCircle,
   FiUsers,
   FiTrendingUp,
-  FiDollarSign,
+  FiMinus,
+  FiPlus,
 } from "react-icons/fi";
 import { notifications } from "@mantine/notifications";
 import {
@@ -39,6 +42,7 @@ import {
   useUpdateAadhaar,
   useToggleStatus,
   useAddWalletAmount,
+  useDeductWalletAmount,
 } from "../../hooks/query/useAdminUsers.query";
 import classes from "./index.module.scss";
 
@@ -58,12 +62,12 @@ const AllUsers = () => {
   const [aadhaarStatus, setAadhaarStatus] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Add these new modal states
+  // Wallet modal states
   const [walletModal, setWalletModal] = useState(false);
-  const [walletType, setWalletType] = useState<
-    "mainWallet" | "commissionWallet"
-  >("mainWallet");
+  const [walletAction, setWalletAction] = useState<"add" | "deduct">("add");
+  const [walletType, setWalletType] = useState<"mainWallet" | "commissionWallet">("mainWallet");
   const [walletAmount, setWalletAmount] = useState<number>(0);
+  const [deductReason, setDeductReason] = useState("");
 
   // Fetch users with filters
   const { data, isLoading, error } = useAllUsers({
@@ -76,12 +80,14 @@ const AllUsers = () => {
     sortOrder: "desc",
   });
 
+
   // Mutations
   const resetPasswordMutation = useResetPassword();
   const updateVerificationMutation = useUpdateVerification();
   const updateAadhaarMutation = useUpdateAadhaar();
   const toggleStatusMutation = useToggleStatus();
   const addWalletAmountMutation = useAddWalletAmount();
+  const deductWalletAmountMutation = useDeductWalletAmount();
 
   const users = data?.users || [];
   const pagination = data?.pagination || {};
@@ -94,14 +100,16 @@ const AllUsers = () => {
     setNewPassword("");
   };
 
-  const handleAddWallet = (user: any) => {
+  const handleWalletAction = (user: any, action: "add" | "deduct") => {
     setSelectedUser(user);
+    setWalletAction(action);
     setWalletModal(true);
     setWalletType("mainWallet");
     setWalletAmount(0);
+    setDeductReason("");
   };
 
-  const confirmAddWalletAmount = async () => {
+  const confirmWalletAction = async () => {
     if (!walletAmount || walletAmount <= 0) {
       notifications.show({
         title: "Invalid Amount",
@@ -112,27 +120,55 @@ const AllUsers = () => {
       return;
     }
 
-    try {
-      await addWalletAmountMutation.mutateAsync({
-        userId: selectedUser._id,
-        walletType,
-        amount: walletAmount,
-      });
-
+    if (walletAction === "deduct" && !deductReason.trim()) {
       notifications.show({
-        title: "Success",
-        message: `₹${walletAmount} added to ${selectedUser.name}'s ${
-          walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
-        }`,
-        color: "green",
-        icon: <FiCheckCircle />,
+        title: "Reason Required",
+        message: "Please provide a reason for deduction",
+        color: "red",
+        icon: <FiXCircle />,
       });
+      return;
+    }
+
+    try {
+      if (walletAction === "add") {
+        await addWalletAmountMutation.mutateAsync({
+          userId: selectedUser._id,
+          walletType,
+          amount: walletAmount,
+        });
+
+        notifications.show({
+          title: "Success",
+          message: `₹${walletAmount} added to ${selectedUser.name}'s ${
+            walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
+          }`,
+          color: "green",
+          icon: <FiCheckCircle />,
+        });
+      } else {
+        await deductWalletAmountMutation.mutateAsync({
+          userId: selectedUser._id,
+          walletType,
+          amount: walletAmount,
+          reason: deductReason,
+        });
+
+        notifications.show({
+          title: "Success",
+          message: `₹${walletAmount} deducted from ${selectedUser.name}'s ${
+            walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
+          }`,
+          color: "green",
+          icon: <FiCheckCircle />,
+        });
+      }
 
       setWalletModal(false);
     } catch (error: any) {
       notifications.show({
         title: "Error",
-        message: error.response?.data?.message || "Failed to add amount",
+        message: error.response?.data?.message || `Failed to ${walletAction} amount`,
         color: "red",
         icon: <FiXCircle />,
       });
@@ -184,9 +220,7 @@ const AllUsers = () => {
 
       notifications.show({
         title: "Success",
-        message: `User verification ${
-          !user.isVerified ? "enabled" : "disabled"
-        }`,
+        message: `User verification ${!user.isVerified ? "enabled" : "disabled"}`,
         color: "green",
         icon: <FiCheckCircle />,
       });
@@ -232,8 +266,7 @@ const AllUsers = () => {
       await updateAadhaarMutation.mutateAsync({
         userId: selectedUser._id,
         status: aadhaarStatus as any,
-        rejectionReason:
-          aadhaarStatus === "rejected" ? rejectionReason : undefined,
+        rejectionReason: aadhaarStatus === "rejected" ? rejectionReason : undefined,
       });
 
       notifications.show({
@@ -282,21 +315,12 @@ const AllUsers = () => {
       approved: { color: "green", label: "Approved", icon: <FiCheckCircle /> },
       pending: { color: "yellow", label: "Pending", icon: <FiFilter /> },
       rejected: { color: "red", label: "Rejected", icon: <FiXCircle /> },
-      not_submitted: {
-        color: "gray",
-        label: "Not Submitted",
-        icon: <FiAlertCircle />,
-      },
+      not_submitted: { color: "gray", label: "Not Submitted", icon: <FiAlertCircle /> },
     };
 
     const config = statusConfig[status] || statusConfig.not_submitted;
     return (
-      <Badge
-        color={config.color}
-        variant="light"
-        leftSection={config.icon}
-        size="sm"
-      >
+      <Badge color={config.color} variant="light" leftSection={config.icon} size="sm">
         {config.label}
       </Badge>
     );
@@ -337,11 +361,7 @@ const AllUsers = () => {
       <Table.Td>
         <Badge
           color={
-            user.teamLevel === "A"
-              ? "green"
-              : user.teamLevel === "B"
-              ? "blue"
-              : "orange"
+            user.teamLevel === "A" ? "green" : user.teamLevel === "B" ? "blue" : "orange"
           }
           size="sm"
         >
@@ -363,16 +383,16 @@ const AllUsers = () => {
       </Table.Td>
       <Table.Td>
         <Tooltip label="Click to manage">
-          <div
-            style={{ cursor: "pointer" }}
-            onClick={() => handleAadhaarVerification(user)}
-          >
+          <div style={{ cursor: "pointer" }} onClick={() => handleAadhaarVerification(user)}>
             {getVerificationBadge(user.aadhaarVerificationStatus)}
           </div>
         </Tooltip>
       </Table.Td>
       <Table.Td>
         <Text size="sm">₹{user.mainWallet?.toLocaleString() || 0}</Text>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">₹{user.commissionWallet?.toLocaleString() || 0}</Text>
       </Table.Td>
       <Table.Td>
         <Tooltip label={user.plainPassword || "N/A"}>
@@ -410,9 +430,19 @@ const AllUsers = () => {
               variant="light"
               color="green"
               size="sm"
-              onClick={() => handleAddWallet(user)}
+              onClick={() => handleWalletAction(user, "add")}
             >
-              <FiDollarSign size={14} />
+              <FiPlus size={14} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Deduct Amount">
+            <ActionIcon
+              variant="light"
+              color="red"
+              size="sm"
+              onClick={() => handleWalletAction(user, "deduct")}
+            >
+              <FiMinus size={14} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Reset Password">
@@ -553,7 +583,7 @@ const AllUsers = () => {
 
       {/* Table */}
       <Paper shadow="xs" className={classes.tableContainer}>
-        <Table.ScrollContainer minWidth={1200}>
+        <Table.ScrollContainer minWidth={1300}>
           <Table striped highlightOnHover withColumnBorders>
             <Table.Thead>
               <Table.Tr>
@@ -562,7 +592,8 @@ const AllUsers = () => {
                 <Table.Th ta="center">Team</Table.Th>
                 <Table.Th ta="center">Status</Table.Th>
                 <Table.Th ta="center">Aadhaar</Table.Th>
-                <Table.Th ta="center">Wallet</Table.Th>
+                <Table.Th ta="center">Prime Wallet</Table.Th>
+                <Table.Th ta="center">Task Wallet</Table.Th>
                 <Table.Th ta="center">Password</Table.Th>
                 <Table.Th ta="center">Referrals</Table.Th>
                 <Table.Th ta="center">Active</Table.Th>
@@ -572,13 +603,8 @@ const AllUsers = () => {
             <Table.Tbody>
               {isLoading ? (
                 <Table.Tr>
-                  <Table.Td colSpan={9}>
-                    <Flex
-                      justify="center"
-                      direction="column"
-                      align="center"
-                      py="xl"
-                    >
+                  <Table.Td colSpan={10}>
+                    <Flex justify="center" direction="column" align="center" py="xl">
                       <Loader size="lg" />
                       <Text c="dimmed" ml="sm">
                         Loading users...
@@ -590,7 +616,7 @@ const AllUsers = () => {
                 rows
               ) : (
                 <Table.Tr>
-                  <Table.Td colSpan={9}>
+                  <Table.Td colSpan={10}>
                     <Text ta="center" c="dimmed" py="xl">
                       No users found
                     </Text>
@@ -659,10 +685,13 @@ const AllUsers = () => {
         )}
       </Modal>
 
+      {/* Wallet Action Modal (Add/Deduct) */}
       <Modal
         opened={walletModal}
         onClose={() => setWalletModal(false)}
-        title="Add Amount to Wallet"
+        title={`${walletAction === "add" ? "Add" : "Deduct"} Amount ${
+          walletAction === "add" ? "to" : "from"
+        } Wallet`}
         centered
       >
         {selectedUser && (
@@ -688,10 +717,21 @@ const AllUsers = () => {
                   Task Wallet
                 </Text>
                 <Text size="lg" fw={600}>
-                  ₹{selectedUser.taskWallet?.toLocaleString() || 0}
+                  ₹{selectedUser.commissionWallet?.toLocaleString() || 0}
                 </Text>
               </Paper>
             </Flex>
+
+            <SegmentedControl
+              value={walletAction}
+              onChange={(value) => setWalletAction(value as "add" | "deduct")}
+              data={[
+                { label: "Add Amount", value: "add" },
+                { label: "Deduct Amount", value: "deduct" },
+              ]}
+              fullWidth
+              color={walletAction === "add" ? "green" : "red"}
+            />
 
             <Select
               label="Select Wallet"
@@ -709,7 +749,7 @@ const AllUsers = () => {
 
             <NumberInput
               label="Amount"
-              placeholder="Enter amount to add"
+              placeholder={`Enter amount to ${walletAction}`}
               value={walletAmount}
               onChange={(value) => setWalletAmount(Number(value))}
               min={0}
@@ -717,29 +757,54 @@ const AllUsers = () => {
               prefix="₹"
               thousandSeparator=","
               required
-              description="Enter the amount you want to add"
+              description={`Enter the amount you want to ${walletAction}`}
             />
 
-            <Alert icon={<FiAlertCircle />} color="blue" variant="light">
-              This will add ₹{walletAmount.toLocaleString()} to the selected
-              wallet
+            {walletAction === "deduct" && (
+              <Textarea
+                label="Reason for Deduction"
+                placeholder="Enter reason (required)"
+                value={deductReason}
+                onChange={(e) => setDeductReason(e.target.value)}
+                required
+                minRows={3}
+                description="This will be recorded for audit purposes"
+              />
+            )}
+
+            <Alert
+              icon={<FiAlertCircle />}
+              color={walletAction === "add" ? "blue" : "orange"}
+              variant="light"
+            >
+              This will {walletAction} ₹{walletAmount.toLocaleString()}{" "}
+              {walletAction === "add" ? "to" : "from"} the selected wallet
             </Alert>
 
             <Group justify="flex-end" gap="sm">
               <Button
                 variant="subtle"
                 onClick={() => setWalletModal(false)}
-                disabled={addWalletAmountMutation.isPending}
+                disabled={
+                  addWalletAmountMutation.isPending ||
+                  deductWalletAmountMutation.isPending
+                }
               >
                 Cancel
               </Button>
               <Button
-                color="green"
-                onClick={confirmAddWalletAmount}
-                loading={addWalletAmountMutation.isPending}
-                leftSection={<FiDollarSign />}
+                color={walletAction === "add" ? "green" : "red"}
+                onClick={confirmWalletAction}
+                loading={
+                  walletAction === "add"
+                    ? addWalletAmountMutation.isPending
+                    : deductWalletAmountMutation.isPending
+                }
+                leftSection={
+                  walletAction === "add" ? <FiPlus /> : <FiMinus />
+                }
               >
-                Add Amount
+                {walletAction === "add" ? "Add" : "Deduct"} Amount
               </Button>
             </Group>
           </Flex>
@@ -759,8 +824,7 @@ const AllUsers = () => {
               User: <strong>{selectedUser.name}</strong>
             </Text>
             <Text size="sm" c="dimmed">
-              Current Status:{" "}
-              {getVerificationBadge(selectedUser.aadhaarVerificationStatus)}
+              Current Status: {getVerificationBadge(selectedUser.aadhaarVerificationStatus)}
             </Text>
 
             <Select

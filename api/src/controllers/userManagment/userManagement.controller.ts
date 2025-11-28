@@ -11,6 +11,17 @@ interface AddWalletAmountBody {
   amount: number;
 }
 
+interface AddWalletAmountBody {
+  walletType: 'mainWallet' | 'commissionWallet';
+  amount: number;
+}
+
+interface DeductWalletAmountBody {
+  walletType: 'mainWallet' | 'commissionWallet';
+  amount: number;
+  reason?: string;
+}
+
 const getAllUsers = async (req: Request, res: Response, __: NextFunction) => {
   try {
     const {
@@ -433,7 +444,6 @@ const addWalletAmount = async (
   res: Response,
   __: NextFunction,
 ) => {
-  console.log('💡 Add wallet amount request body:', req.body);
   try {
     const { userId } = req.params;
     const { walletType, amount } = req.body;
@@ -502,6 +512,94 @@ const addWalletAmount = async (
     });
   }
 };
+
+const deductWalletAmount = async (
+  req: Request<{ userId: string }, {}, DeductWalletAmountBody>,
+  res: Response,
+  __: NextFunction,
+) => {
+  try {
+    const { userId } = req.params;
+    const { walletType, amount, reason } = req.body;
+
+    if (
+      !walletType ||
+      !['mainWallet', 'commissionWallet'].includes(walletType)
+    ) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 400,
+        message: 'Invalid wallet type. Must be mainWallet or commissionWallet.',
+        title: 'Deduct Wallet Amount',
+      });
+    }
+
+    if (!amount || Number(amount) <= 0) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 400,
+        message: 'Amount must be greater than 0.',
+        title: 'Deduct Wallet Amount',
+      });
+    }
+
+    const user = await models.User.findById(userId);
+    if (!user) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 404,
+        message: 'User not found.',
+        title: 'Deduct Wallet Amount',
+      });
+    }
+
+    const key = walletType as 'mainWallet' | 'commissionWallet';
+    const previousBalance = Number((user as IUser)[key] ?? 0);
+
+    // Check if user has sufficient balance
+    if (previousBalance < Number(amount)) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 400,
+        message: `Insufficient balance. Current balance: ₹${previousBalance}`,
+        title: 'Deduct Wallet Amount',
+      });
+    }
+
+    const newBalance = previousBalance - Number(amount);
+    (user as IUser)[key] = newBalance;
+
+    await user.save();
+
+    return JsonResponse(res, {
+      status: 'success',
+      statusCode: 200,
+      title: 'Amount Deducted',
+      message: `₹${amount} deducted successfully from ${
+        walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
+      }.`,
+      data: {
+        userId: user._id,
+        walletType,
+        amountDeducted: Number(amount),
+        previousBalance,
+        newBalance,
+        reason: reason || 'Admin deduction',
+        updatedAt: new Date(),
+      },
+    });
+  } catch (err) {
+    console.error('💥 Deduct wallet amount error:', err);
+    return JsonResponse(res, {
+      status: 'error',
+      statusCode: 500,
+      title: 'Server Error',
+      message: 'Failed to deduct amount from wallet.',
+    });
+  }
+};
+
+
 export default {
   updateAadhaarVerification,
   updateUserLevel,
@@ -511,4 +609,5 @@ export default {
   getAllUsers,
   getUserById,
   addWalletAmount,
+  deductWalletAmount
 };
