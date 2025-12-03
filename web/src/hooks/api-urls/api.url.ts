@@ -21,7 +21,8 @@ export const authUrls = {
   LOGIN: authPrefix + "/login",
   SIGNUP: authPrefix + "/signup",
   VERIFYUSER:authPrefix + "/profile",
-  LOGOUT:authPrefix + "/logout"
+  LOGOUT:authPrefix + "/logout",
+  UPDATEPROFILE : authPrefix + "/update",
 };
 
 export const teamUrls = {

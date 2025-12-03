@@ -1,5 +1,5 @@
 // components/Profile/Profile.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Text,
@@ -8,6 +8,7 @@ import {
   Divider,
   Loader,
   Center,
+  Tooltip,
 } from "@mantine/core";
 import {
   FaBuilding,
@@ -17,6 +18,7 @@ import {
   FaShieldAlt,
   FaDownload,
   FaSignOutAlt,
+  FaEdit,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,6 +28,7 @@ import { login } from "../../store/reducer/authSlice";
 import { useVerifyUserQuery } from "../../hooks/query/useGetVerifyUser.query";
 import { notifications } from "@mantine/notifications";
 import { useLogoutMutation } from "../../hooks/mutations/useLogout.mutation";
+import UpdateProfileModal from "../../components/UpdateProfileModal/UpdateProfileModal";
 
 interface StatItemProps {
   label: string;
@@ -90,6 +93,7 @@ const Profile: React.FC = () => {
   );
   const { data, isLoading, isError, refetch } = useVerifyUserQuery();
   const logoutMutation = useLogoutMutation();
+  const [updateModalOpened, setUpdateModalOpened] = useState(false);
 
   useEffect(() => {
     if (data?.status === "success" && data.data?.user) {
@@ -158,7 +162,7 @@ const Profile: React.FC = () => {
 
   if (isLoading || isLoggedIn === "loading") {
     return (
-     <Center h="100vh">
+      <Center h="100vh">
         <Loader size="lg" color="#8FABD4" />
       </Center>
     );
@@ -185,6 +189,22 @@ const Profile: React.FC = () => {
       </Center>
     );
   }
+  const getImageUrl = (path: string | undefined | null): string | null => {
+    if (!path) return null;
+
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      return path;
+    }
+
+    const baseUrl =
+      import.meta.env.VITE_PUBLIC_BASE_URL || "http://localhost:5000";
+
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
+    return `${baseUrl}${cleanPath}`;
+  };
+
+  const profileImageUrl = getImageUrl(userData.picture);
 
   return (
     <>
@@ -196,85 +216,92 @@ const Profile: React.FC = () => {
         }}
       >
         <Box p={20}>
-          <Flex align="center" gap="16px">
-            {userData.picture ? (
-              <Box
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: "50%",
-                  background: "#8FABD4",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "3px solid #fff",
-                  overflow: "hidden",
-                }}
-              >
-                <img
-                  src={userData.picture}
-                  alt={userData.name || "User"}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </Box>
-            ) : (
-              <Box
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: "50%",
-                  background: "#8FABD4",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  fontWeight: 700,
-                  color: "#fff",
-                  border: "3px solid #fff",
-                }}
-              >
-                {getInitials(userData.name)}
-              </Box>
-            )}
-
-            <Flex direction="column">
-              <Text size="sm" c="#fff" fw={500}>
-                {userData.phone || "N/A"}
-              </Text>
-              <Box
-                mt={10}
-                px={10}
-                style={{
-                  background: "#8FABD4",
-                  borderRadius: 4,
-                  color: "black",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  alignSelf: "flex-start",
-                }}
-              >
-                {userData.username || userData.name || "User"}
-              </Box>
-              {userData.levelName && (
+          <Flex direction="row" justify="space-between">
+            <Flex align="center" gap="16px">
+              {userData.picture ? (
                 <Box
-                  mt={6}
-                  px={8}
                   style={{
-                    background: "rgba(255, 255, 255, 0.2)",
-                    borderRadius: 4,
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    background: "#8FABD4",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "3px solid #fff",
+                    overflow: "hidden",
+                  }}
+                >
+                  <img
+                    src={profileImageUrl ?? ""}
+                    alt={userData.name || "User"}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
+              ) : (
+                <Box
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    background: "#8FABD4",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    fontWeight: 700,
                     color: "#fff",
-                    fontSize: 12,
-                    fontWeight: 500,
+                    border: "3px solid #fff",
+                  }}
+                >
+                  {getInitials(userData.name)}
+                </Box>
+              )}
+
+              <Flex direction="column">
+                <Text size="sm" c="#fff" fw={500}>
+                  {userData.phone || "N/A"}
+                </Text>
+                <Box
+                  mt={10}
+                  px={10}
+                  style={{
+                    background: "#8FABD4",
+                    borderRadius: 4,
+                    color: "black",
+                    fontSize: 14,
+                    fontWeight: 600,
                     alignSelf: "flex-start",
                   }}
                 >
-                  {userData.levelName} • Level {userData.userLevel || 0}
+                  {userData.username || userData.name || "User"}
                 </Box>
-              )}
+                {userData.levelName && (
+                  <Box
+                    mt={6}
+                    px={8}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.2)",
+                      borderRadius: 4,
+                      color: "#fff",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    {userData.levelName} • Level {userData.userLevel || 0}
+                  </Box>
+                )}
+              </Flex>
+            </Flex>
+            <Flex onClick={() => setUpdateModalOpened(true)}>
+              <Tooltip label="Edit Profile" withArrow>
+                <FaEdit size={18} color="white" />
+              </Tooltip>
             </Flex>
           </Flex>
         </Box>
@@ -302,7 +329,7 @@ const Profile: React.FC = () => {
           <Divider />
           <StatItem
             label="Total revenue"
-            value={formatCurrency(userData.totalRevenue)}
+            value={formatCurrency(data?.data?.stats?.totalRevenue)}
           />
           <Divider />
           <StatItem
@@ -322,7 +349,7 @@ const Profile: React.FC = () => {
           <Divider />
           <StatItem
             label="Profit"
-            value={formatCurrency(userData.totalProfit)}
+            value={formatCurrency(data?.data?.stats?.profit)}
           />
 
           <Flex gap="md" mt="lg">
@@ -394,6 +421,12 @@ const Profile: React.FC = () => {
           ))}
         </Box>
       </Box>
+
+      <UpdateProfileModal
+        opened={updateModalOpened}
+        onClose={() => setUpdateModalOpened(false)}
+        userData={userData}
+      />
     </>
   );
 };

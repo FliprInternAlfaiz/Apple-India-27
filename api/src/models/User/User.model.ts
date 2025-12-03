@@ -9,7 +9,7 @@ const schema = new Schema<IUser>(
     phone: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     plainPassword: { type: String, select: false },
-    picture: { type: String },
+    picture: { type: String},
     mainWallet: { type: Number, default: 0, min: 0 },
     commissionWallet: { type: Number, default: 0, min: 0 },
     todayIncome: { type: Number, default: 0 },

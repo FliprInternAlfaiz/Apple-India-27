@@ -7,6 +7,7 @@ import getUserProfileController from './getUserProfile.controller';
 import userLoginController from './userLogin.controller';
 import userLogoutController from './userLogout.controller';
 import userSignupController from './userSignup.controller';
+import updateUserProfile from "./updateUserProfile.controller"
 
 export const authController = {
   userLogin: asyncWrapper(userLoginController),
@@ -17,4 +18,5 @@ export const authController = {
   getAdminProfile: asyncWrapper(getAdminProfileController),
   createAdmin: asyncWrapper(createAdmin),
   adminLogout: asyncWrapper(adminLogoutController),
+  updateUserProfile : asyncWrapper(updateUserProfile)
 };
