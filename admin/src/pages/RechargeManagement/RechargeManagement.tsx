@@ -29,6 +29,7 @@ import {
   FiClock,
   FiEye,
   FiDownload,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { notifications } from "@mantine/notifications";
 import {
@@ -42,7 +43,7 @@ import classes from "./index.module.scss";
 const RechargeManagement = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("processing"); // Default to processing
   const [activePage, setActivePage] = useState(1);
   const itemsPerPage = 10;
 
@@ -75,7 +76,7 @@ const RechargeManagement = () => {
   // Handlers
   const handleApprove = (recharge: any) => {
     setSelectedRecharge(recharge);
-    setRemarks("");
+    setRemarks("Payment verified and approved");
     setApproveModal(true);
   };
 
@@ -96,17 +97,19 @@ const RechargeManagement = () => {
     try {
       await approveRechargeMutation.mutateAsync({
         orderId: selectedRecharge.orderId,
-        remarks: remarks || "Payment verified successfully",
+        remarks: remarks || "Payment verified and approved by admin",
       });
 
       notifications.show({
-        title: "Success",
-        message: "Recharge approved successfully",
+        title: "✅ Recharge Approved",
+        message: `₹${selectedRecharge.amount} added to user's wallet successfully`,
         color: "green",
         icon: <FiCheckCircle />,
+        autoClose: 5000,
       });
 
       setApproveModal(false);
+      setRemarks("");
     } catch (error: any) {
       notifications.show({
         title: "Error",
@@ -120,10 +123,11 @@ const RechargeManagement = () => {
   const confirmReject = async () => {
     if (!selectedRecharge) return;
 
-    if (!remarks) {
+    if (!remarks || remarks.trim().length < 10) {
       notifications.show({
         title: "Validation Error",
-        message: "Please provide rejection reason",
+        message:
+          "Please provide a detailed rejection reason (minimum 10 characters)",
         color: "red",
         icon: <FiXCircle />,
       });
@@ -133,17 +137,18 @@ const RechargeManagement = () => {
     try {
       await rejectRechargeMutation.mutateAsync({
         orderId: selectedRecharge._id,
-        remarks,
+        remarks: remarks.trim(),
       });
 
       notifications.show({
-        title: "Success",
-        message: "Recharge rejected",
-        color: "green",
-        icon: <FiCheckCircle />,
+        title: "Recharge Rejected",
+        message: "Recharge request has been rejected",
+        color: "orange",
+        icon: <FiAlertTriangle />,
       });
 
       setRejectModal(false);
+      setRemarks("");
     } catch (error: any) {
       notifications.show({
         title: "Error",
@@ -155,15 +160,21 @@ const RechargeManagement = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const colors: any = {
-      pending: "yellow",
-      processing: "blue",
-      completed: "green",
-      rejected: "red",
+    const statusConfig: any = {
+      pending: { color: "yellow", label: "PENDING" },
+      processing: { color: "blue", label: "PROCESSING" },
+      completed: { color: "green", label: "COMPLETED" },
+      rejected: { color: "red", label: "REJECTED" },
     };
+
+    const config = statusConfig[status] || {
+      color: "gray",
+      label: status.toUpperCase(),
+    };
+
     return (
-      <Badge color={colors[status] || "gray"} size="sm">
-        {status.toUpperCase()}
+      <Badge color={config.color} size="sm" variant="filled">
+        {config.label}
       </Badge>
     );
   };
@@ -268,7 +279,7 @@ const RechargeManagement = () => {
 
   return (
     <Flex direction="column" gap="md" className={classes.container}>
-      {/* Statistics */}
+      {/* Statistics Cards */}
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Paper p="md" shadow="xs" className={classes.statsCard}>
@@ -297,10 +308,10 @@ const RechargeManagement = () => {
               <FiClock size={32} color="white" />
               <div>
                 <Text size="xs" c="white" opacity={0.9}>
-                  Pending
+                  Processing
                 </Text>
                 <Text size="xl" fw={700} c="white">
-                  {statistics.pendingCount || 0}
+                  {statistics.processingCount || 0}
                 </Text>
               </div>
             </Group>
@@ -350,7 +361,7 @@ const RechargeManagement = () => {
         </Grid.Col>
       </Grid>
 
-      {/* Header */}
+      {/* Header with Filters */}
       <Paper p="md" shadow="xs" className={classes.header}>
         <Group justify="space-between" mb="md">
           <Flex gap="xs" direction="column" align="flex-start">
@@ -358,15 +369,20 @@ const RechargeManagement = () => {
               Recharge Management
             </Text>
             <Text size="sm" c="dimmed" className={classes.subtitle}>
-              Manage user recharge requests
+              Review and approve user recharge requests
             </Text>
           </Flex>
+          {statistics.processingCount > 0 && (
+            <Badge size="lg" color="orange" variant="filled">
+              {statistics.processingCount} Pending Approval
+            </Badge>
+          )}
         </Group>
 
         {/* Filters */}
         <Group gap="md" className={classes.filters}>
           <TextInput
-            placeholder="Search by order ID, name, or phone..."
+            placeholder="Search by order ID, name, phone, or UTR..."
             leftSection={<FiSearch />}
             value={searchQuery}
             onChange={(e) => {
@@ -387,10 +403,10 @@ const RechargeManagement = () => {
             ]}
             value={statusFilter}
             onChange={(value) => {
-              setStatusFilter(value || "all");
+              setStatusFilter(value || "processing");
               setActivePage(1);
             }}
-            clearable
+            clearable={false}
           />
         </Group>
       </Paper>
@@ -421,7 +437,7 @@ const RechargeManagement = () => {
                       py="xl"
                     >
                       <Loader size="lg" />
-                      <Text c="dimmed" ml="sm">
+                      <Text c="dimmed" mt="sm">
                         Loading Recharge...
                       </Text>
                     </Flex>
@@ -433,7 +449,7 @@ const RechargeManagement = () => {
                 <Table.Tr>
                   <Table.Td colSpan={9}>
                     <Text ta="center" c="dimmed" py="xl">
-                      No Recharge Data found
+                      No recharge requests found
                     </Text>
                   </Table.Td>
                 </Table.Tr>
@@ -460,6 +476,7 @@ const RechargeManagement = () => {
         onClose={() => setApproveModal(false)}
         title="Approve Recharge"
         centered
+        size="md"
       >
         {selectedRecharge && (
           <Flex direction="column" gap="md">
@@ -468,25 +485,60 @@ const RechargeManagement = () => {
               title="Confirm Approval"
               color="green"
             >
-              This will add ₹{selectedRecharge.amount} to user's main wallet
+              This will add ₹{selectedRecharge.amount.toLocaleString()} to
+              user's main wallet
             </Alert>
 
-            <Card withBorder>
-              <Text size="sm" fw={500}>
-                Order: {selectedRecharge.orderId}
+            <Card withBorder p="md">
+              <Text size="sm" fw={600} mb="xs">
+                Order Information
               </Text>
-              <Text size="sm">Amount: ₹{selectedRecharge.amount}</Text>
-              <Text size="sm">User: {selectedRecharge.userId?.name}</Text>
-              <Text size="sm">
-                Transaction: {selectedRecharge.transactionId}
-              </Text>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Order ID:
+                </Text>
+                <Text size="sm" fw={500}>
+                  {selectedRecharge.orderId}
+                </Text>
+              </Group>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Amount:
+                </Text>
+                <Text size="sm" fw={600} c="blue">
+                  ₹{selectedRecharge.amount.toLocaleString()}
+                </Text>
+              </Group>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  User:
+                </Text>
+                <Text size="sm" fw={500}>
+                  {selectedRecharge.userId?.name}
+                </Text>
+              </Group>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Phone:
+                </Text>
+                <Text size="sm">{selectedRecharge.userId?.phone}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Transaction ID:
+                </Text>
+                <Text size="sm" fw={500}>
+                  {selectedRecharge.transactionId}
+                </Text>
+              </Group>
             </Card>
 
             <Textarea
-              label="Remarks (Optional)"
-              placeholder="Payment verified successfully"
+              label="Admin Remarks (Optional)"
+              placeholder="Payment verified and approved"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
+              minRows={2}
             />
 
             <Group justify="flex-end" gap="sm" mt="md">
@@ -503,7 +555,7 @@ const RechargeManagement = () => {
                 loading={approveRechargeMutation.isPending}
                 leftSection={<FiCheckCircle />}
               >
-                Approve Recharge
+                Approve & Add to Wallet
               </Button>
             </Group>
           </Flex>
@@ -516,27 +568,57 @@ const RechargeManagement = () => {
         onClose={() => setRejectModal(false)}
         title="Reject Recharge"
         centered
+        size="md"
       >
         {selectedRecharge && (
           <Flex direction="column" gap="md">
             <Alert icon={<FiXCircle />} title="Confirm Rejection" color="red">
-              This recharge request will be rejected
+              This recharge request will be rejected. User will not receive the
+              amount.
             </Alert>
 
-            <Card withBorder>
-              <Text size="sm" fw={500}>
-                Order: {selectedRecharge.orderId}
+            <Card withBorder p="md">
+              <Text size="sm" fw={600} mb="xs">
+                Order Information
               </Text>
-              <Text size="sm">Amount: ₹{selectedRecharge.amount}</Text>
-              <Text size="sm">User: {selectedRecharge.userId?.name}</Text>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Order ID:
+                </Text>
+                <Text size="sm" fw={500}>
+                  {selectedRecharge.orderId}
+                </Text>
+              </Group>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Amount:
+                </Text>
+                <Text size="sm" fw={600}>
+                  ₹{selectedRecharge.amount.toLocaleString()}
+                </Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  User:
+                </Text>
+                <Text size="sm" fw={500}>
+                  {selectedRecharge.userId?.name}
+                </Text>
+              </Group>
             </Card>
 
             <Textarea
               label="Rejection Reason *"
-              placeholder="e.g., Invalid transaction ID, Payment not received"
+              placeholder="e.g., Invalid transaction ID, Payment not received, Duplicate request..."
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               required
+              minRows={3}
+              error={
+                remarks && remarks.length < 10
+                  ? "Please provide at least 10 characters"
+                  : undefined
+              }
             />
 
             <Group justify="flex-end" gap="sm" mt="md">
@@ -552,6 +634,7 @@ const RechargeManagement = () => {
                 onClick={confirmReject}
                 loading={rejectRechargeMutation.isPending}
                 leftSection={<FiXCircle />}
+                disabled={!remarks || remarks.length < 10}
               >
                 Reject Recharge
               </Button>
@@ -589,7 +672,7 @@ const RechargeManagement = () => {
                   Amount
                 </Text>
                 <Text size="sm" fw={600} c="blue">
-                  ₹{selectedRecharge.amount}
+                  ₹{selectedRecharge.amount.toLocaleString()}
                 </Text>
               </Group>
 
@@ -605,7 +688,7 @@ const RechargeManagement = () => {
                   Transaction ID
                 </Text>
                 <Text size="sm" fw={500}>
-                  {selectedRecharge.transactionId || "N/A"}
+                  {selectedRecharge.transactionId || "Not submitted"}
                 </Text>
               </Group>
 
@@ -626,13 +709,60 @@ const RechargeManagement = () => {
                   </Text>
                 </Group>
               )}
+
+              {selectedRecharge.approvedAt && (
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    Approved At
+                  </Text>
+                  <Text size="sm" c="green">
+                    {formatDate(selectedRecharge.approvedAt)}
+                  </Text>
+                </Group>
+              )}
+
+              {selectedRecharge.rejectedAt && (
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    Rejected At
+                  </Text>
+                  <Text size="sm" c="red">
+                    {formatDate(selectedRecharge.rejectedAt)}
+                  </Text>
+                </Group>
+              )}
+            </Card>
+
+            <Card shadow="sm" padding="lg" radius="md" withBorder>
+              <Text size="lg" fw={600} mb="md">
+                User Details
+              </Text>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Name
+                </Text>
+                <Text size="sm" fw={500}>
+                  {selectedRecharge.userId?.name || "N/A"}
+                </Text>
+              </Group>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
+                  Phone
+                </Text>
+                <Text size="sm">{selectedRecharge.userId?.phone || "N/A"}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  Email
+                </Text>
+                <Text size="sm">{selectedRecharge.userId?.email || "N/A"}</Text>
+              </Group>
             </Card>
 
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Text size="lg" fw={600} mb="md">
                 Payment Details
               </Text>
-
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
                   Method Name
@@ -641,7 +771,6 @@ const RechargeManagement = () => {
                   {selectedRecharge.paymentDetails?.methodName}
                 </Text>
               </Group>
-
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
                   Method Type
@@ -650,7 +779,6 @@ const RechargeManagement = () => {
                   {selectedRecharge.paymentDetails?.methodType}
                 </Text>
               </Group>
-
               {selectedRecharge.paymentDetails?.upiId && (
                 <Group justify="space-between" mb="xs">
                   <Text size="sm" c="dimmed">
@@ -659,16 +787,33 @@ const RechargeManagement = () => {
                   <Text size="sm">{selectedRecharge.paymentDetails.upiId}</Text>
                 </Group>
               )}
-
               {selectedRecharge.paymentDetails?.accountNumber && (
-                <Group justify="space-between" mb="xs">
-                  <Text size="sm" c="dimmed">
-                    Account Number
-                  </Text>
-                  <Text size="sm">
-                    {selectedRecharge.paymentDetails.accountNumber}
-                  </Text>
-                </Group>
+                <>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">
+                      Account Number
+                    </Text>
+                    <Text size="sm">
+                      {selectedRecharge.paymentDetails.accountNumber}
+                    </Text>
+                  </Group>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">
+                      Bank Name
+                    </Text>
+                    <Text size="sm">
+                      {selectedRecharge.paymentDetails.bankName}
+                    </Text>
+                  </Group>
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">
+                      IFSC Code
+                    </Text>
+                    <Text size="sm">
+                      {selectedRecharge.paymentDetails.ifscCode}
+                    </Text>
+                  </Group>
+                </>
               )}
             </Card>
 
@@ -697,7 +842,11 @@ const RechargeManagement = () => {
             )}
 
             {selectedRecharge.remarks && (
-              <Alert icon={<FiAlertCircle />} title="Remarks">
+              <Alert
+                icon={<FiAlertCircle />}
+                title="Admin Remarks"
+                color={selectedRecharge.status === "rejected" ? "red" : "blue"}
+              >
                 {selectedRecharge.remarks}
               </Alert>
             )}

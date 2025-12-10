@@ -1,26 +1,26 @@
-// models/BankAccount.ts
-import { Schema, model } from "mongoose";
-import commonsUtils from "../../utils";
+// models/bankAccount.model.ts
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IBankAccount {
-  userId: Schema.Types.ObjectId;
+export interface IBankAccount extends Document {
+  userId: mongoose.Types.ObjectId;
   accountHolderName: string;
   bankName: string;
   accountNumber: string;
   ifscCode: string;
   branchName?: string;
-  accountType: "savings" | "current";
+  accountType: 'savings' | 'current' | 'qr';
+  qrCodeImage?: string; // Path to QR code image
   isDefault: boolean;
   isActive: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const bankAccountSchema = new Schema<IBankAccount>(
+const BankAccountSchema: Schema = new Schema(
   {
     userId: {
-      type: Schema.Types.ObjectId,
-      ref: "user",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
       required: true,
       index: true,
     },
@@ -51,8 +51,12 @@ const bankAccountSchema = new Schema<IBankAccount>(
     },
     accountType: {
       type: String,
-      enum: ["savings", "current"],
-      default: "savings",
+      enum: ['savings', 'current', 'qr'],
+      default: 'savings',
+    },
+    qrCodeImage: {
+      type: String,
+      default: null,
     },
     isDefault: {
       type: Boolean,
@@ -61,13 +65,15 @@ const bankAccountSchema = new Schema<IBankAccount>(
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-bankAccountSchema.index({ userId: 1, isActive: 1 });
-bankAccountSchema.index({ userId: 1, isDefault: 1 });
+// Compound index for user and active status
+BankAccountSchema.index({ userId: 1, isActive: 1 });
 
-const BankAccountModel = model<IBankAccount>("bankAccount", bankAccountSchema);
-export default BankAccountModel;
+export default mongoose.model<IBankAccount>('BankAccount', BankAccountSchema);

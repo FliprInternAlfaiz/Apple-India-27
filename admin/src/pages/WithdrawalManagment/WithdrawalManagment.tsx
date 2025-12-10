@@ -19,6 +19,7 @@ import {
   Card,
   Grid,
   CopyButton,
+  Image,
 } from "@mantine/core";
 import {
   FiSearch,
@@ -40,14 +41,12 @@ import {
 import classes from "./index.module.scss";
 
 const WithdrawalManagement = () => {
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [walletFilter, setWalletFilter] = useState("all");
   const [activePage, setActivePage] = useState(1);
   const itemsPerPage = 10;
 
-  // Modal states
   const [approveModal, setApproveModal] = useState(false);
   const [rejectModal, setRejectModal] = useState(false);
   const [viewModal, setViewModal] = useState(false);
@@ -55,7 +54,6 @@ const WithdrawalManagement = () => {
   const [remarks, setRemarks] = useState("");
   const [transactionId, setTransactionId] = useState("");
 
-  // Fetch withdrawals
   const { data, isLoading, error } = useAllWithdrawals({
     page: activePage,
     limit: itemsPerPage,
@@ -64,10 +62,7 @@ const WithdrawalManagement = () => {
     walletType: walletFilter !== "all" ? walletFilter : undefined,
   });
 
-  // Fetch statistics
   const { data: statsData } = useWithdrawalStatistics();
-
-  // Mutations
   const approveWithdrawalMutation = useApproveWithdrawal();
   const rejectWithdrawalMutation = useRejectWithdrawal();
 
@@ -75,7 +70,6 @@ const WithdrawalManagement = () => {
   const pagination = data?.pagination || {};
   const statistics = statsData || {};
 
-  // Handlers
   const handleApprove = (withdrawal: any) => {
     setSelectedWithdrawal(withdrawal);
     setRemarks("");
@@ -192,6 +186,24 @@ const WithdrawalManagement = () => {
     );
   };
 
+  const getAccountTypeBadge = (accountType: string) => {
+    const colors: any = {
+      savings: "blue",
+      current: "cyan",
+      qr: "violet",
+    };
+    const labels: any = {
+      savings: "Savings",
+      current: "Current",
+      qr: "QR Code",
+    };
+    return (
+      <Badge color={colors[accountType] || "gray"} size="sm">
+        {labels[accountType] || accountType}
+      </Badge>
+    );
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString("en-IN", {
       day: "2-digit",
@@ -249,11 +261,16 @@ const WithdrawalManagement = () => {
       <Table.Td>
         <div>
           <Text size="sm">{withdrawal.bankName}</Text>
-          <Text size="xs" c="dimmed">
-            ••••{withdrawal.accountNumber?.slice(-4)}
-          </Text>
+          {withdrawal.accountType === 'qr' ? (
+            <Badge size="xs" color="violet">QR Payment</Badge>
+          ) : (
+            <Text size="xs" c="dimmed">
+              ••••{withdrawal.accountNumber?.slice(-4)}
+            </Text>
+          )}
         </div>
       </Table.Td>
+      <Table.Td>{getAccountTypeBadge(withdrawal.accountType)}</Table.Td>
       <Table.Td>{getStatusBadge(withdrawal.status)}</Table.Td>
       <Table.Td>
         <Group gap="xs">
@@ -449,7 +466,8 @@ const WithdrawalManagement = () => {
                 <Table.Th ta="center">User</Table.Th>
                 <Table.Th ta="center">Amount</Table.Th>
                 <Table.Th ta="center">Wallet Type</Table.Th>
-                <Table.Th ta="center">Bank Details</Table.Th>
+                <Table.Th ta="center">Payment Details</Table.Th>
+                <Table.Th ta="center">Method</Table.Th>
                 <Table.Th ta="center">Status</Table.Th>
                 <Table.Th ta="center">Actions</Table.Th>
               </Table.Tr>
@@ -457,7 +475,7 @@ const WithdrawalManagement = () => {
             <Table.Tbody>
               {isLoading ? (
                 <Table.Tr>
-                  <Table.Td colSpan={9}>
+                  <Table.Td colSpan={8}>
                     <Flex
                       justify="center"
                       direction="column"
@@ -475,7 +493,7 @@ const WithdrawalManagement = () => {
                 rows
               ) : (
                 <Table.Tr>
-                  <Table.Td colSpan={9}>
+                  <Table.Td colSpan={8}>
                     <Text ta="center" c="dimmed" py="xl">
                       No Withdrawal Data found
                     </Text>
@@ -504,6 +522,7 @@ const WithdrawalManagement = () => {
         onClose={() => setApproveModal(false)}
         title="Approve Withdrawal"
         centered
+        size="lg"
       >
         {selectedWithdrawal && (
           <Flex direction="column" gap="md">
@@ -512,13 +531,36 @@ const WithdrawalManagement = () => {
               title="Confirm Approval"
               color="green"
             >
-              Process payment to user's bank account
+              Process payment to user's {selectedWithdrawal.accountType === 'qr' ? 'QR code' : 'bank account'}
             </Alert>
 
             <Card withBorder>
               <Text size="sm" fw={500} mb="xs">
-                Bank Details:
+                Payment Details:
               </Text>
+
+              {selectedWithdrawal.accountType === 'qr' && selectedWithdrawal.qrCodeImage && (
+                <Card withBorder p="md" mb="md" style={{ backgroundColor: '#f8f9fa' }}>
+                  <Text size="sm" fw={600} mb="sm" ta="center">
+                    Scan QR Code to Pay
+                  </Text>
+                  <Flex justify="center" mb="sm">
+                    <Image
+                      src={`${process.env.REACT_APP_API_URL}/${selectedWithdrawal.qrCodeImage}`}
+                      alt="Payment QR Code"
+                      width={250}
+                      height={250}
+                      radius="md"
+                    />
+                  </Flex>
+                  <Alert color="blue" icon={<FiAlertCircle />}>
+                    <Text size="xs">
+                      Scan this QR code using any UPI app to make the payment. After successful payment, enter the transaction ID below.
+                    </Text>
+                  </Alert>
+                </Card>
+              )}
+
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
                   Account Holder
@@ -527,48 +569,54 @@ const WithdrawalManagement = () => {
               </Group>
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
-                  Bank Name
+                  {selectedWithdrawal.accountType === 'qr' ? 'Payment Name' : 'Bank Name'}
                 </Text>
                 <Text size="sm">{selectedWithdrawal.bankName}</Text>
               </Group>
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  Account Number
-                </Text>
-                <Group gap="xs">
-                  <Text size="sm">{selectedWithdrawal.accountNumber}</Text>
-                  <CopyButton value={selectedWithdrawal.accountNumber}>
-                    {({ copied, copy }) => (
-                      <ActionIcon
-                        color={copied ? "teal" : "gray"}
-                        onClick={copy}
-                        size="sm"
-                      >
-                        <FiCopy size={12} />
-                      </ActionIcon>
-                    )}
-                  </CopyButton>
-                </Group>
-              </Group>
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  IFSC Code
-                </Text>
-                <Group gap="xs">
-                  <Text size="sm">{selectedWithdrawal.ifscCode}</Text>
-                  <CopyButton value={selectedWithdrawal.ifscCode}>
-                    {({ copied, copy }) => (
-                      <ActionIcon
-                        color={copied ? "teal" : "gray"}
-                        onClick={copy}
-                        size="sm"
-                      >
-                        <FiCopy size={12} />
-                      </ActionIcon>
-                    )}
-                  </CopyButton>
-                </Group>
-              </Group>
+              
+              {selectedWithdrawal.accountType !== 'qr' && (
+                <>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">
+                      Account Number
+                    </Text>
+                    <Group gap="xs">
+                      <Text size="sm">{selectedWithdrawal.accountNumber}</Text>
+                      <CopyButton value={selectedWithdrawal.accountNumber}>
+                        {({ copied, copy }) => (
+                          <ActionIcon
+                            color={copied ? "teal" : "gray"}
+                            onClick={copy}
+                            size="sm"
+                          >
+                            <FiCopy size={12} />
+                          </ActionIcon>
+                        )}
+                      </CopyButton>
+                    </Group>
+                  </Group>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">
+                      IFSC Code
+                    </Text>
+                    <Group gap="xs">
+                      <Text size="sm">{selectedWithdrawal.ifscCode}</Text>
+                      <CopyButton value={selectedWithdrawal.ifscCode}>
+                        {({ copied, copy }) => (
+                          <ActionIcon
+                            color={copied ? "teal" : "gray"}
+                            onClick={copy}
+                            size="sm"
+                          >
+                            <FiCopy size={12} />
+                          </ActionIcon>
+                        )}
+                      </CopyButton>
+                    </Group>
+                  </Group>
+                </>
+              )}
+              
               <Group justify="space-between">
                 <Text size="sm" c="dimmed">
                   Amount
@@ -581,7 +629,7 @@ const WithdrawalManagement = () => {
 
             <TextInput
               label="Transaction ID *"
-              placeholder="Enter bank transaction ID"
+              placeholder="Enter transaction ID"
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
               required
@@ -640,11 +688,14 @@ const WithdrawalManagement = () => {
                   ? "Main"
                   : "Commission"}
               </Text>
+              <Text size="sm">
+                Method: {selectedWithdrawal.accountType === 'qr' ? 'QR Payment' : 'Bank Transfer'}
+              </Text>
             </Card>
 
             <Textarea
               label="Rejection Reason *"
-              placeholder="e.g., Invalid bank details, Insufficient funds"
+              placeholder="e.g., Invalid details, Technical issue"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               required
@@ -713,6 +764,13 @@ const WithdrawalManagement = () => {
 
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
+                  Payment Method
+                </Text>
+                {getAccountTypeBadge(selectedWithdrawal.accountType)}
+              </Group>
+
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" c="dimmed">
                   Status
                 </Text>
                 {getStatusBadge(selectedWithdrawal.status)}
@@ -739,41 +797,76 @@ const WithdrawalManagement = () => {
               )}
             </Card>
 
-            <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Text size="lg" fw={600} mb="md">
-                Bank Details
-              </Text>
+            {selectedWithdrawal.accountType === 'qr' && selectedWithdrawal.qrCodeImage ? (
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Text size="lg" fw={600} mb="md">
+                  QR Code Payment Details
+                </Text>
+                
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    Payment Name
+                  </Text>
+                  <Text size="sm" fw={500}>
+                    {selectedWithdrawal.accountHolderName}
+                  </Text>
+                </Group>
 
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  Account Holder
-                </Text>
-                <Text size="sm" fw={500}>
-                  {selectedWithdrawal.accountHolderName}
-                </Text>
-              </Group>
+                <Group justify="space-between" mb="md">
+                  <Text size="sm" c="dimmed">
+                    UPI Details
+                  </Text>
+                  <Text size="sm">{selectedWithdrawal.bankName}</Text>
+                </Group>
 
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  Bank Name
+                <Text size="sm" fw={500} mb="sm" ta="center">QR Code:</Text>
+                <Flex justify="center">
+                  <Image
+                    src={`${process.env.REACT_APP_API_URL}/${selectedWithdrawal.qrCodeImage}`}
+                    alt="Payment QR Code"
+                    width={200}
+                    height={200}
+                    radius="md"
+                  />
+                </Flex>
+              </Card>
+            ) : (
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Text size="lg" fw={600} mb="md">
+                  Bank Details
                 </Text>
-                <Text size="sm">{selectedWithdrawal.bankName}</Text>
-              </Group>
 
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  Account Number
-                </Text>
-                <Text size="sm">{selectedWithdrawal.accountNumber}</Text>
-              </Group>
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    Account Holder
+                  </Text>
+                  <Text size="sm" fw={500}>
+                    {selectedWithdrawal.accountHolderName}
+                  </Text>
+                </Group>
 
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  IFSC Code
-                </Text>
-                <Text size="sm">{selectedWithdrawal.ifscCode}</Text>
-              </Group>
-            </Card>
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    Bank Name
+                  </Text>
+                  <Text size="sm">{selectedWithdrawal.bankName}</Text>
+                </Group>
+
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    Account Number
+                  </Text>
+                  <Text size="sm">{selectedWithdrawal.accountNumber}</Text>
+                </Group>
+
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" c="dimmed">
+                    IFSC Code
+                  </Text>
+                  <Text size="sm">{selectedWithdrawal.ifscCode}</Text>
+                </Group>
+              </Card>
+            )}
 
             {selectedWithdrawal.transactionId && (
               <Card shadow="sm" padding="lg" radius="md" withBorder>

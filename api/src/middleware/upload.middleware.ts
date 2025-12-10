@@ -11,8 +11,9 @@ const aadhaarDir = 'uploads/aadhaar';
 const newsDir = 'uploads/conference-news';
 const profileDir = 'uploads/profile';
 const luckyDrawDir = 'uploads/lucky-draw';
+const qrCodeDir = 'uploads/qr-codes'; 
 
-[videoDir, proofDir, aadhaarDir, newsDir,profileDir,luckyDrawDir].forEach((dir) => {
+[videoDir, proofDir, aadhaarDir, newsDir,profileDir,luckyDrawDir,qrCodeDir].forEach((dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
@@ -74,6 +75,14 @@ const profileStorage = multer.diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
     cb(null, `profile-${uniqueSuffix}${ext}`);
+  },
+});
+
+const qrCodeStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, qrCodeDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `qr-${uniqueSuffix}${path.extname(file.originalname)}`);
   },
 });
 
@@ -173,6 +182,20 @@ const imageFilter = (
   else cb(new Error('Only image files are allowed for profile picture!'));
 };
 
+const qrCodeFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback,
+) => {
+  const allowedTypes = /jpeg|jpg|png|webp/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase(),
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) cb(null, true);
+  else cb(new Error('Only image files are allowed for QR code!'));
+};
 /* ============================================================
    ✅ Upload Middleware Instances
 ============================================================ */
@@ -212,6 +235,12 @@ export const profileImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+export const qrCodeUpload = multer({
+  storage: qrCodeStorage,
+  fileFilter: qrCodeFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
 /* ============================================================
    ✅ Single Upload Helpers
 ============================================================ */
@@ -221,6 +250,7 @@ export const uploadAadhaarFile = aadhaarUpload.single('aadhaarPhoto');
 export const uploadConferenceNews = newsUpload.single('newsImage');
 export const uploadLuckyDrawImage = luckyDrawUpload.single('luckyDrawImage');
 export const uploadProfileImage = profileImage.single('profileImage');
+export const uploadQRCode = qrCodeUpload.single('qrCodeImage');
 
 /* ============================================================
    ✅ Error Handler Middleware
@@ -238,4 +268,4 @@ export const handleMulterError = (err: any, req: any, res: any, next: any) => {
     return res.status(400).json({ status: 'error', message: err.message });
   }
   next();
-};
+};    

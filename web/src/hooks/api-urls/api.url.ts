@@ -48,6 +48,8 @@ export const withdrawalUrls = {
   SET_PASSWORD: withdrawalPrefix + "/set-password",
    CHECK_AVAILABILITY: withdrawalPrefix + "/check-availability",
   WITHDRAWAL_SCHEDULE: withdrawalPrefix + "/schedule",
+  QR_CODES: withdrawalPrefix + "/qr-codes",
+
 };
 
 export const rechargeUrls = {

@@ -4,6 +4,8 @@ import commonsUtils from "../../utils";
 import models from "../../models";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import fs from 'fs';
+import path from 'path';
 
 const { JsonResponse } = commonsUtils;
 
@@ -21,7 +23,6 @@ export const getBankAccounts = async (
       .select("-__v")
       .sort({ isDefault: -1, createdAt: -1 })
       .lean();
-
 
     return JsonResponse(res, {
       status: "success",
@@ -58,7 +59,6 @@ export const addBankAccount = async (
       accountType,
       isDefault,
     } = req.body;
-
 
     // Check if user already has 4 accounts
     const accountCount = await models.bankAccount.countDocuments({
@@ -108,7 +108,7 @@ export const addBankAccount = async (
       ifscCode: ifscCode.toUpperCase(),
       branchName,
       accountType: accountType || "savings",
-      isDefault: isDefault || accountCount === 0, // First account is default
+      isDefault: isDefault || accountCount === 0,
     });
 
     return JsonResponse(res, {
@@ -129,7 +129,86 @@ export const addBankAccount = async (
   }
 };
 
-// Delete bank account
+export const addQRCode = async (
+  req: Request,
+  res: Response,
+  __: NextFunction
+) => {
+  try {
+    const userId = res.locals.userId;
+    const { qrName, upiId, isDefault } = req.body;
+
+    if (!req.file) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "QR code image is required.",
+        title: "QR Code",
+      });
+    }
+
+    // Check if user already has 4 QR codes
+    const qrCount = await models.bankAccount.countDocuments({
+      userId,
+      isActive: true,
+      accountType: 'qr',
+    });
+
+    if (qrCount >= 4) {
+      // Delete uploaded file if limit exceeded
+      fs.unlinkSync(req.file.path);
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Maximum 4 QR codes allowed.",
+        title: "QR Code",
+      });
+    }
+
+    // If this is set as default, remove default from other accounts
+    if (isDefault) {
+      await models.bankAccount.updateMany(
+        { userId, isActive: true },
+        { $set: { isDefault: false } }
+      );
+    }
+
+    // Create QR code entry
+    const qrCodePath = req.file.path.replace(/\\/g, '/');
+    const newQRCode = await models.bankAccount.create({
+      userId,
+      accountHolderName: qrName,
+      bankName: upiId || 'UPI',
+      accountNumber: 'QR_' + Date.now(),
+      ifscCode: 'QR',
+      accountType: 'qr',
+      qrCodeImage: qrCodePath,
+      isDefault: isDefault || qrCount === 0,
+    });
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 201,
+      title: "QR Code",
+      message: "QR code added successfully.",
+      data: { qrCode: newQRCode },
+    });
+  } catch (error) {
+    console.error("Error adding QR code:", error);
+    // Delete uploaded file on error
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      message: "An error occurred while adding QR code.",
+      title: "QR Code",
+    });
+  }
+};
+
+// Delete bank account or QR code
 export const deleteBankAccount = async (
   req: Request,
   res: Response,
@@ -149,9 +228,20 @@ export const deleteBankAccount = async (
       return JsonResponse(res, {
         status: "error",
         statusCode: 404,
-        message: "Bank account not found.",
+        message: "Account not found.",
         title: "Bank Account",
       });
+    }
+
+    // Delete QR image file if it's a QR code
+    if (account.accountType === 'qr' && account.qrCodeImage) {
+      try {
+        if (fs.existsSync(account.qrCodeImage)) {
+          fs.unlinkSync(account.qrCodeImage);
+        }
+      } catch (err) {
+        console.error('Error deleting QR image:', err);
+      }
     }
 
     // Soft delete
@@ -173,16 +263,16 @@ export const deleteBankAccount = async (
     return JsonResponse(res, {
       status: "success",
       statusCode: 200,
-      title: "Bank Account",
-      message: "Bank account deleted successfully.",
+      title: "Account",
+      message: "Account deleted successfully.",
     });
   } catch (error) {
-    console.error("Error deleting bank account:", error);
+    console.error("Error deleting account:", error);
     return JsonResponse(res, {
       status: "error",
       statusCode: 500,
-      message: "An error occurred while deleting bank account.",
-      title: "Bank Account",
+      message: "An error occurred while deleting account.",
+      title: "Account",
     });
   }
 };
@@ -207,8 +297,8 @@ export const setDefaultAccount = async (
       return JsonResponse(res, {
         status: "error",
         statusCode: 404,
-        message: "Bank account not found.",
-        title: "Bank Account",
+        message: "Account not found.",
+        title: "Account",
       });
     }
 
@@ -225,7 +315,7 @@ export const setDefaultAccount = async (
     return JsonResponse(res, {
       status: "success",
       statusCode: 200,
-      title: "Bank Account",
+      title: "Account",
       message: "Default account updated successfully.",
       data: { account },
     });
@@ -235,7 +325,7 @@ export const setDefaultAccount = async (
       status: "error",
       statusCode: 500,
       message: "An error occurred while setting default account.",
-      title: "Bank Account",
+      title: "Account",
     });
   }
 };
@@ -289,7 +379,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
     const userId = res.locals.userId;
     const { walletType, amount, bankAccountId, withdrawalPassword } = req.body;
 
-    // Validate amount
     if (isNaN(amount) || amount < 280) {
       return JsonResponse(res, {
         status: "error",
@@ -299,7 +388,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       });
     }
 
-    // Get user with withdrawal password
     const user = await models.User.findById(userId)
       .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals");
 
@@ -312,12 +400,10 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       });
     }
 
-    // Ensure numeric defaults
     user.mainWallet = Number(user.mainWallet) || 0;
     user.commissionWallet = Number(user.commissionWallet) || 0;
     user.totalWithdrawals = Number(user.totalWithdrawals) || 0;
 
-    // Verify withdrawal password
     if (user.withdrawalPassword) {
       const isPasswordValid = await bcrypt.compare(withdrawalPassword, user.withdrawalPassword);
       if (!isPasswordValid) {
@@ -330,7 +416,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       }
     }
 
-    // Check wallet balance
     const walletBalance = walletType === "mainWallet" ? user.mainWallet : user.commissionWallet;
     if (walletBalance < amount) {
       return JsonResponse(res, {
@@ -341,7 +426,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       });
     }
 
-    // Get bank account
     const bankAccount = await models.bankAccount.findOne({
       _id: bankAccountId,
       userId,
@@ -352,12 +436,11 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       return JsonResponse(res, {
         status: "error",
         statusCode: 404,
-        message: "Bank account not found.",
+        message: "Account not found.",
         title: "Withdrawal",
       });
     }
 
-    // Deduct from wallet
     if (walletType === "mainWallet") {
       user.mainWallet -= amount;
     } else {
@@ -367,7 +450,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
     user.totalWithdrawals += amount;
     await user.save();
 
-    // Create withdrawal request
     const withdrawal = await models.withdrawal.create({
       userId,
       walletType,
@@ -377,6 +459,8 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       accountNumber: bankAccount.accountNumber,
       accountHolderName: bankAccount.accountHolderName,
       bankName: bankAccount.bankName,
+      accountType: bankAccount.accountType,
+      qrCodeImage: bankAccount.qrCodeImage || null,
       status: "pending",
     });
 
@@ -399,8 +483,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
   }
 };
 
-
-// Get withdrawal history
 export const getWithdrawalHistory = async (
   req: Request,
   res: Response,
@@ -453,7 +535,6 @@ export const getWithdrawalHistory = async (
   }
 };
 
-// Set or update withdrawal password
 export const setWithdrawalPassword = async (
   req: Request,
   res: Response,
@@ -476,7 +557,6 @@ export const setWithdrawalPassword = async (
       });
     }
 
-    // If updating existing password, verify current password
     if (user.withdrawalPassword && currentPassword) {
       const isValid = await bcrypt.compare(
         currentPassword,
@@ -492,7 +572,6 @@ export const setWithdrawalPassword = async (
       }
     }
 
-    // Hash and save new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.withdrawalPassword = hashedPassword;
     await user.save();
@@ -512,9 +591,9 @@ export const setWithdrawalPassword = async (
       title: "Withdrawal Password",
     });
   }
-}
+};
 
-  const getAllWithdrawals = async (
+const getAllWithdrawals = async (
   req: Request,
   res: Response,
   __: NextFunction
@@ -609,8 +688,7 @@ export const setWithdrawalPassword = async (
   }
 };
 
-// Get withdrawal statistics (ADMIN)
- const getWithdrawalStatistics = async (
+const getWithdrawalStatistics = async (
   req: Request,
   res: Response,
   __: NextFunction
@@ -651,8 +729,7 @@ export const setWithdrawalPassword = async (
   }
 };
 
-// Approve withdrawal (ADMIN)
- const approveWithdrawal = async (
+const approveWithdrawal = async (
   req: Request,
   res: Response,
   __: NextFunction
@@ -683,6 +760,7 @@ export const setWithdrawalPassword = async (
 
     withdrawal.status = "completed";
     withdrawal.transactionId = transactionId;
+    withdrawal.remarks = remarks;
     await withdrawal.save();
 
     return JsonResponse(res, {
@@ -703,14 +781,14 @@ export const setWithdrawalPassword = async (
   }
 };
 
-// Reject withdrawal (ADMIN)
- const rejectWithdrawal = async (
+const rejectWithdrawal = async (
   req: Request,
   res: Response,
   __: NextFunction
 ) => {
   try {
     const { withdrawalId } = req.params;
+    const { remarks } = req.body;
 
     const withdrawal = await models.withdrawal.findById(withdrawalId);
 
@@ -744,6 +822,7 @@ export const setWithdrawalPassword = async (
     }
 
     withdrawal.status = "rejected";
+    withdrawal.remarks = remarks;
     await withdrawal.save();
 
     return JsonResponse(res, {
@@ -786,7 +865,6 @@ export const checkWithdrawalAvailability = async (
     const dayOfWeek = today.getDay(); 
     const currentTime = `${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`;
 
-    // Get today's configuration
     const config = await models.withdrawalConfig.findOne({ dayOfWeek });
 
     if (!config || !config.isActive) {
@@ -819,7 +897,6 @@ export const checkWithdrawalAvailability = async (
       });
     }
 
-    // Check time range
     if (currentTime < config.startTime || currentTime > config.endTime) {
       return JsonResponse(res, {
         status: "error",
@@ -856,6 +933,7 @@ export const checkWithdrawalAvailability = async (
     });
   }
 };
+
 export const getWithdrawalSchedule = async (
   req: Request,
   res: Response,
@@ -888,7 +966,6 @@ export const getWithdrawalSchedule = async (
       allowedLevels: config.allowedLevels,
     }));
 
-    // Get current day status
     const today = new Date().getDay();
     const todaySchedule = schedule.find(s => s.dayOfWeek === today);
 
@@ -914,161 +991,10 @@ export const getWithdrawalSchedule = async (
   }
 };
 
-export const createWithdrawalWithDayCheck = async (
-  req: Request,
-  res: Response,
-  __: NextFunction
-) => {
-  try {
-    const userId = res.locals.userId;
-    const { walletType, amount, bankAccountId, withdrawalPassword } = req.body;
-
-    if (isNaN(amount) || amount < 280) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "Minimum withdrawal amount is Rs 280.",
-        title: "Withdrawal",
-      });
-    }
-
-    const user = await models.User.findById(userId)
-      .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals appleLevel");
-
-    if (!user) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 404,
-        message: "User not found.",
-        title: "Withdrawal",
-      });
-    }
-
-    // Check day and time availability
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const currentTime = `${today.getHours().toString().padStart(2, '0')}:${today.getMinutes().toString().padStart(2, '0')}`;
-
-    const config = await models.withdrawalConfig.findOne({ dayOfWeek });
-
-    if (!config || !config.isActive) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 403,
-        message: "Withdrawals are not allowed today.",
-        title: "Withdrawal",
-      });
-    }
-
-    const userLevel = user.currentLevelNumber;
-    if (!config.allowedLevels.includes(userLevel)) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 403,
-        message: `Apple Level ${userLevel} cannot withdraw today. Please check your withdrawal schedule.`,
-        title: "Withdrawal",
-      });
-    }
-
-    if (currentTime < config.startTime || currentTime > config.endTime) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 403,
-        message: `Withdrawals are only allowed between ${config.startTime} and ${config.endTime}.`,
-        title: "Withdrawal",
-      });
-    }
-
-    user.mainWallet = Number(user.mainWallet) || 0;
-    user.commissionWallet = Number(user.commissionWallet) || 0;
-    user.totalWithdrawals = Number(user.totalWithdrawals) || 0;
-
-    if (user.withdrawalPassword) {
-      const isPasswordValid = await bcrypt.compare(withdrawalPassword, user.withdrawalPassword);
-      if (!isPasswordValid) {
-        return JsonResponse(res, {
-          status: "error",
-          statusCode: 401,
-          message: "Invalid withdrawal password.",
-          title: "Withdrawal",
-        });
-      }
-    }
-
-    // Check wallet balance
-    const walletBalance = walletType === "mainWallet" ? user.mainWallet : user.commissionWallet;
-    if (walletBalance < amount) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 400,
-        message: "Insufficient wallet balance.",
-        title: "Withdrawal",
-      });
-    }
-
-    // Get bank account
-    const bankAccount = await models.bankAccount.findOne({
-      _id: bankAccountId,
-      userId,
-      isActive: true,
-    });
-
-    if (!bankAccount) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 404,
-        message: "Bank account not found.",
-        title: "Withdrawal",
-      });
-    }
-
-    // Deduct from wallet
-    if (walletType === "mainWallet") {
-      user.mainWallet -= amount;
-    } else {
-      user.commissionWallet -= amount;
-    }
-
-    user.totalWithdrawals += amount;
-    await user.save();
-
-    // Create withdrawal request
-    const withdrawal = await models.withdrawal.create({
-      userId,
-      walletType,
-      amount,
-      bankAccountId,
-      ifscCode: bankAccount.ifscCode,
-      accountNumber: bankAccount.accountNumber,
-      accountHolderName: bankAccount.accountHolderName,
-      bankName: bankAccount.bankName,
-      status: "pending",
-    });
-
-    return JsonResponse(res, {
-      status: "success",
-      statusCode: 201,
-      title: "Withdrawal",
-      message: "Withdrawal request created successfully.",
-      data: { withdrawal },
-    });
-
-  } catch (error) {
-    console.error("Error creating withdrawal:", error);
-    return JsonResponse(res, {
-      status: "error",
-      statusCode: 500,
-      message: "An error occurred while creating withdrawal request.",
-      title: "Withdrawal",
-    });
-  }
-};
-
-
-
 export default {
   getBankAccounts,
   addBankAccount,
+  addQRCode,
   deleteBankAccount,
   setDefaultAccount,
   getWalletInfo,
@@ -1077,8 +1003,6 @@ export default {
   setWithdrawalPassword,
   checkWithdrawalAvailability,
   getWithdrawalSchedule,
-  createWithdrawalWithDayCheck,
-
   getAllWithdrawals,
   getWithdrawalStatistics,
   approveWithdrawal,

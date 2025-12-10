@@ -1,34 +1,36 @@
-// models/Withdrawal.ts
-import { Schema, model } from "mongoose";
+// models/withdrawal.model.ts
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IWithdrawal {
-  userId: Schema.Types.ObjectId;
-  walletType: "mainWallet" | "commissionWallet";
+export interface IWithdrawal extends Document {
+  userId: mongoose.Types.ObjectId;
+  walletType: 'mainWallet' | 'commissionWallet';
   amount: number;
-  bankAccountId: Schema.Types.ObjectId;
-  ifscCode: string;
-  accountNumber: string;
+  bankAccountId: mongoose.Types.ObjectId;
   accountHolderName: string;
   bankName: string;
-  status: "pending" | "processing" | "completed" | "rejected";
+  accountNumber: string;
+  ifscCode: string;
+  accountType: 'savings' | 'current' | 'qr';
+  qrCodeImage?: string; // Path to QR code image if QR payment
+  status: 'pending' | 'processing' | 'completed' | 'rejected';
   transactionId?: string;
-  rejectionReason?: string;
-  processedAt?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
+  remarks?: string;
+  createdAt: Date;
+  completedAt?: Date;
+  updatedAt: Date;
 }
 
-const withdrawalSchema = new Schema<IWithdrawal>(
+const WithdrawalSchema: Schema = new Schema(
   {
     userId: {
-      type: Schema.Types.ObjectId,
-      ref: "user",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
       required: true,
       index: true,
     },
     walletType: {
       type: String,
-      enum: ["mainWallet", "commissionWallet"],
+      enum: ['mainWallet', 'commissionWallet'],
       required: true,
     },
     amount: {
@@ -37,16 +39,8 @@ const withdrawalSchema = new Schema<IWithdrawal>(
       min: 280,
     },
     bankAccountId: {
-      type: Schema.Types.ObjectId,
-      ref: "bankAccount",
-      required: true,
-    },
-    ifscCode: {
-      type: String,
-      required: true,
-    },
-    accountNumber: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'BankAccount',
       required: true,
     },
     accountHolderName: {
@@ -57,28 +51,57 @@ const withdrawalSchema = new Schema<IWithdrawal>(
       type: String,
       required: true,
     },
+    accountNumber: {
+      type: String,
+      required: true,
+    },
+    ifscCode: {
+      type: String,
+      required: true,
+      uppercase: true,
+    },
+    accountType: {
+      type: String,
+      enum: ['savings', 'current', 'qr'],
+      default: 'savings',
+    },
+    qrCodeImage: {
+      type: String,
+      default: null,
+    },
     status: {
       type: String,
-      enum: ["pending", "processing", "completed", "rejected"],
-      default: "pending",
+      enum: ['pending', 'processing', 'completed', 'rejected'],
+      default: 'pending',
       index: true,
     },
     transactionId: {
       type: String,
-      sparse: true,
+      trim: true,
     },
-    rejectionReason: {
+    remarks: {
       type: String,
+      trim: true,
     },
-    processedAt: {
+    completedAt: {
       type: Date,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-withdrawalSchema.index({ userId: 1, status: 1 });
-withdrawalSchema.index({ createdAt: -1 });
+// Compound indexes
+WithdrawalSchema.index({ userId: 1, status: 1 });
+WithdrawalSchema.index({ status: 1, createdAt: -1 });
 
-const WithdrawalModel = model<IWithdrawal>("withdrawal", withdrawalSchema);
-export default WithdrawalModel;
+// Update completedAt when status changes to completed
+WithdrawalSchema.pre('save', function (next) {
+  if (this.isModified('status') && this.status === 'completed') {
+    this.completedAt = new Date();
+  }
+  next();
+});
+
+export default mongoose.model<IWithdrawal>('Withdrawal', WithdrawalSchema);

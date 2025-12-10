@@ -16,12 +16,16 @@ import {
   Divider,
   Alert,
   Center,
+  Tabs,
+  FileInput,
+  Image,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   useWalletInfoQuery,
   useBankAccountsQuery,
   useAddBankAccountMutation,
+  useAddQRCodeMutation,
   useDeleteBankAccountMutation,
   useSetDefaultAccountMutation,
   useCreateWithdrawalMutation,
@@ -34,14 +38,17 @@ import {
   FaInfoCircle,
   FaCalendarAlt,
   FaLock,
+  FaUniversity,
+  FaQrcode,
+  FaImage,
 } from "react-icons/fa";
 
 const WithdrawalScreen: React.FC = () => {
   const [selectedWallet, setSelectedWallet] = useState("mainWallet");
   const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [customAmount, setCustomAmount] = useState<number | undefined>();
   const [withdrawalPassword, setWithdrawalPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<string | null>("bank");
 
   const [addAccountOpened, { open: openAddAccount, close: closeAddAccount }] =
     useDisclosure(false);
@@ -56,22 +63,27 @@ const WithdrawalScreen: React.FC = () => {
     accountType: "savings",
   });
 
+  const [qrForm, setQrForm] = useState({
+    qrName: "",
+    upiId: "",
+    qrImage: null as File | null,
+    qrPreview: "" as string,
+  });
+
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const predefinedAmounts = [
-    280, 750, 1080, 2100, 3500, 6500, 12000, 21500, 36000, 55000, 108000,
-    150000,
+    280, 1080, 3500, 12000, 21500, 36000, 55000, 108000, 150000,
   ];
 
   const {
     data: walletInfo,
     isLoading: walletLoading,
-    error: walletError,
   } = useWalletInfoQuery();
+  
   const {
     data: bankData = [],
     isLoading: bankLoading,
-    error: bankError,
   } = useBankAccountsQuery();
 
   const { data: scheduleData, isLoading: scheduleLoading } =
@@ -80,6 +92,7 @@ const WithdrawalScreen: React.FC = () => {
   const bankAccounts = bankData?.accounts ?? [];
 
   const addBankMutation = useAddBankAccountMutation();
+  const addQRMutation = useAddQRCodeMutation();
   const deleteBankMutation = useDeleteBankAccountMutation();
   const setDefaultMutation = useSetDefaultAccountMutation();
   const createWithdrawalMutation = useCreateWithdrawalMutation();
@@ -105,8 +118,8 @@ const WithdrawalScreen: React.FC = () => {
     }
   }, [bankAccounts]);
 
-  // Validate form
-  const validateForm = () => {
+  // Validate bank form
+  const validateBankForm = () => {
     const errors: Record<string, string> = {};
 
     if (!accountForm.accountHolderName.trim()) {
@@ -143,8 +156,24 @@ const WithdrawalScreen: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleAddAccount = () => {
-    if (!validateForm()) return;
+  // Validate QR form
+  const validateQRForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!qrForm.qrName.trim()) {
+      errors.qrName = "QR name is required";
+    }
+
+    if (!qrForm.qrImage) {
+      errors.qrImage = "QR code image is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleAddBankAccount = () => {
+    if (!validateBankForm()) return;
 
     if (bankAccounts.length >= 4) {
       return;
@@ -177,8 +206,48 @@ const WithdrawalScreen: React.FC = () => {
     });
   };
 
+  const handleAddQRCode = () => {
+    if (!validateQRForm()) return;
+
+    if (bankAccounts.filter((a: any) => a.accountType === 'qr').length >= 4) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('qrName', qrForm.qrName.trim());
+    formData.append('upiId', qrForm.upiId.trim());
+    formData.append('qrCodeImage', qrForm.qrImage!);
+    formData.append('isDefault', String(bankAccounts.length === 0));
+
+    addQRMutation.mutate(formData, {
+      onSuccess: () => {
+        closeAddAccount();
+        setQrForm({
+          qrName: "",
+          upiId: "",
+          qrImage: null,
+          qrPreview: "",
+        });
+        setFormErrors({});
+      },
+    });
+  };
+
+  const handleQRImageChange = (file: File | null) => {
+    if (file) {
+      setQrForm({ ...qrForm, qrImage: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setQrForm((prev) => ({ ...prev, qrPreview: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setQrForm({ ...qrForm, qrImage: null, qrPreview: "" });
+    }
+  };
+
   const handleDeleteAccount = (accountId: string) => {
-    if (window.confirm("Are you sure you want to delete this bank account?")) {
+    if (window.confirm("Are you sure you want to delete this account?")) {
       deleteBankMutation.mutate(accountId);
     }
   };
@@ -188,7 +257,7 @@ const WithdrawalScreen: React.FC = () => {
   };
 
   const handleWithdrawal = () => {
-    const amount = customAmount || selectedAmount;
+    const amount = selectedAmount;
     if (!amount || amount < 280 || !selectedAccount || !withdrawalPassword)
       return;
 
@@ -209,7 +278,6 @@ const WithdrawalScreen: React.FC = () => {
       {
         onSuccess: () => {
           setSelectedAmount(null);
-          setCustomAmount(undefined);
           setWithdrawalPassword("");
         },
       }
@@ -222,7 +290,6 @@ const WithdrawalScreen: React.FC = () => {
       : walletInfo?.commissionWallet || 0;
   };
 
-
   if (walletLoading || bankLoading || scheduleLoading) {
     return (
       <Center h="100vh">
@@ -231,15 +298,6 @@ const WithdrawalScreen: React.FC = () => {
     );
   }
 
-  if (walletError || bankError) {
-    return (
-      <Flex justify="center" align="center" h="100vh" p="md">
-        <Alert color="red" title="Error" icon={<FaInfoCircle />}>
-          Failed to load data. Please refresh the page.
-        </Alert>
-      </Flex>
-    );
-  }
 
   return (
     <div className={classes.container}>
@@ -306,7 +364,7 @@ const WithdrawalScreen: React.FC = () => {
             </Text>
           </Card>
 
-          {/* Bank Accounts */}
+          {/* Bank Accounts & QR Codes */}
           <Card shadow="sm" p="md" radius="md" className={classes.card}>
             <Flex justify="space-between" align="center" mb="xs">
               <Text fw={600}>Withdrawal Method</Text>
@@ -316,14 +374,13 @@ const WithdrawalScreen: React.FC = () => {
                 onClick={openAddAccount}
                 disabled={bankAccounts.length >= 4}
               >
-                Add Account ({bankAccounts.length}/4)
+                Add Method ({bankAccounts.length}/4)
               </Button>
             </Flex>
 
             {bankAccounts.length === 0 ? (
               <Alert color="blue" icon={<FaInfoCircle />} mt="sm">
-                No bank accounts added yet. Please add a bank account to
-                proceed.
+                No withdrawal methods added yet. Please add a bank account or QR code to proceed.
               </Alert>
             ) : (
               <Flex direction="column" gap="sm">
@@ -340,22 +397,40 @@ const WithdrawalScreen: React.FC = () => {
                     style={{ cursor: "pointer" }}
                   >
                     <Flex justify="space-between" align="center">
-                      <div>
-                        <Flex align="center" gap="xs">
-                          <Text fw={600}>{acc.bankName}</Text>
-                          {acc.isDefault && (
-                            <Badge size="xs" color="green">
-                              Default
-                            </Badge>
+                      <Flex align="center" gap="md">
+                        {acc.accountType === 'qr' && acc.qrCodeImage && (
+                          <Image
+                            src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${acc.qrCodeImage}`}
+                            alt="QR Code"
+                            width={50}
+                            height={50}
+                            radius="sm"
+                          />
+                        )}
+                        <div>
+                          <Flex align="center" gap="xs">
+                            {acc.accountType === 'qr' ? (
+                              <FaQrcode size={16} />
+                            ) : (
+                              <FaUniversity size={16} />
+                            )}
+                            <Text fw={600}>{acc.bankName}</Text>
+                            {acc.isDefault && (
+                              <Badge size="xs" color="green">
+                                Default
+                              </Badge>
+                            )}
+                          </Flex>
+                          <Text size="xs" c="dimmed">
+                            {acc.accountHolderName}
+                          </Text>
+                          {acc.accountType !== 'qr' && (
+                            <Text size="xs" c="dimmed">
+                              ••••{acc.accountNumber?.slice(-4)}
+                            </Text>
                           )}
-                        </Flex>
-                        <Text size="xs" c="dimmed">
-                          {acc.accountHolderName}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          ••••{acc.accountNumber?.slice(-4)}
-                        </Text>
-                      </div>
+                        </div>
+                      </Flex>
 
                       <Group gap="xs">
                         <ActionIcon
@@ -398,8 +473,7 @@ const WithdrawalScreen: React.FC = () => {
             </Flex>
 
             <Text size="xs" c="dimmed" mb="md">
-              Choose from the available withdrawal amounts below. The amount
-              should not exceed your wallet balance.
+              Choose from the available withdrawal amounts below.
             </Text>
 
             <div className={classes.amountGrid}>
@@ -461,175 +535,235 @@ const WithdrawalScreen: React.FC = () => {
             mt="md"
             onClick={handleWithdrawal}
             loading={createWithdrawalMutation.isPending}
+            disabled={!selectedAmount || !selectedAccount || !withdrawalPassword}
           >
             {`Submit Withdrawal Request ${
-              customAmount || selectedAmount
-                ? `₹${(customAmount || selectedAmount)?.toLocaleString()}`
-                : ""
+              selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""
             }`}
           </Button>
         </>
       )}
 
+      {/* Withdrawal Schedule */}
       <Card shadow="sm" p="md" radius="md" className={classes.card} mt="md">
-        <Card shadow="sm" p="md" radius="md" className={classes.card} mt="md">
-          <Text fw={600} mb="sm" ta="center">
-            📅 Withdrawal Schedule
-          </Text>
-          <Divider mb="sm" />
-          {schedule
-            .filter((s: any) => s.isActive && s.allowedLevels?.length > 0)
-            .map((day: any) => (
-              <Text key={day.day} size="sm" mb="xs">
-                <strong>{day.day}:</strong> Apple Levels{" "}
-                {day.allowedLevels.join(", ")} — {day.startTime}–{day.endTime}
-              </Text>
-            ))}
+        <Text fw={600} mb="sm" ta="center">
+          📅 Withdrawal Schedule
+        </Text>
+        <Divider mb="sm" />
+        {schedule
+          .filter((s: any) => s.isActive && s.allowedLevels?.length > 0)
+          .map((day: any) => (
+            <Text key={day.day} size="sm" mb="xs">
+              <strong>{day.day}:</strong> Apple Levels{" "}
+              {day.allowedLevels.join(", ")} — {day.startTime}–{day.endTime}
+            </Text>
+          ))}
 
-          {schedule.filter((s: any) => s.allowedLevels?.length > 0).length ===
-            0 && (
-            <Alert color="orange" icon={<FaInfoCircle />}>
-              <Text size="sm">
-                No active withdrawal days found. Please contact support.
-              </Text>
-            </Alert>
-          )}
-        </Card>
-        <Alert color="blue" icon={<FaInfoCircle />}>
+        <Alert color="blue" icon={<FaInfoCircle />} mt="md">
           <Text size="sm">
             Please make the withdrawal on the corresponding date according to
             your Apple level. If you encounter any problems with withdrawals,
             please contact your work manager immediately.
           </Text>
         </Alert>
-        <Divider my="sm" />
-        <Text size="xs" c="dimmed" ta="center">
-          निकासी समय: सुबह 8:30 - शाम 5:00 बजे
-        </Text>
-        <Text size="xs" c="dimmed" ta="center">
-          सदस्य वापसी का समय
-        </Text>
-        <Text size="xs" c="dimmed" ta="center">
-          प्रशिक्षु कर्मचारी: सोमवार से रविवार
-        </Text>
       </Card>
 
-      {/* Add Account Modal */}
+      {/* Add Account/QR Modal */}
       <Modal
         opened={addAccountOpened}
         onClose={() => {
           closeAddAccount();
           setFormErrors({});
+          setActiveTab("bank");
         }}
-        title="Add Bank Account"
+        title="Add Withdrawal Method"
         centered
         size="md"
       >
-        <Flex direction="column" gap="md">
-          <TextInput
-            label="Account Holder Name"
-            placeholder="Enter full name as per bank"
-            value={accountForm.accountHolderName}
-            onChange={(e) => {
-              setAccountForm({
-                ...accountForm,
-                accountHolderName: e.target.value,
-              });
-              if (formErrors.accountHolderName) {
-                setFormErrors({ ...formErrors, accountHolderName: "" });
-              }
-            }}
-            error={formErrors.accountHolderName}
-            required
-          />
-          <TextInput
-            label="Bank Name"
-            placeholder="Enter bank name"
-            value={accountForm.bankName}
-            onChange={(e) => {
-              setAccountForm({ ...accountForm, bankName: e.target.value });
-              if (formErrors.bankName) {
-                setFormErrors({ ...formErrors, bankName: "" });
-              }
-            }}
-            error={formErrors.bankName}
-            required
-          />
-          <TextInput
-            label="Account Number"
-            placeholder="Enter account number"
-            value={accountForm.accountNumber}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "");
-              setAccountForm({ ...accountForm, accountNumber: value });
-              if (formErrors.accountNumber) {
-                setFormErrors({ ...formErrors, accountNumber: "" });
-              }
-            }}
-            error={formErrors.accountNumber}
-            maxLength={18}
-            required
-          />
-          <TextInput
-            label="Confirm Account Number"
-            placeholder="Re-enter account number"
-            value={accountForm.confirmAccountNumber}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "");
-              setAccountForm({ ...accountForm, confirmAccountNumber: value });
-              if (formErrors.confirmAccountNumber) {
-                setFormErrors({ ...formErrors, confirmAccountNumber: "" });
-              }
-            }}
-            error={formErrors.confirmAccountNumber}
-            maxLength={18}
-            required
-          />
-          <TextInput
-            label="IFSC Code"
-            placeholder="Enter IFSC code"
-            value={accountForm.ifscCode}
-            onChange={(e) => {
-              setAccountForm({
-                ...accountForm,
-                ifscCode: e.target.value.toUpperCase(),
-              });
-              if (formErrors.ifscCode) {
-                setFormErrors({ ...formErrors, ifscCode: "" });
-              }
-            }}
-            error={formErrors.ifscCode}
-            maxLength={11}
-            required
-          />
-          <TextInput
-            label="Branch Name (Optional)"
-            placeholder="Enter branch name"
-            value={accountForm.branchName}
-            onChange={(e) =>
-              setAccountForm({ ...accountForm, branchName: e.target.value })
-            }
-          />
-          <Select
-            label="Account Type"
-            data={[
-              { value: "savings", label: "Savings Account" },
-              { value: "current", label: "Current Account" },
-            ]}
-            value={accountForm.accountType}
-            onChange={(v) =>
-              setAccountForm({ ...accountForm, accountType: v || "savings" })
-            }
-          />
-          <Button
-            fullWidth
-            onClick={handleAddAccount}
-            loading={addBankMutation.isPending}
-            mt="md"
-          >
-            Add Bank Account
-          </Button>
-        </Flex>
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Tab value="bank" leftSection={<FaUniversity size={14} />}>
+              Bank Account
+            </Tabs.Tab>
+            <Tabs.Tab value="qr" leftSection={<FaQrcode size={14} />}>
+              QR Code
+            </Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="bank" pt="md">
+            <Flex direction="column" gap="md">
+              <TextInput
+                label="Account Holder Name"
+                placeholder="Enter full name as per bank"
+                value={accountForm.accountHolderName}
+                onChange={(e) => {
+                  setAccountForm({
+                    ...accountForm,
+                    accountHolderName: e.target.value,
+                  });
+                  if (formErrors.accountHolderName) {
+                    setFormErrors({ ...formErrors, accountHolderName: "" });
+                  }
+                }}
+                error={formErrors.accountHolderName}
+                required
+              />
+              <TextInput
+                label="Bank Name"
+                placeholder="Enter bank name"
+                value={accountForm.bankName}
+                onChange={(e) => {
+                  setAccountForm({ ...accountForm, bankName: e.target.value });
+                  if (formErrors.bankName) {
+                    setFormErrors({ ...formErrors, bankName: "" });
+                  }
+                }}
+                error={formErrors.bankName}
+                required
+              />
+              <TextInput
+                label="Account Number"
+                placeholder="Enter account number"
+                value={accountForm.accountNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setAccountForm({ ...accountForm, accountNumber: value });
+                  if (formErrors.accountNumber) {
+                    setFormErrors({ ...formErrors, accountNumber: "" });
+                  }
+                }}
+                error={formErrors.accountNumber}
+                maxLength={18}
+                required
+              />
+              <TextInput
+                label="Confirm Account Number"
+                placeholder="Re-enter account number"
+                value={accountForm.confirmAccountNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setAccountForm({
+                    ...accountForm,
+                    confirmAccountNumber: value,
+                  });
+                  if (formErrors.confirmAccountNumber) {
+                    setFormErrors({ ...formErrors, confirmAccountNumber: "" });
+                  }
+                }}
+                error={formErrors.confirmAccountNumber}
+                maxLength={18}
+                required
+              />
+              <TextInput
+                label="IFSC Code"
+                placeholder="Enter IFSC code"
+                value={accountForm.ifscCode}
+                onChange={(e) => {
+                  setAccountForm({
+                    ...accountForm,
+                    ifscCode: e.target.value.toUpperCase(),
+                  });
+                  if (formErrors.ifscCode) {
+                    setFormErrors({ ...formErrors, ifscCode: "" });
+                  }
+                }}
+                error={formErrors.ifscCode}
+                maxLength={11}
+                required
+              />
+              <TextInput
+                label="Branch Name (Optional)"
+                placeholder="Enter branch name"
+                value={accountForm.branchName}
+                onChange={(e) =>
+                  setAccountForm({ ...accountForm, branchName: e.target.value })
+                }
+              />
+              <Select
+                label="Account Type"
+                data={[
+                  { value: "savings", label: "Savings Account" },
+                  { value: "current", label: "Current Account" },
+                ]}
+                value={accountForm.accountType}
+                onChange={(v) =>
+                  setAccountForm({
+                    ...accountForm,
+                    accountType: v || "savings",
+                  })
+                }
+              />
+              <Button
+                fullWidth
+                onClick={handleAddBankAccount}
+                loading={addBankMutation.isPending}
+                mt="md"
+              >
+                Add Bank Account
+              </Button>
+            </Flex>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="qr" pt="md">
+            <Flex direction="column" gap="md">
+              <TextInput
+                label="QR Name/Label"
+                placeholder="e.g., PhonePe, Google Pay, etc."
+                value={qrForm.qrName}
+                onChange={(e) => {
+                  setQrForm({ ...qrForm, qrName: e.target.value });
+                  if (formErrors.qrName) {
+                    setFormErrors({ ...formErrors, qrName: "" });
+                  }
+                }}
+                error={formErrors.qrName}
+                required
+              />
+              <TextInput
+                label="UPI ID (Optional)"
+                placeholder="Enter UPI ID"
+                value={qrForm.upiId}
+                onChange={(e) =>
+                  setQrForm({ ...qrForm, upiId: e.target.value })
+                }
+              />
+              <FileInput
+                label="QR Code Image"
+                placeholder="Upload QR code"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                leftSection={<FaImage size={14} />}
+                onChange={handleQRImageChange}
+                error={formErrors.qrImage}
+                required
+              />
+              {qrForm.qrPreview && (
+                <Center>
+                  <Image
+                    src={qrForm.qrPreview}
+                    alt="QR Preview"
+                    width={200}
+                    height={200}
+                    radius="md"
+                  />
+                </Center>
+              )}
+              <Alert color="blue" icon={<FaInfoCircle />}>
+                <Text size="xs">
+                  Upload a clear image of your payment QR code. This will be shown to admin for payment processing.
+                </Text>
+              </Alert>
+              <Button
+                fullWidth
+                onClick={handleAddQRCode}
+                loading={addQRMutation.isPending}
+                mt="md"
+                disabled={!qrForm.qrImage}
+              >
+                Add QR Code
+              </Button>
+            </Flex>
+          </Tabs.Panel>
+        </Tabs>
       </Modal>
     </div>
   );

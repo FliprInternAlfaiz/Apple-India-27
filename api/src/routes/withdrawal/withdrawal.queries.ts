@@ -1,5 +1,9 @@
 import { Router } from 'express';
 import { commonsMiddleware } from '../../middleware';
+import {
+  handleMulterError,
+  uploadQRCode,
+} from '../../middleware/upload.middleware';
 import withdrawalController from '../../controllers/withdrawalControllers/withdrawal.controller';
 
 const {
@@ -16,8 +20,8 @@ const {
   getWithdrawalStatistics,
   rejectWithdrawal,
   checkWithdrawalAvailability,
-  createWithdrawalWithDayCheck,
   getWithdrawalSchedule,
+  addQRCode
 } = withdrawalController;
 
 export default (router: Router) => {
@@ -31,6 +35,14 @@ export default (router: Router) => {
     '/bank-accounts',
     commonsMiddleware.checkUserAuth,
     addBankAccount,
+  );
+
+  router.post(
+    '/qr-codes',
+    commonsMiddleware.checkUserAuth,
+    uploadQRCode,
+    handleMulterError,
+    addQRCode,
   );
 
   router.delete(

@@ -272,7 +272,7 @@ export const verifyRechargePayment = async (
       status: "success",
       statusCode: 200,
       title: "Recharge",
-      message: "Payment submitted successfully. Your recharge will be processed within 5-10 minutes.",
+      message: "Payment submitted successfully. Your recharge will be processed by admin shortly.",
       data: {
         order: {
           _id: rechargeOrder._id,
@@ -492,7 +492,6 @@ export const getRechargeStatistics = async (
   }
 };
 
-// Approve recharge (ADMIN)
 export const approveRecharge = async (
   req: Request,
   res: Response,
@@ -522,6 +521,15 @@ export const approveRecharge = async (
       });
     }
 
+    if (rechargeOrder.status === "rejected") {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Cannot approve a rejected order.",
+        title: "Recharge",
+      });
+    }
+
     const user = await models.User.findById(rechargeOrder.userId);
     if (!user) {
       return JsonResponse(res, {
@@ -537,16 +545,28 @@ export const approveRecharge = async (
 
     rechargeOrder.status = "completed";
     rechargeOrder.approvedAt = new Date();
-    rechargeOrder.remarks = remarks || "Payment verified successfully";
+    rechargeOrder.remarks = remarks || "Payment verified and approved by admin";
     await rechargeOrder.save();
 
     return JsonResponse(res, {
       status: "success",
       statusCode: 200,
-      title: "Recharge",
-      message: "Recharge approved successfully.",
+      title: "Recharge Approved",
+      message: `Recharge of ₹${rechargeOrder.amount} approved successfully. Amount added to user's wallet.`,
       data: {
-        order: rechargeOrder,
+        order: {
+          _id: rechargeOrder._id,
+          orderId: rechargeOrder.orderId,
+          amount: rechargeOrder.amount,
+          status: rechargeOrder.status,
+          approvedAt: rechargeOrder.approvedAt,
+          remarks: rechargeOrder.remarks,
+        },
+        user: {
+          _id: user._id,
+          name: user.name,
+          mainWallet: user.mainWallet,
+        }
       },
     });
   } catch (error) {
@@ -560,7 +580,6 @@ export const approveRecharge = async (
   }
 };
 
-// Reject recharge (ADMIN)
 export const rejectRecharge = async (
   req: Request,
   res: Response,
@@ -569,6 +588,15 @@ export const rejectRecharge = async (
   try {
     const { orderId } = req.params;
     const { remarks } = req.body;
+
+    if (!remarks || remarks.trim().length < 10) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Please provide a detailed rejection reason (minimum 10 characters).",
+        title: "Recharge",
+      });
+    }
 
     const rechargeOrder = await models.recharge.findById(orderId);
 
@@ -590,18 +618,34 @@ export const rejectRecharge = async (
       });
     }
 
+    if (rechargeOrder.status === "rejected") {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "This order has already been rejected.",
+        title: "Recharge",
+      });
+    }
+
     rechargeOrder.status = "rejected";
-    rechargeOrder.remarks = remarks || "Payment verification failed";
+    rechargeOrder.remarks = remarks.trim();
     rechargeOrder.rejectedAt = new Date();
     await rechargeOrder.save();
 
     return JsonResponse(res, {
       status: "success",
       statusCode: 200,
-      title: "Recharge",
-      message: "Recharge rejected.",
+      title: "Recharge Rejected",
+      message: "Recharge request has been rejected.",
       data: {
-        order: rechargeOrder,
+        order: {
+          _id: rechargeOrder._id,
+          orderId: rechargeOrder.orderId,
+          amount: rechargeOrder.amount,
+          status: rechargeOrder.status,
+          remarks: rechargeOrder.remarks,
+          rejectedAt: rechargeOrder.rejectedAt,
+        },
       },
     });
   } catch (error) {

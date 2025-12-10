@@ -3,7 +3,12 @@ import { notifications } from "@mantine/notifications";
 import { request } from "../../lib/axios.config";
 import { withdrawalUrls } from "../api-urls/api.url";
 
-// ✅ Wallet Info
+interface AddQRAccountPayload {
+  qrCodeImage: File;
+  upiId?: string;
+  isDefault?: boolean;
+}
+
 export const getWalletInfo = async () => {
   const response = await request({
     url: withdrawalUrls.WALLET_INFO,
@@ -296,5 +301,44 @@ export const useWithdrawalSchedule = () => {
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 10, 
     retry: 2,
+  });
+};
+
+
+const addQRCodeRequest = async (formData: FormData) => {
+  const response = await request({
+    url: withdrawalUrls.QR_CODES, 
+    method: "POST",
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response?.data;
+};
+
+
+export const useAddQRCodeMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addQRCodeRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
+      notifications.show({
+        title: "Success",
+        message: "QR code added successfully",
+        color: "green",
+        autoClose: 3000,
+      });
+    },
+    onError: (error: any) => {
+      notifications.show({
+        title: "Error",
+        message: error?.response?.data?.message || "Failed to add QR code",
+        color: "red",
+        autoClose: 4000,
+      });
+    },
   });
 };
