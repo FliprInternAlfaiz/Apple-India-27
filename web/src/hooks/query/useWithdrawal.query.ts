@@ -3,12 +3,6 @@ import { notifications } from "@mantine/notifications";
 import { request } from "../../lib/axios.config";
 import { withdrawalUrls } from "../api-urls/api.url";
 
-interface AddQRAccountPayload {
-  qrCodeImage: File;
-  upiId?: string;
-  isDefault?: boolean;
-}
-
 export const getWalletInfo = async () => {
   const response = await request({
     url: withdrawalUrls.WALLET_INFO,
