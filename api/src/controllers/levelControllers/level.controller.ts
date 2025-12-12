@@ -1,8 +1,8 @@
-// controllers/levelControllers/level.controller.ts - COMPLETE VERSION
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
 import mongoose from "mongoose";
+import { processReferralCommissions } from "../authControllers/referral.controller";
 
 const { JsonResponse } = commonsUtils;
 
@@ -182,6 +182,8 @@ export const upgradeUserLevel = async (
       });
     }
 
+    const isFirstLevelPurchase = user.currentLevelNumber === -1 || user.currentLevelNumber === null;
+
     user.mainWallet -= targetLevel.investmentAmount;
     user.investmentAmount = (user.investmentAmount || 0) + targetLevel.investmentAmount;
     user.currentLevel = targetLevel.levelName;
@@ -192,6 +194,16 @@ export const upgradeUserLevel = async (
     user.todayTasksCompleted = 0;
 
     await user.save();
+
+    if (isFirstLevelPurchase) {
+      console.log(`🎯 First level purchase detected for user: ${userId}`);
+      try {
+        const commissionResult = await processReferralCommissions(userId, targetLevel);
+        console.log(`✅ Referral commission processing result:`, commissionResult);
+      } catch (error) {
+        console.error(`❌ Error processing referral commissions:`, error);
+      }
+    }
 
     return JsonResponse(res, {
       status: "success",

@@ -327,10 +327,10 @@ const FinancialRecords: React.FC = () => {
                         <Text
                           fw={700}
                           fz="lg"
-                          c="green"
+                          c={ref.status === 'pending' ? 'gray' : 'green'}
                           style={{ whiteSpace: "nowrap" }}
                         >
-                          +₹{formatCurrency(ref.amount)}
+                          {ref.status === 'pending' ? '₹0.00' : `+₹${formatCurrency(ref.amount)}`}
                         </Text>
                       </Group>
                     </Card>
