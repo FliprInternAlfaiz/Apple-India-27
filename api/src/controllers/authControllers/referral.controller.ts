@@ -65,7 +65,7 @@ export async function processReferralCommissions(userId: ObjectId, purchasedLeve
       status: "pending",
       transactionType: "signup_bonus",
       level: "A",
-    }).populate("userId", "name phone commissionWallet");
+    }).populate("userId", "name phone mainWallet");
 
     if (pendingReferrals.length === 0) {
       console.log(`ℹ️ No pending Level A referrals found for user: ${userId}`);
@@ -78,7 +78,7 @@ export async function processReferralCommissions(userId: ObjectId, purchasedLeve
 
       const referrerUser = await models.User.findById(referral.userId);
       if (referrerUser) {
-        referrerUser.commissionWallet = (referrerUser.commissionWallet || 0) + commissionAmount;
+        referrerUser.mainWallet = (referrerUser.mainWallet || 0) + commissionAmount;
         await referrerUser.save();
 
         console.log(`✅ Updated ${referrerUser.name}'s wallet: +₹${commissionAmount}`);
