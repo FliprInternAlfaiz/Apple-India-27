@@ -73,14 +73,14 @@ const WithdrawalScreen: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const predefinedAmounts = [
-    280, 1080, 3500, 12000, 21500, 36000, 55000, 108000, 150000,
+    280, 750, 1080, 2100, 3500, 12000, 21500, 36000, 55000, 108000, 150000,
   ];
 
   const {
     data: walletInfo,
     isLoading: walletLoading,
   } = useWalletInfoQuery();
-  
+
   const {
     data: bankData = [],
     isLoading: bankLoading,
@@ -347,15 +347,13 @@ const WithdrawalScreen: React.FC = () => {
               <Group>
                 <Radio
                   value="mainWallet"
-                  label={`Prime wallet: ₹${
-                    walletInfo?.mainWallet?.toFixed(2) || 0
-                  }`}
+                  label={`Prime wallet: ₹${walletInfo?.mainWallet?.toFixed(2) || 0
+                    }`}
                 />
                 <Radio
                   value="commissionWallet"
-                  label={`Task Wallet: ₹${
-                    walletInfo?.commissionWallet?.toFixed(2) || 0
-                  }`}
+                  label={`Task Wallet: ₹${walletInfo?.commissionWallet?.toFixed(2) || 0
+                    }`}
                 />
               </Group>
             </Radio.Group>
@@ -390,9 +388,8 @@ const WithdrawalScreen: React.FC = () => {
                     withBorder
                     radius="md"
                     p="sm"
-                    className={`${classes.bankCard} ${
-                      selectedAccount === acc._id ? classes.activeCard : ""
-                    }`}
+                    className={`${classes.bankCard} ${selectedAccount === acc._id ? classes.activeCard : ""
+                      }`}
                     onClick={() => setSelectedAccount(acc._id)}
                     style={{ cursor: "pointer" }}
                   >
@@ -484,9 +481,8 @@ const WithdrawalScreen: React.FC = () => {
                 return (
                   <div
                     key={amt}
-                    className={`${classes.amountCard} ${
-                      isSelected ? classes.amountSelected : ""
-                    } ${disabled ? classes.amountDisabled : ""}`}
+                    className={`${classes.amountCard} ${isSelected ? classes.amountSelected : ""
+                      } ${disabled ? classes.amountDisabled : ""}`}
                     onClick={() => !disabled && setSelectedAmount(amt)}
                   >
                     <Text fw={700} size="md">
@@ -537,9 +533,8 @@ const WithdrawalScreen: React.FC = () => {
             loading={createWithdrawalMutation.isPending}
             disabled={!selectedAmount || !selectedAccount || !withdrawalPassword}
           >
-            {`Submit Withdrawal Request ${
-              selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""
-            }`}
+            {`Submit Withdrawal Request ${selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""
+              }`}
           </Button>
         </>
       )}
