@@ -843,6 +843,12 @@ const rejectWithdrawal = async (
   }
 };
 
+// Helper function to convert time string (HH:MM) to minutes since midnight
+const timeToMinutes = (timeString: string): number => {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
 export const checkWithdrawalAvailability = async (
   req: Request,
   res: Response,
@@ -897,7 +903,12 @@ export const checkWithdrawalAvailability = async (
       });
     }
 
-    if (currentTime < config.startTime || currentTime > config.endTime) {
+    // Convert times to minutes for proper comparison
+    const currentMinutes = timeToMinutes(currentTime);
+    const startMinutes = timeToMinutes(config.startTime);
+    const endMinutes = timeToMinutes(config.endTime);
+
+    if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
       return JsonResponse(res, {
         status: "error",
         statusCode: 403,
@@ -908,6 +919,7 @@ export const checkWithdrawalAvailability = async (
           reason: "Outside time range",
           startTime: config.startTime,
           endTime: config.endTime,
+          currentTime,
         },
       });
     }
@@ -921,6 +933,7 @@ export const checkWithdrawalAvailability = async (
         canWithdraw: true,
         startTime: config.startTime,
         endTime: config.endTime,
+        currentTime,
       },
     });
   } catch (error) {

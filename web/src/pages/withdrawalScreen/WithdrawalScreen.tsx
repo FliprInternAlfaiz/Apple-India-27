@@ -101,6 +101,36 @@ const WithdrawalScreen: React.FC = () => {
   const userLevel = scheduleData?.userLevel;
   const todaySchedule = scheduleData?.today;
 
+  /* 
+    TIME HELPER & VALIDATION 
+  */
+  const timeToMinutes = (timeString: string) => {
+    if (!timeString) return 0;
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const [currentTimeMinutes, setCurrentTimeMinutes] = useState(() => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  });
+
+  // Update time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      setCurrentTimeMinutes(now.getHours() * 60 + now.getMinutes());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isTimeAllowed = React.useMemo(() => {
+    if (!todaySchedule || !todaySchedule.startTime || !todaySchedule.endTime) return false;
+    const start = timeToMinutes(todaySchedule.startTime);
+    const end = timeToMinutes(todaySchedule.endTime);
+    return currentTimeMinutes >= start && currentTimeMinutes <= end;
+  }, [todaySchedule, currentTimeMinutes]);
+
   const isTodayAllowed =
     todaySchedule?.isActive &&
     Array.isArray(todaySchedule?.allowedLevels) &&
@@ -303,6 +333,9 @@ const WithdrawalScreen: React.FC = () => {
     <div className={classes.container}>
       <Text className={classes.title}>Withdrawal</Text>
 
+      {/* 
+        CASE 1: Not allowed today by level/day 
+      */}
       {!isTodayAllowed && (
         <Alert
           icon={<FaLock />}
@@ -317,21 +350,40 @@ const WithdrawalScreen: React.FC = () => {
         </Alert>
       )}
 
-      {isTodayAllowed && todaySchedule && (
+      {/* 
+        CASE 2: Allowed today, but currently outside of time window 
+      */}
+      {isTodayAllowed && todaySchedule && !isTimeAllowed && (
         <Alert
-          icon={<FaCalendarAlt />}
-          color="green"
-          title="Withdrawals Available Today"
+          icon={<FaLock />}
+          color="orange"
+          title="Withdrawals Closed For Now"
           mb="md"
         >
           <Text size="sm">
-            Apple Level {userLevel} can withdraw between{" "}
-            {todaySchedule.startTime} - {todaySchedule.endTime}.
+             Withdrawals are currently closed. You can withdraw today between{" "}
+             <strong>{todaySchedule.startTime} - {todaySchedule.endTime}</strong>.
           </Text>
         </Alert>
       )}
 
-      {isTodayAllowed && (
+      {/* 
+        CASE 3: Allowed Today AND Inside Time Window
+      */}
+      {isTodayAllowed && todaySchedule && isTimeAllowed && (
+        <Alert
+          icon={<FaCalendarAlt />}
+          color="green"
+          title="Withdrawals Available"
+          mb="md"
+        >
+          <Text size="sm">
+            Withdrawal window is open ({todaySchedule.startTime} - {todaySchedule.endTime}).
+          </Text>
+        </Alert>
+      )}
+
+      {isTodayAllowed && isTimeAllowed && (
         <>
           <Card shadow="sm" p="md" radius="md" className={classes.card}>
             <Text fw={600} mb="xs">
