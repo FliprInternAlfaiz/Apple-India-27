@@ -24,7 +24,7 @@ const taskCompletionSchema = new Schema(
   { timestamps: true }
 );
 
-taskCompletionSchema.index({ userId: 1, taskId: 1 }, { unique: true });
+taskCompletionSchema.index({ userId: 1, taskId: 1 });
 taskCompletionSchema.index({ userId: 1, completedAt: -1 });
 
 const taskCompletionModel = model("taskCompletion", taskCompletionSchema);
