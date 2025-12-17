@@ -101,13 +101,10 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
 
     const totalTasks = await models.task.countDocuments(query);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    // Fetch completed tasks for this user & level
     const completedTasks = await models.taskCompletion.find({
       userId,
       taskId: { $in: tasks.map((t: any) => t._id) },
-      completedAt: { $gte: today },
     }).select("taskId");
 
     const completedTaskIds = new Set(completedTasks.map((c: any) => c.taskId.toString()));
@@ -116,7 +113,10 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
       task.isCompleted = completedTaskIds.has(task._id.toString());
     });
 
-    // Note: 'today' is already defined above
+    // Get today's completed task count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const todayCompleted = await models.taskCompletion.countDocuments({
       userId,
       completedAt: { $gte: today },
@@ -226,13 +226,9 @@ export const getTaskById = async (
 
     let isCompleted = false;
     if (userId) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       const completion = await models.taskCompletion.findOne({
         userId,
         taskId,
-        completedAt: { $gte: today },
       });
       isCompleted = !!completion;
     }
@@ -287,13 +283,9 @@ export const completeTask = async (
       });
     }
 
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
     const existingCompletion = await models.taskCompletion.findOne({
       userId,
       taskId,
-      completedAt: { $gte: today },
     });
 
     if (existingCompletion) {
@@ -367,11 +359,8 @@ export const completeTask = async (
       });
     }
 
-    // Remove duplicate date definition, moving 'now' and 'today' up if needed, 
-    // but we defined them above for existingCompletion check.
-    // We'll reuse them or ensure they are available.
-    // In this scope, 'now' and 'today' were defined above for existingCompletion check.
-
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     // Reset daily counters if new day
     const lastTaskDate = user.lastTaskCompletedAt
