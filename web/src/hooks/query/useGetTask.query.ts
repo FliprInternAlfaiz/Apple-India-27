@@ -33,9 +33,12 @@ export type TTaskStats = {
   totalAvailable: number;
   dailyLimit: number;
   remainingTasks: number;
-  limitReached: number;
+  limitReached: boolean;
   userLevel: string | null;
   userLevelNumber: number | null;
+  rewardPerTask?: number;
+  maxDailyEarning?: number;
+  todayIncome?: number; // Added this field
 };
 
 export type TTaskResponse = {
@@ -52,10 +55,12 @@ export type TSingleTaskResponse = {
 export type TCompleteTaskResponse = {
   status: "success" | "error";
   rewardAmount: number;
-  newBalance: number;
+  commissionWallet: number;
   todayTasksCompleted: number;
   totalTasksCompleted: number;
   todayIncome: number;
+  dailyLimit: number;
+  remainingTasks: number;
 };
 
 export const getTasks = async (params?: {
@@ -70,7 +75,6 @@ export const getTasks = async (params?: {
       params,
     });
 
-    // Handle successful response
     if (response?.data) {
       return {
         tasks: response.data.tasks || [],
@@ -85,15 +89,15 @@ export const getTasks = async (params?: {
           totalAvailable: 0,
           dailyLimit: 0,
           remainingTasks: 0,
-          limitReached: 0,
+          limitReached: false,
           userLevel: null,
           userLevelNumber: null,
+          todayIncome: 0,
         },
         requiresLevelPurchase: response.data.requiresLevelPurchase || false,
       };
     }
 
-    // Fallback empty response
     return {
       tasks: [],
       pagination: {
@@ -107,13 +111,13 @@ export const getTasks = async (params?: {
         totalAvailable: 0,
         dailyLimit: 0,
         remainingTasks: 0,
-        limitReached: 0,
+        limitReached: false,
         userLevel: null,
         userLevelNumber: null,
+        todayIncome: 0,
       },
     };
   } catch (error: any) {
-    // Handle 403 - Level purchase required
     if (error?.response?.status === 403) {
       return {
         tasks: [],
@@ -128,15 +132,15 @@ export const getTasks = async (params?: {
           totalAvailable: 0,
           dailyLimit: 0,
           remainingTasks: 0,
-          limitReached: 0,
+          limitReached: false,
           userLevel: null,
           userLevelNumber: null,
+          todayIncome: 0,
         },
         requiresLevelPurchase: true,
       };
     }
 
-    // Re-throw other errors
     throw error;
   }
 };
@@ -159,7 +163,6 @@ export const useInfiniteTasksQuery = (params?: {
       return await getTasks({ ...params, page: pageParam, limit });
     },
     getNextPageParam: (lastPage) => {
-      // Don't fetch more if level purchase is required
       if (lastPage?.requiresLevelPurchase) return undefined;
       
       if (!lastPage?.tasks?.length) return undefined;
@@ -170,11 +173,11 @@ export const useInfiniteTasksQuery = (params?: {
       return currentPage + 1;
     },
     initialPageParam: 1,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30, // 30 seconds for fresher data
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
     retry: (failureCount, error: any) => {
-      // Don't retry on 403 (level purchase required)
       if (error?.response?.status === 403) return false;
-      // Retry other errors up to 2 times
       return failureCount < 2;
     },
   });
@@ -205,7 +208,9 @@ export const useTaskQuery = (taskId: string) => {
     queryKey: ["task", taskId],
     queryFn: () => getTaskById(taskId),
     enabled: !!taskId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30, // 30 seconds for fresher data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: 2,
   });
 };

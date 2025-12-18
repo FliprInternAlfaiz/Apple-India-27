@@ -11,7 +11,7 @@ import {
   Center,
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
-import { Trophy, Target, CheckCircle, ShoppingCart } from "lucide-react";
+import { Trophy, Target, CheckCircle, ShoppingCart, IndianRupee } from "lucide-react";
 import classes from "./Task.module.scss";
 import TaskItem from "../../components/TaskItem/TaskItem";
 import { useInfiniteTasksQuery } from "../../hooks/query/useGetTask.query";
@@ -86,6 +86,10 @@ const Task: React.FC = () => {
   const dailyLimit = stats?.dailyLimit || 0;
   const todayCompleted = stats?.todayCompleted || 0;
   const remainingTasks = stats?.remainingTasks || 0;
+  const todayIncome = stats?.todayIncome || 0;
+  const rewardPerTask = stats?.rewardPerTask || 0;
+  const maxDailyEarning = stats?.maxDailyEarning || 0;
+  
   const progressPercentage =
     dailyLimit > 0 ? (todayCompleted / dailyLimit) * 100 : 0;
 
@@ -158,7 +162,6 @@ const Task: React.FC = () => {
     );
   }
 
-  // Error state (but not 403 which we handle above)
   if (isError && !requiresLevelPurchase) {
     return (
       <Flex justify="center" align="center" h="100vh" p="md">
@@ -192,6 +195,32 @@ const Task: React.FC = () => {
           </Badge>
         </Flex>
 
+        {/* Today's Income Highlight */}
+        <Box
+          mb="md"
+          p="md"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            borderRadius: "12px",
+            color: "white",
+          }}
+        >
+          <Flex align="center" justify="space-between">
+            <Flex align="center" gap="xs">
+              <IndianRupee size={20} />
+              <Text size="sm" fw={500}>
+                Today's Earnings
+              </Text>
+            </Flex>
+            <Text size="xl" fw={700}>
+              ₹{todayIncome.toFixed(2)}
+            </Text>
+          </Flex>
+          <Text size="xs" mt="xs" opacity={0.9}>
+            Max possible: ₹{maxDailyEarning} ({dailyLimit} tasks × ₹{rewardPerTask})
+          </Text>
+        </Box>
+
         <Box mb="md">
           <Flex justify="space-between" align="center" mb="xs">
             <Flex align="center" gap="xs">
@@ -201,7 +230,7 @@ const Task: React.FC = () => {
               </Text>
             </Flex>
             <Text size="sm" fw={600}>
-              {todayCompleted} / {totalTasks}
+              {todayCompleted} / {dailyLimit}
             </Text>
           </Flex>
           <Progress value={progressPercentage} size="lg" radius="xl" />
@@ -242,18 +271,23 @@ const Task: React.FC = () => {
             p="xl"
           >
             <Text size="lg" c="gray" ta="center">
-              No tasks available at the moment
+              {todayCompleted >= dailyLimit 
+                ? "🎉 Daily limit reached! Come back tomorrow" 
+                : "No tasks available at the moment"}
             </Text>
             <Text size="sm" c="dimmed" ta="center">
-              Check back later for new tasks or upgrade your level
+              {todayCompleted >= dailyLimit
+                ? `You've completed all ${dailyLimit} tasks today and earned ₹${todayIncome}`
+                : "Check back later for new tasks or upgrade your level"}
             </Text>
-            <Button variant="light" onClick={handlePurchaseLevel} mt="md">
-              Upgrade Level
-            </Button>
+            {todayCompleted < dailyLimit && (
+              <Button variant="light" onClick={handlePurchaseLevel} mt="md">
+                Upgrade Level
+              </Button>
+            )}
           </Flex>
         ) : (
           allTasks.map((task: any, index: number) => {
-            // Skip invalid tasks
             if (!task || !task._id || !task.thumbnail) {
               return null;
             }
@@ -263,7 +297,7 @@ const Task: React.FC = () => {
                 key={task._id}
                 thumbnail={task.thumbnail}
                 level={task.level || "Unknown"}
-                reward={`Rs +${task.rewardPrice || 0}`}
+                reward={`₹ +${task.rewardPrice || 0}`}
                 isCompleted={task.isCompleted || false}
                 onClick={() => handleTaskClick(task._id, task.isCompleted)}
               />

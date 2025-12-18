@@ -1,4 +1,4 @@
-// controllers/task.controller.ts - UPDATED with Level Purchase Check
+// controllers/task.controller.ts - FIXED Daily Reset Logic
 import { Request, Response, NextFunction } from "express";
 import commonsUtils from "../../utils";
 import models from "../../models";
@@ -7,6 +7,15 @@ import path from 'path';
 import fs from 'fs';
 
 const { JsonResponse } = commonsUtils;
+
+// Helper function to get start of today in IST
+const getStartOfTodayIST = (): Date => {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+  const istTime = new Date(now.getTime() + istOffset);
+  istTime.setUTCHours(0, 0, 0, 0);
+  return new Date(istTime.getTime() - istOffset); // Convert back to UTC
+};
 
 export const getTasks = async (req: Request, res: Response, __: NextFunction) => {
   try {
@@ -22,9 +31,8 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
       });
     }
 
-    // Fetch user details
     const user = await models.User.findById(userId).select(
-      "currentLevel currentLevelNumber todayTasksCompleted"
+      "currentLevel currentLevelNumber todayTasksCompleted todayIncome lastTaskCompletedAt"
     );
 
     if (!user) {
@@ -36,7 +44,6 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
       });
     }
 
-    // Check if user has purchased a level
     const hasNoLevel = !user.currentLevel || user.currentLevelNumber === null || user.currentLevelNumber === undefined;
 
     if (hasNoLevel) {
@@ -62,6 +69,7 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
             limitReached: false,
             userLevel: null,
             userLevelNumber: null,
+            todayIncome: 0,
           },
         },
       });
@@ -86,9 +94,19 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
 
     const dailyLimit = levelConfig.dailyTaskLimit;
 
-    // Query only tasks matching current level
-    const query: any = { isActive: true, level: userLevel };
+    // Check if we need to reset daily counters
+    const startOfToday = getStartOfTodayIST();
+    const needsReset = !user.lastTaskCompletedAt || 
+                       new Date(user.lastTaskCompletedAt) < startOfToday;
 
+    if (needsReset && (user.todayTasksCompleted > 0 || user.todayIncome > 0)) {
+      // Reset daily counters
+      user.todayTasksCompleted = 0;
+      user.todayIncome = 0;
+      await user.save();
+    }
+
+    const query: any = { isActive: true, level: userLevel };
     const skip = (Number(page) - 1) * Number(limit);
 
     const tasks = await models.task
@@ -101,10 +119,11 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
 
     const totalTasks = await models.task.countDocuments(query);
 
-    // Fetch completed tasks for this user & level
+    // Get today's completions based on IST midnight
     const completedTasks = await models.taskCompletion.find({
       userId,
       taskId: { $in: tasks.map((t: any) => t._id) },
+      completedAt: { $gte: startOfToday },
     }).select("taskId");
 
     const completedTaskIds = new Set(completedTasks.map((c: any) => c.taskId.toString()));
@@ -113,21 +132,15 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
       task.isCompleted = completedTaskIds.has(task._id.toString());
     });
 
-    // Get today's completed task count
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    // Count today's completed tasks
     const todayCompleted = await models.taskCompletion.countDocuments({
       userId,
-      completedAt: { $gte: today },
+      completedAt: { $gte: startOfToday },
     });
 
-    // Correct remaining task calculation:
-    // Remaining = min(dailyLimit, totalAvailable) - todayCompleted
     const totalAvailable = totalTasks;
     const maxAvailable = Math.min(dailyLimit, totalAvailable);
     const remainingTasks = Math.max(0, maxAvailable - todayCompleted);
-
     const limitReached = todayCompleted >= maxAvailable;
 
     return JsonResponse(res, {
@@ -154,6 +167,7 @@ export const getTasks = async (req: Request, res: Response, __: NextFunction) =>
           userLevelNumber,
           rewardPerTask: levelConfig.rewardPerTask,
           maxDailyEarning: levelConfig.rewardPerTask * dailyLimit,
+          todayIncome: user.todayIncome || 0,
         },
       },
     });
@@ -186,7 +200,6 @@ export const getTaskById = async (
       });
     }
 
-    // Check if user has purchased a level
     if (userId) {
       const user = await models.User.findById(userId).select("currentLevel currentLevelNumber");
       
@@ -226,9 +239,11 @@ export const getTaskById = async (
 
     let isCompleted = false;
     if (userId) {
+      const startOfToday = getStartOfTodayIST();
       const completion = await models.taskCompletion.findOne({
         userId,
         taskId,
+        completedAt: { $gte: startOfToday },
       });
       isCompleted = !!completion;
     }
@@ -283,16 +298,19 @@ export const completeTask = async (
       });
     }
 
+    // Check for today's completion
+    const startOfToday = getStartOfTodayIST();
     const existingCompletion = await models.taskCompletion.findOne({
       userId,
       taskId,
+      completedAt: { $gte: startOfToday },
     });
 
     if (existingCompletion) {
       return JsonResponse(res, {
         status: "error",
         statusCode: 400,
-        message: "Task already completed.",
+        message: "Task already completed today.",
         title: "Complete Task",
       });
     }
@@ -322,7 +340,6 @@ export const completeTask = async (
       });
     }
 
-    // Check if user has purchased a level
     const hasNoLevel = !user.currentLevel || user.currentLevelNumber === null || user.currentLevelNumber === undefined;
 
     if (hasNoLevel) {
@@ -334,7 +351,6 @@ export const completeTask = async (
       });
     }
 
-    // Get user's current level configuration
     const userLevelConfig = await models.level.findOne({
       levelNumber: user.currentLevelNumber,
       isActive: true,
@@ -349,7 +365,6 @@ export const completeTask = async (
       });
     }
 
-    // Verify task belongs to user's current level
     if (task.level !== user.currentLevel) {
       return JsonResponse(res, {
         status: "error",
@@ -360,18 +375,12 @@ export const completeTask = async (
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Reset daily counters if new day
-    const lastTaskDate = user.lastTaskCompletedAt
-      ? new Date(
-          user.lastTaskCompletedAt.getFullYear(),
-          user.lastTaskCompletedAt.getMonth(),
-          user.lastTaskCompletedAt.getDate()
-        )
-      : null;
+    // Check if we need to reset daily counters
+    const needsReset = !user.lastTaskCompletedAt || 
+                       new Date(user.lastTaskCompletedAt) < startOfToday;
 
-    if (!lastTaskDate || lastTaskDate.getTime() < today.getTime()) {
+    if (needsReset) {
       user.todayTasksCompleted = 0;
       user.todayIncome = 0;
     }
@@ -386,29 +395,17 @@ export const completeTask = async (
       });
     }
 
-    // Use reward from level configuration
     const rewardPrice = userLevelConfig.rewardPerTask;
 
-    try {
-      await models.taskCompletion.create({
-        userId,
-        taskId,
-        rewardAmount: rewardPrice,
-        completedAt: now,
-      });
-    } catch (dupError: any) {
-      if (dupError.code === 11000) {
-        return JsonResponse(res, {
-          status: "error",
-          statusCode: 400,
-          message: "Task already completed.",
-          title: "Complete Task",
-        });
-      }
-      throw dupError;
-    }
+    // Create task completion record
+    await models.taskCompletion.create({
+      userId,
+      taskId,
+      rewardAmount: rewardPrice,
+      completedAt: now,
+    });
 
-    // Update user - Add to commissionWallet
+    // Update user balances and counters
     user.commissionWallet = (user.commissionWallet || 0) + rewardPrice;
     user.todayIncome = (user.todayIncome || 0) + rewardPrice;
     user.monthlyIncome = (user.monthlyIncome || 0) + rewardPrice;
@@ -487,7 +484,6 @@ export const createTask = async (
       });
     }
 
-    // Get level configuration to set reward price
     const levelConfig = await models.level.findOne({
       levelName: level,
       isActive: true,
@@ -524,7 +520,6 @@ export const createTask = async (
       });
     }
 
-    // Create task with reward from level config
     const task = await models.task.create({
       videoUrl,
       thumbnail: thumbnail || '',
@@ -590,16 +585,13 @@ export const updateTask = async (
       });
     }
 
-    // Update fields if provided
     if (thumbnail !== undefined) task.thumbnail = thumbnail;
     if (level !== undefined) task.level = level;
     if (rewardPrice !== undefined) task.rewardPrice = Number(rewardPrice);
     if (order !== undefined) task.order = Number(order);
     if (isActive !== undefined) task.isActive = Boolean(isActive);
 
-    // Handle video file update
     if (req.file) {
-      // Delete old video file
       if (task.videoUrl) {
         const oldFilename = path.basename(task.videoUrl);
         const oldFilePath = path.join('uploads/videos', oldFilename);
@@ -608,7 +600,6 @@ export const updateTask = async (
         }
       }
       
-      // Set new video URL
       task.videoUrl = `/uploads/videos/${req.file.filename}`;
     }
 
@@ -619,12 +610,9 @@ export const updateTask = async (
       statusCode: 200,
       title: 'Update Task',
       message: 'Task updated successfully.',
-      data: {
-        task,
-      },
+      data: { task },
     });
   } catch (error: any) {
-    // Clean up uploaded file on error
     if (req.file) {
       const filePath = path.join('uploads/videos', req.file.filename);
       if (fs.existsSync(filePath)) {
@@ -671,7 +659,6 @@ export const deleteTask = async (
       });
     }
 
-    // Delete video file from storage
     if (task.videoUrl) {
       const filename = path.basename(task.videoUrl);
       const filePath = path.join('uploads/videos', filename);
@@ -680,7 +667,6 @@ export const deleteTask = async (
       }
     }
 
-    // Delete task from database
     await models.task.findByIdAndDelete(taskId);
 
     return JsonResponse(res, {
@@ -728,7 +714,6 @@ export const toggleTaskStatus = async (
       });
     }
 
-    // Toggle isActive status
     task.isActive = !task.isActive;
     await task.save();
 
@@ -737,9 +722,7 @@ export const toggleTaskStatus = async (
       statusCode: 200,
       title: 'Toggle Task Status',
       message: `Task ${task.isActive ? 'activated' : 'deactivated'} successfully.`,
-      data: {
-        task,
-      },
+      data: { task },
     });
   } catch (error) {
     console.error('Error toggling task status:', error);

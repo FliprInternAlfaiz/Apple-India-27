@@ -62,6 +62,8 @@ export const useVerifyUserQuery = () => {
     queryKey: ["verifyUser"],
     queryFn: () => verifyUser(),
     retry: false,
-    staleTime: 5 * 60 * 1000
+    staleTime: 1000 * 60, // 1 minute for fresher wallet/stats data
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 };

@@ -112,8 +112,9 @@ export const useActiveLuckyDrawsQuery = () => {
   return useQuery<ActiveLuckyDrawsResponse>({
     queryKey: ["activeLuckyDraws"],
     queryFn: fetchActiveLuckyDraws,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -156,7 +157,9 @@ export const useAllLuckyDrawsQuery = (
   return useQuery<PaginatedLuckyDrawResponse>({
     queryKey: ["allLuckyDraws", page, limit, isActive, status],
     queryFn: () => fetchAllLuckyDraws(page, limit, isActive, status),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -323,6 +326,8 @@ export const useLuckyDrawDetailsQuery = (drawId: string) => {
     queryKey: ["luckyDrawDetails", drawId],
     queryFn: () => fetchLuckyDrawDetails(drawId),
     enabled: !!drawId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };

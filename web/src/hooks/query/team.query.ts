@@ -71,6 +71,9 @@ export const useTeamStatsQuery = () => {
   return useQuery({
     queryKey: ["team-stats"],
     queryFn: fetchTeamStats,
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -80,8 +83,9 @@ export const useTeamReferralHistoryQuery = (
   return useQuery({
     queryKey: ["teamReferralHistory", params],
     queryFn: () => getTeamReferralHistory(params),
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 2, 
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60, // 1 minute
     retry: 2,
   });
 };
@@ -99,6 +103,9 @@ export const useReferralLinkQuery = () => {
   return useQuery({
     queryKey: ["referral-link"],
     queryFn: fetchReferralLink,
+    staleTime: 1000 * 60 * 5, // 5 minutes (referral link doesn't change often)
+    refetchOnMount: true,
+    refetchOnWindowFocus: false, // No need to refetch link on focus
   });
 };
 
@@ -116,5 +123,8 @@ export const useTeamMembersByLevelQuery = (level: string, enabled = false) => {
     queryKey: ["team-members", level],
     queryFn: () => fetchTeamMembersByLevel(level),
     enabled,
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };

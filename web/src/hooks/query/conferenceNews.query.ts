@@ -72,8 +72,9 @@ export const useActiveConferenceNewsQuery = () => {
   return useQuery({
     queryKey: ["activeConferenceNews"],
     queryFn: fetchActiveConferenceNews,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -105,9 +106,11 @@ export const useAllConferenceNewsQuery = (
   isActive?: boolean
 ) => {
   return useQuery<PaginatedConferenceNewsResponse>({
-       staleTime: 1000 * 60 * 5, 
     queryKey: ["allConferenceNews", page, limit, isActive],
     queryFn: () => fetchAllConferenceNews(page, limit, isActive),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
