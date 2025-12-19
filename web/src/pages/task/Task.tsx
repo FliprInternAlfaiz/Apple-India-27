@@ -79,7 +79,6 @@ const Task: React.FC = () => {
   const allTasks =
     data?.pages?.flatMap((page) => page?.tasks || [])?.filter(Boolean) || [];
   const stats = data?.pages?.[0]?.stats;
-  const totalTasks = data?.pages?.[0]?.pagination?.totalTasks || 0;
   const requiresLevelPurchase =
     data?.pages?.[0]?.requiresLevelPurchase || false;
 
