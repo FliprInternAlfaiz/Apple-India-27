@@ -304,6 +304,7 @@ const WithdrawalScreen: React.FC = () => {
         amount,
         bankAccountId: selectedAccount,
         withdrawalPassword,
+        currency: 'INR',
       },
       {
         onSuccess: () => {
