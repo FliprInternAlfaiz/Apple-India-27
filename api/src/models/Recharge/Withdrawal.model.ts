@@ -12,6 +12,9 @@ export interface IWithdrawal extends Document {
   ifscCode: string;
   accountType: 'savings' | 'current' | 'qr';
   qrCodeImage?: string; // Path to QR code image if QR payment
+  currency?: 'INR' | 'USDT';
+  withdrawalMethod?: 'bank_transfer' | 'stripe' | 'crypto_wallet'; // For USDT, 'stripe' or 'crypto_wallet' might be relevant
+  cryptoAddress?: string; // If 'crypto_wallet' or just to store the destination
   status: 'pending' | 'processing' | 'completed' | 'rejected';
   transactionId?: string;
   remarks?: string;
@@ -41,7 +44,7 @@ const WithdrawalSchema: Schema = new Schema(
     bankAccountId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'BankAccount',
-      required: true,
+      required: false,
     },
     accountHolderName: {
       type: String,
@@ -64,6 +67,20 @@ const WithdrawalSchema: Schema = new Schema(
       type: String,
       enum: ['savings', 'current', 'qr'],
       default: 'savings',
+    },
+    currency: {
+      type: String,
+      enum: ['INR', 'USDT'],
+      default: 'INR',
+    },
+    withdrawalMethod: {
+      type: String,
+      enum: ['bank_transfer', 'stripe', 'crypto_wallet'],
+      default: 'bank_transfer',
+    },
+    cryptoAddress: {
+      type: String,
+      default: null,
     },
     qrCodeImage: {
       type: String,

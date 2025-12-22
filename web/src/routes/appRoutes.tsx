@@ -23,6 +23,7 @@ import PrivacyPolicy from "../pages/company/PrivacyPolicy";
 import IdentityVerificationScreen from "../pages/IdentityVerification/IdentityVerificationScreen";
 import ConferenceNewsScreen from "../pages/ConferenceNewsScreen/ConferenceNewsScreen";
 import LuckyDrawScreen from "../pages/luckydrawScreen/LuckyDrawScreen";
+import UsdtWalletScreen from "../pages/UsdtWalletScreen/UsdtWalletScreen";
 
 export const appRouter = createBrowserRouter([
   {
@@ -54,6 +55,7 @@ export const appRouter = createBrowserRouter([
             path: "/identity-verification",
             element: <IdentityVerificationScreen />,
           },
+          { path: "/usdt-wallet", element: <UsdtWalletScreen /> },
         ],
       },
     ],

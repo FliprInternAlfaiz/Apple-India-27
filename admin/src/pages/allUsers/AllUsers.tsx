@@ -43,6 +43,7 @@ import {
   useToggleStatus,
   useAddWalletAmount,
   useDeductWalletAmount,
+  useToggleUsdtStatus,
 } from "../../hooks/query/useAdminUsers.query";
 import classes from "./index.module.scss";
 
@@ -88,6 +89,7 @@ const AllUsers = () => {
   const toggleStatusMutation = useToggleStatus();
   const addWalletAmountMutation = useAddWalletAmount();
   const deductWalletAmountMutation = useDeductWalletAmount();
+  const toggleUsdtStatusMutation = useToggleUsdtStatus();
 
   const users = data?.users || [];
   const pagination = data?.pagination || {};
@@ -310,6 +312,30 @@ const AllUsers = () => {
     }
   };
 
+  const handleToggleUsdt = async (user: any) => {
+    try {
+      const isEnabled = !user.isUsdtEnabled;
+      await toggleUsdtStatusMutation.mutateAsync({
+        userId: user._id,
+        isUsdtEnabled: isEnabled,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: `USDT Wallet ${isEnabled ? "Enabled" : "Disabled"} for ${user.name}`,
+        color: "green",
+        icon: <FiCheckCircle />,
+      });
+    } catch (error: any) {
+      notifications.show({
+        title: "Error",
+        message: "Failed to update USDT status",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+    }
+  };
+
   const getVerificationBadge = (status: string) => {
     const statusConfig: any = {
       approved: { color: "green", label: "Approved", icon: <FiCheckCircle /> },
@@ -378,6 +404,19 @@ const AllUsers = () => {
             size="sm"
           >
             {user.isVerified ? "Verified" : "Unverified"}
+          </Badge>
+        </Tooltip>
+      </Table.Td>
+      <Table.Td>
+        <Tooltip label="Toggle USDT Access">
+          <Badge
+            color={user.isUsdtEnabled ? "violet" : "gray"}
+            variant="light"
+            style={{ cursor: "pointer" }}
+            onClick={() => handleToggleUsdt(user)}
+            size="sm"
+          >
+            {user.isUsdtEnabled ? "Enabled" : "Disabled"}
           </Badge>
         </Tooltip>
       </Table.Td>
@@ -591,6 +630,7 @@ const AllUsers = () => {
                 <Table.Th ta="center">Level</Table.Th>
                 <Table.Th ta="center">Team</Table.Th>
                 <Table.Th ta="center">Status</Table.Th>
+                <Table.Th ta="center">USDT</Table.Th>
                 <Table.Th ta="center">Aadhaar</Table.Th>
                 <Table.Th ta="center">Prime Wallet</Table.Th>
                 <Table.Th ta="center">Task Wallet</Table.Th>

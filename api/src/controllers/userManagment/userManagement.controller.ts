@@ -6,21 +6,61 @@ import { IUser } from '../../interface/user.interface';
 
 const { JsonResponse } = commonsUtils;
 
-interface AddWalletAmountBody {
-  walletType: 'mainWallet' | 'commissionWallet';
-  amount: number;
-}
+
 
 interface AddWalletAmountBody {
   walletType: 'mainWallet' | 'commissionWallet';
   amount: number;
+  currency?: 'INR' | 'USDT';
 }
 
 interface DeductWalletAmountBody {
   walletType: 'mainWallet' | 'commissionWallet';
   amount: number;
   reason?: string;
+  currency?: 'INR' | 'USDT';
 }
+
+const toggleUsdtStatus = async (
+  req: Request,
+  res: Response,
+  __: NextFunction,
+) => {
+  try {
+    const { userId } = req.params;
+    const { isUsdtEnabled } = req.body;
+
+    const user = await models.User.findById(userId);
+
+    if (!user) {
+      return JsonResponse(res, {
+        status: 'error',
+        statusCode: 404,
+        message: 'User not found.',
+        title: 'Toggle USDT',
+      });
+    }
+
+    user.isUsdtEnabled = isUsdtEnabled;
+    await user.save();
+
+    return JsonResponse(res, {
+      status: 'success',
+      statusCode: 200,
+      title: 'USDT Status Updated',
+      message: `User USDT wallet ${isUsdtEnabled ? 'enabled' : 'disabled'} successfully.`,
+      data: { user },
+    });
+  } catch (err) {
+    console.error('💥 Toggle USDT status error:', err);
+    return JsonResponse(res, {
+      status: 'error',
+      statusCode: 500,
+      title: 'Server Error',
+      message: 'Failed to update USDT status.',
+    });
+  }
+};
 
 const getAllUsers = async (req: Request, res: Response, __: NextFunction) => {
   try {
@@ -446,7 +486,7 @@ const addWalletAmount = async (
 ) => {
   try {
     const { userId } = req.params;
-    const { walletType, amount } = req.body;
+    const { walletType, amount, currency = 'INR' } = req.body;
 
     if (
       !walletType ||
@@ -479,10 +519,13 @@ const addWalletAmount = async (
       });
     }
 
-    const key = walletType as 'mainWallet' | 'commissionWallet';
-    const previousBalance = Number((user as IUser)[key] ?? 0);
+    const key = currency === 'USDT' 
+      ? (walletType === 'mainWallet' ? 'mainWalletUsdt' : 'commissionWalletUsdt')
+      : walletType;
+
+    const previousBalance = Number((user as any)[key] ?? 0);
     const newBalance = previousBalance + Number(amount);
-    (user as IUser)[key] = newBalance;
+    (user as any)[key] = newBalance;
 
     await user.save();
 
@@ -490,9 +533,9 @@ const addWalletAmount = async (
       status: 'success',
       statusCode: 200,
       title: 'Amount Added',
-      message: `₹${amount} added successfully to ${
+      message: `${currency === 'USDT' ? '$' : '₹'}${amount} added successfully to ${
         walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
-      }.`,
+      }${currency === 'USDT' ? ' (USDT)' : ''}.`,
       data: {
         userId: user._id,
         walletType,
@@ -520,7 +563,7 @@ const deductWalletAmount = async (
 ) => {
   try {
     const { userId } = req.params;
-    const { walletType, amount, reason } = req.body;
+    const { walletType, amount, reason, currency = 'INR' } = req.body;
 
     if (
       !walletType ||
@@ -553,21 +596,24 @@ const deductWalletAmount = async (
       });
     }
 
-    const key = walletType as 'mainWallet' | 'commissionWallet';
-    const previousBalance = Number((user as IUser)[key] ?? 0);
+    const key = currency === 'USDT' 
+      ? (walletType === 'mainWallet' ? 'mainWalletUsdt' : 'commissionWalletUsdt')
+      : walletType;
+      
+    const previousBalance = Number((user as any)[key] ?? 0);
 
     // Check if user has sufficient balance
     if (previousBalance < Number(amount)) {
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
-        message: `Insufficient balance. Current balance: ₹${previousBalance}`,
+        message: `Insufficient balance. Current balance: ${currency === 'USDT' ? '$' : '₹'}${previousBalance}`,
         title: 'Deduct Wallet Amount',
       });
     }
 
     const newBalance = previousBalance - Number(amount);
-    (user as IUser)[key] = newBalance;
+    (user as any)[key] = newBalance;
 
     await user.save();
 
@@ -575,9 +621,9 @@ const deductWalletAmount = async (
       status: 'success',
       statusCode: 200,
       title: 'Amount Deducted',
-      message: `₹${amount} deducted successfully from ${
+      message: `${currency === 'USDT' ? '$' : '₹'}${amount} deducted successfully from ${
         walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
-      }.`,
+      }${currency === 'USDT' ? ' (USDT)' : ''}.`,
       data: {
         userId: user._id,
         walletType,
@@ -609,5 +655,6 @@ export default {
   getAllUsers,
   getUserById,
   addWalletAmount,
-  deductWalletAmount
+  deductWalletAmount,
+  toggleUsdtStatus
 };

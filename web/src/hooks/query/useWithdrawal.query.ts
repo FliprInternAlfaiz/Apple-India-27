@@ -159,8 +159,9 @@ export const useSetDefaultAccountMutation = () => {
 interface CreateWithdrawalPayload {
   walletType: string;
   amount: number;
-  bankAccountId: string;
+  bankAccountId?: string;
   withdrawalPassword: string;
+  currency?: string;
 }
 
 const createWithdrawalRequest = async (payload: CreateWithdrawalPayload) => {
@@ -203,6 +204,7 @@ interface WithdrawalHistoryParams {
   page?: number;
   limit?: number;
   status?: string;
+  currency?: string;
 }
 
 const getWithdrawalHistory = async (params: WithdrawalHistoryParams) => {
