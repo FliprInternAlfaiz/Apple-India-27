@@ -341,7 +341,7 @@ export const getWalletInfo = async (
 
     const user = await models.User
       .findById(userId)
-      .select("mainWallet commissionWallet totalWithdrawals isUsdtEnabled mainWalletUsdt commissionWalletUsdt");
+      .select("mainWallet commissionWallet totalWithdrawals");
 
     if (!user) {
       return JsonResponse(res, {
@@ -361,9 +361,6 @@ export const getWalletInfo = async (
         mainWallet: user.mainWallet,
         commissionWallet: user.commissionWallet,
         totalWithdrawals: user.totalWithdrawals,
-        isUsdtEnabled: user.isUsdtEnabled,
-        mainWalletUsdt: user.mainWalletUsdt,
-        commissionWalletUsdt: user.commissionWalletUsdt,
       },
     });
   } catch (error) {
@@ -380,21 +377,19 @@ export const getWalletInfo = async (
 export const createWithdrawal = async (req: Request, res: Response, __: NextFunction) => {
   try {
     const userId = res.locals.userId;
-    const { walletType, amount, bankAccountId, withdrawalPassword, currency } = req.body;
+    const { walletType, amount, bankAccountId, withdrawalPassword } = req.body;
 
-    if (isNaN(amount) || amount < 280) { // Note: for USDT this min amount might be wrong in strict sense, but frontend handles $10 min.
-        if (currency !== 'USDT' && amount < 280) {
-             return JsonResponse(res, {
-                status: "error",
-                statusCode: 400,
-                message: "Minimum withdrawal amount is Rs 280.",
-                title: "Withdrawal",
-              });
-        }
+    if (isNaN(amount) || amount < 280) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 400,
+        message: "Minimum withdrawal amount is Rs 280.",
+        title: "Withdrawal",
+      });
     }
 
     const user = await models.User.findById(userId)
-      .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals isUsdtEnabled mainWalletUsdt commissionWalletUsdt");
+      .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals");
 
     if (!user) {
       return JsonResponse(res, {
@@ -421,52 +416,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       }
     }
 
-    // USDT Logic - Prioritize request currency OR user setting
-    if (currency === 'USDT' || user.isUsdtEnabled) {
-       const walletBalance = walletType === "mainWallet" ? (user.mainWalletUsdt || 0) : (user.commissionWalletUsdt || 0);
-
-       if (walletBalance < amount) {
-          return JsonResponse(res, {
-            status: "error",
-            statusCode: 400,
-            message: "Insufficient USDT wallet balance.",
-            title: "Withdrawal",
-          });
-       }
-       
-       // Deduct from USDT wallet
-       if (walletType === "mainWallet") {
-          user.mainWalletUsdt = (user.mainWalletUsdt || 0) - amount;
-       } else {
-          user.commissionWalletUsdt = (user.commissionWalletUsdt || 0) - amount;
-       }
-       
-       await user.save();
-
-       const withdrawal = await models.withdrawal.create({
-          userId,
-          walletType,
-          amount,
-          currency: 'USDT',
-          withdrawalMethod: 'stripe',
-          status: "pending",
-          accountHolderName: user.name,
-          bankName: 'Stripe',
-          accountNumber: 'USDT-STRIPE', 
-          ifscCode: 'NA', 
-          accountType: 'savings'
-       });
-       
-       return JsonResponse(res, {
-          status: "success",
-          statusCode: 201,
-          title: "Withdrawal",
-          message: "USDT Withdrawal request created successfully.",
-          data: { withdrawal },
-       });
-    }
-
-    // Existing INR Logic
     const walletBalance = walletType === "mainWallet" ? user.mainWallet : user.commissionWallet;
     if (walletBalance < amount) {
       return JsonResponse(res, {
@@ -505,7 +454,6 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       userId,
       walletType,
       amount,
-      currency: 'INR',
       bankAccountId,
       ifscCode: bankAccount.ifscCode,
       accountNumber: bankAccount.accountNumber,
@@ -542,14 +490,11 @@ export const getWithdrawalHistory = async (
 ) => {
   try {
     const userId = res.locals.userId;
-    const { page = 1, limit = 10, status, currency } = req.query;
+    const { page = 1, limit = 10, status } = req.query;
 
     const query: any = { userId };
     if (status) {
       query.status = status;
-    }
-    if (currency) {
-      query.currency = currency;
     }
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -867,23 +812,12 @@ const rejectWithdrawal = async (
 
     const user = await models.User.findById(withdrawal.userId);
     if (user) {
-      if (withdrawal.currency === 'USDT') {
-         // USDT Refund Logic
-         if (withdrawal.walletType === "mainWallet") {
-             user.mainWalletUsdt = (user.mainWalletUsdt || 0) + withdrawal.amount;
-         } else {
-             user.commissionWalletUsdt = (user.commissionWalletUsdt || 0) + withdrawal.amount;
-         }
+      if (withdrawal.walletType === "mainWallet") {
+        user.mainWallet += withdrawal.amount;
       } else {
-         // INR Refund Logic
-         if (withdrawal.walletType === "mainWallet") {
-             user.mainWallet += withdrawal.amount;
-         } else {
-             user.commissionWallet += withdrawal.amount;
-         }
-         user.totalWithdrawals -= withdrawal.amount;
+        user.commissionWallet += withdrawal.amount;
       }
-      
+      user.totalWithdrawals -= withdrawal.amount;
       await user.save();
     }
 

@@ -57,11 +57,6 @@ interface DeductWalletAmountPayload {
 }
 
 
-interface ToggleUsdtPayload {
-  userId: string;
-  isUsdtEnabled: boolean;
-}
-
 // ==================== Fetch Queries ====================
 
 // ✅ Get all users with filters
@@ -193,20 +188,6 @@ const deductWalletAmount = async ({
   return response.data;
 };
 
-
-const toggleUsdtStatus = async ({
-  userId,
-  isUsdtEnabled,
-}: ToggleUsdtPayload) => {
-  const response = await request({
-    url: userUrls.TOGGLE_USDT(userId),
-    method: "PATCH",
-    data: { isUsdtEnabled },
-  });
-
-  return response.data;
-};
-
 // ==================== React Query Hooks ====================
 
 // ✅ Fetch All Users
@@ -301,17 +282,6 @@ export const useDeductWalletAmount = () => {
 
   return useMutation({
     mutationFn: deductWalletAmount,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    },
-  });
-};
-
-export const useToggleUsdtStatus = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: toggleUsdtStatus,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },

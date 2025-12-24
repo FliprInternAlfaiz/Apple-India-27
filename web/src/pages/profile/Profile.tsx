@@ -157,20 +157,8 @@ const Profile: React.FC = () => {
     navigate(path);
   };
 
-  const handleRecharge = () => {
-      if (userData?.isUsdtEnabled) {
-          navigate("/usdt-wallet");
-      } else {
-          navigate("/recharge");
-      }
-  };
-  const handleWithdrawal = () => {
-      if (userData?.isUsdtEnabled) {
-          navigate("/usdt-wallet");
-      } else {
-          navigate("/withdrawal");
-      }
-  };
+  const handleRecharge = () => navigate("/recharge");
+  const handleWithdrawal = () => navigate("/withdrawal");
 
   if (isLoading || isLoggedIn === "loading") {
     return (

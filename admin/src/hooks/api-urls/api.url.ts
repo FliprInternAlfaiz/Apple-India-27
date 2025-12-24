@@ -37,7 +37,6 @@ export const userUrls = {
     userPrefix + "/users/" + userId + "/add-wallet-amount",
   DEDUCT_WALLET_AMOUNT : (userId:string) => 
     userPrefix + "/users/" + userId + "/deduct-wallet-amount",
-  TOGGLE_USDT: (userId: string) => userPrefix + "/users/" + userId + "/toggle-usdt",
 };
 
 export const adminUrls = {

@@ -191,13 +191,11 @@ const WithdrawalManagement = () => {
       savings: "blue",
       current: "cyan",
       qr: "violet",
-      stripe: "grape",
     };
     const labels: any = {
       savings: "Savings",
       current: "Current",
       qr: "QR Code",
-      stripe: "Stripe",
     };
     return (
       <Badge color={colors[accountType] || "gray"} size="sm">
@@ -256,34 +254,15 @@ const WithdrawalManagement = () => {
       </Table.Td>
       <Table.Td>
         <Text size="sm" fw={600} c="blue">
-          {withdrawal.currency === "USDT" ? "$" : "₹"}
-          {withdrawal.amount}
+          ₹{withdrawal.amount}
         </Text>
-      </Table.Td>
-      <Table.Td>
-        <Badge
-          color={withdrawal.currency === "USDT" ? "green" : "blue"}
-          variant="light"
-          size="sm"
-        >
-          {withdrawal.currency || "INR"}
-        </Badge>
       </Table.Td>
       <Table.Td>{getWalletBadge(withdrawal.walletType)}</Table.Td>
       <Table.Td>
         <div>
-          {withdrawal.withdrawalMethod === "stripe" ? (
-             <Text size="sm" fw={500}>Stripe Payout</Text>
-          ) : (
-             <Text size="sm">{withdrawal.bankName}</Text>
-          )}
-
+          <Text size="sm">{withdrawal.bankName}</Text>
           {withdrawal.accountType === 'qr' ? (
             <Badge size="xs" color="violet">QR Payment</Badge>
-          ) : withdrawal.withdrawalMethod === "stripe" ? (
-            <Text size="xs" c="dimmed">
-               Processed via Stripe
-            </Text>
           ) : (
             <Text size="xs" c="dimmed">
               ••••{withdrawal.accountNumber?.slice(-4)}
@@ -486,7 +465,6 @@ const WithdrawalManagement = () => {
                 <Table.Th ta="center">Request ID</Table.Th>
                 <Table.Th ta="center">User</Table.Th>
                 <Table.Th ta="center">Amount</Table.Th>
-                <Table.Th ta="center">Currency</Table.Th>
                 <Table.Th ta="center">Wallet Type</Table.Th>
                 <Table.Th ta="center">Payment Details</Table.Th>
                 <Table.Th ta="center">Method</Table.Th>
@@ -553,7 +531,7 @@ const WithdrawalManagement = () => {
               title="Confirm Approval"
               color="green"
             >
-              Process payment to user's {selectedWithdrawal.withdrawalMethod === 'stripe' ? 'Stripe connected account' : selectedWithdrawal.accountType === 'qr' ? 'QR code' : 'bank account'}
+              Process payment to user's {selectedWithdrawal.accountType === 'qr' ? 'QR code' : 'bank account'}
             </Alert>
 
             <Card withBorder>
@@ -568,7 +546,7 @@ const WithdrawalManagement = () => {
                   </Text>
                   <Flex justify="center" mb="sm">
                     <Image
-                      src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${selectedWithdrawal.qrCodeImage}`}
+                      src={`${process.env.REACT_APP_API_URL}/${selectedWithdrawal.qrCodeImage}`}
                       alt="Payment QR Code"
                       width={250}
                       height={250}
@@ -591,14 +569,12 @@ const WithdrawalManagement = () => {
               </Group>
               <Group justify="space-between" mb="xs">
                 <Text size="sm" c="dimmed">
-                  {selectedWithdrawal.accountType === 'qr' ? 'Payment Name' : selectedWithdrawal.withdrawalMethod === 'stripe' ? 'Provider' : 'Bank Name'}
+                  {selectedWithdrawal.accountType === 'qr' ? 'Payment Name' : 'Bank Name'}
                 </Text>
-                <Text size="sm">
-                  {selectedWithdrawal.withdrawalMethod === 'stripe' ? 'Stripe' : selectedWithdrawal.bankName}
-                </Text>
+                <Text size="sm">{selectedWithdrawal.bankName}</Text>
               </Group>
               
-              {selectedWithdrawal.accountType !== 'qr' && selectedWithdrawal.withdrawalMethod !== 'stripe' && (
+              {selectedWithdrawal.accountType !== 'qr' && (
                 <>
                   <Group justify="space-between" mb="xs">
                     <Text size="sm" c="dimmed">
@@ -646,8 +622,7 @@ const WithdrawalManagement = () => {
                   Amount
                 </Text>
                 <Text size="sm" fw={600} c="blue">
-                  {selectedWithdrawal.currency === "USDT" ? "$" : "₹"}
-                  {selectedWithdrawal.amount}
+                  ₹{selectedWithdrawal.amount}
                 </Text>
               </Group>
             </Card>
@@ -714,7 +689,7 @@ const WithdrawalManagement = () => {
                   : "Commission"}
               </Text>
               <Text size="sm">
-                Method: {selectedWithdrawal.withdrawalMethod === 'stripe' ? 'Stripe' : selectedWithdrawal.accountType === 'qr' ? 'QR Payment' : 'Bank Transfer'}
+                Method: {selectedWithdrawal.accountType === 'qr' ? 'QR Payment' : 'Bank Transfer'}
               </Text>
             </Card>
 
@@ -776,8 +751,7 @@ const WithdrawalManagement = () => {
                   Amount
                 </Text>
                 <Text size="sm" fw={600} c="blue">
-                  {selectedWithdrawal.currency === "USDT" ? "$" : "₹"}
-                  {selectedWithdrawal.amount}
+                  ₹{selectedWithdrawal.amount}
                 </Text>
               </Group>
 
@@ -848,7 +822,7 @@ const WithdrawalManagement = () => {
                 <Text size="sm" fw={500} mb="sm" ta="center">QR Code:</Text>
                 <Flex justify="center">
                   <Image
-                      src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${selectedWithdrawal.qrCodeImage}`}
+                    src={`${process.env.REACT_APP_API_URL}/${selectedWithdrawal.qrCodeImage}`}
                     alt="Payment QR Code"
                     width={200}
                     height={200}

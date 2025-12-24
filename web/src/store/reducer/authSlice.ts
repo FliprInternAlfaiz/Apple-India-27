@@ -21,9 +21,6 @@ interface UserData {
   // Wallets
   mainWallet: number;
   commissionWallet: number;
-  isUsdtEnabled?: boolean;
-  mainWalletUsdt?: number;
-  commissionWalletUsdt?: number;
 
   // Statistics
   todayIncome: number;

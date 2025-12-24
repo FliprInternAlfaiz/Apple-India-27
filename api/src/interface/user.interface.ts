@@ -44,9 +44,6 @@ export interface IUser extends Document {
   aadhaarSubmittedAt?: Date | null;
   aadhaarVerifiedAt?: Date | null;
   aadhaarRejectionReason?: string | null;
-  isUsdtEnabled?: boolean;
-  mainWalletUsdt?: number;
-  commissionWalletUsdt?: number;
 }
 
 type TQueryType = Query<IUser, IUser>;
