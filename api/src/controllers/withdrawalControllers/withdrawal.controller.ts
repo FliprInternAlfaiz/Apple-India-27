@@ -421,9 +421,8 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       }
     }
 
-    // USDT Logic - Only process as USDT when the request explicitly asks for USDT
-    // (do NOT force USDT simply because user.isUsdtEnabled is true)
-    if (currency === 'USDT') {
+    // USDT Logic - Prioritize request currency OR user setting
+    if (currency === 'USDT' || user.isUsdtEnabled) {
        const walletBalance = walletType === "mainWallet" ? (user.mainWalletUsdt || 0) : (user.commissionWalletUsdt || 0);
 
        if (walletBalance < amount) {
