@@ -30,6 +30,8 @@ const schema = new Schema<IUser>(
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
     isSSO: { type: Boolean, default: false },
+    // USD User flag - controlled by admin
+    isUSDUser: { type: Boolean, default: false },
     lastActiveDate: { type: Date, default: null },
     lastIncomeResetDate: { type: Date, default: Date.now },
     lastMonthlyResetDate: { type: Date, default: Date.now },

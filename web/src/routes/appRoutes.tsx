@@ -18,6 +18,7 @@ import FinanceFund from "../pages/company/FinanceFund";
 import Recharge from "../pages/company/Recharge";
 import VideoPlayerScreen from "../pages/VideoPlayerScreen/VideoPlayerScreen";
 import WithdrawalScreen from "../pages/withdrawalScreen/WithdrawalScreen";
+import USDWithdrawalScreen from "../pages/usdWithdrawalScreen/USDWithdrawalScreen";
 import FinancialRecords from "../pages/financialRecords/financialRecords";
 import PrivacyPolicy from "../pages/company/PrivacyPolicy";
 import IdentityVerificationScreen from "../pages/IdentityVerification/IdentityVerificationScreen";
@@ -48,6 +49,7 @@ export const appRouter = createBrowserRouter([
           { path: "/finance-fund", element: <FinanceFund /> },
           { path: "/recharge", element: <Recharge /> },
           { path: "/withdrawal", element: <WithdrawalScreen /> },
+          { path: "/usd-withdrawal", element: <USDWithdrawalScreen /> },
           { path: "/financial-records", element: <FinancialRecords /> },
           { path: "/privacy-policy", element: <PrivacyPolicy /> },
           {

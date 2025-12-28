@@ -16,6 +16,8 @@ const conferenceNews = "/conferenceNews";
 
 const withdrawalPrefix = "/withdrawal/admin";
 
+const usdWithdrawalPrefix = "/usd-withdrawal/admin";
+
 export const authUrls = {
   LOGIN: authPrefix + "/login",
   PROFILE: authPrefix + "/profile",
@@ -37,6 +39,12 @@ export const userUrls = {
     userPrefix + "/users/" + userId + "/add-wallet-amount",
   DEDUCT_WALLET_AMOUNT : (userId:string) => 
     userPrefix + "/users/" + userId + "/deduct-wallet-amount",
+  TOGGLE_USD_USER: (userId: string) =>
+    usdWithdrawalPrefix + "/users/" + userId + "/toggle-usd",
+  FUND_USD_WALLET: (userId: string) =>
+    usdWithdrawalPrefix + "/users/" + userId + "/fund-wallet",
+  GET_USD_WALLET: (userId: string) =>
+    usdWithdrawalPrefix + "/users/" + userId + "/wallet",
 };
 
 export const adminUrls = {
@@ -80,6 +88,20 @@ export const withdrawalUrls = {
   UPDATE_WITHDRAWAL_CONFIG: (dayOfWeek: number) =>
     `//withdrawalConfig/withdrawal-configs/${dayOfWeek}`,
   BULK_UPDATE_CONFIGS: "/withdrawalConfig/withdrawal-configs/bulk",
+};
+
+export const usdWithdrawalUrls = {
+  USD_WITHDRAWALS: usdWithdrawalPrefix + "/withdrawals",
+  APPROVE_USD_WITHDRAWAL: (withdrawalId: string) =>
+    `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/approve`,
+  REJECT_USD_WITHDRAWAL: (withdrawalId: string) =>
+    `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/reject`,
+  // New Binance/Settings endpoints
+  GET_SETTINGS: usdWithdrawalPrefix + "/settings",
+  UPDATE_SETTINGS: usdWithdrawalPrefix + "/settings",
+  TEST_BINANCE: usdWithdrawalPrefix + "/test-binance",
+  BINANCE_STATUS: (withdrawalId: string) =>
+    `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/binance-status`,
 };
 
 export const conferenceNewsUrls = {

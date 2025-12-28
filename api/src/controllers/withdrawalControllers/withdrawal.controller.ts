@@ -389,7 +389,7 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
     }
 
     const user = await models.User.findById(userId)
-      .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals");
+      .select("+withdrawalPassword mainWallet commissionWallet totalWithdrawals isUSDUser");
 
     if (!user) {
       return JsonResponse(res, {
@@ -399,6 +399,8 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
         title: "Withdrawal",
       });
     }
+
+    const isUSDUser = (user as any).isUSDUser || false;
 
     user.mainWallet = Number(user.mainWallet) || 0;
     user.commissionWallet = Number(user.commissionWallet) || 0;
@@ -426,19 +428,24 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
       });
     }
 
-    const bankAccount = await models.bankAccount.findOne({
-      _id: bankAccountId,
-      userId,
-      isActive: true,
-    });
-
-    if (!bankAccount) {
-      return JsonResponse(res, {
-        status: "error",
-        statusCode: 404,
-        message: "Account not found.",
-        title: "Withdrawal",
+    // For USD users, bank account is optional - funds go to USD Wallet
+    let bankAccount = null;
+    if (!isUSDUser) {
+      // Non-USD users MUST have bank account
+      bankAccount = await models.bankAccount.findOne({
+        _id: bankAccountId,
+        userId,
+        isActive: true,
       });
+
+      if (!bankAccount) {
+        return JsonResponse(res, {
+          status: "error",
+          statusCode: 404,
+          message: "Account not found.",
+          title: "Withdrawal",
+        });
+      }
     }
 
     if (walletType === "mainWallet") {
@@ -450,25 +457,39 @@ export const createWithdrawal = async (req: Request, res: Response, __: NextFunc
     user.totalWithdrawals += amount;
     await user.save();
 
-    const withdrawal = await models.withdrawal.create({
+    // Create withdrawal record
+    const withdrawalData: any = {
       userId,
       walletType,
       amount,
-      bankAccountId,
-      ifscCode: bankAccount.ifscCode,
-      accountNumber: bankAccount.accountNumber,
-      accountHolderName: bankAccount.accountHolderName,
-      bankName: bankAccount.bankName,
-      accountType: bankAccount.accountType,
-      qrCodeImage: bankAccount.qrCodeImage || null,
       status: "pending",
-    });
+      isUSDWithdrawal: isUSDUser, // Mark as USD withdrawal
+    };
+
+    // Only add bank details for non-USD users
+    if (bankAccount) {
+      withdrawalData.bankAccountId = bankAccountId;
+      withdrawalData.ifscCode = bankAccount.ifscCode;
+      withdrawalData.accountNumber = bankAccount.accountNumber;
+      withdrawalData.accountHolderName = bankAccount.accountHolderName;
+      withdrawalData.bankName = bankAccount.bankName;
+      withdrawalData.accountType = bankAccount.accountType;
+      withdrawalData.qrCodeImage = bankAccount.qrCodeImage || null;
+    } else {
+      // For USD users, mark as USD Wallet destination
+      withdrawalData.bankName = "USD Wallet";
+      withdrawalData.accountHolderName = user.name || "USD User";
+    }
+
+    const withdrawal = await models.withdrawal.create(withdrawalData);
 
     return JsonResponse(res, {
       status: "success",
       statusCode: 201,
       title: "Withdrawal",
-      message: "Withdrawal request created successfully.",
+      message: isUSDUser 
+        ? "Withdrawal request created. Amount will be credited to your USD Wallet after approval."
+        : "Withdrawal request created successfully.",
       data: { withdrawal },
     });
 
@@ -758,6 +779,77 @@ const approveWithdrawal = async (
       });
     }
 
+    // Check if this is a USD user withdrawal (goes to USD Wallet)
+    const isUSDWithdrawal = (withdrawal as any).isUSDWithdrawal || 
+                           (withdrawal as any).bankName === "USD Wallet";
+
+    if (isUSDWithdrawal) {
+      // Credit to USD Wallet instead of direct payment
+      const user = await models.User.findById(withdrawal.userId);
+      if (!user) {
+        return JsonResponse(res, {
+          status: "error",
+          statusCode: 404,
+          message: "User not found.",
+          title: "Withdrawal",
+        });
+      }
+
+      // Get or create USD Wallet
+      let usdWallet = await models.USDWallet.findOne({ userId: withdrawal.userId });
+      
+      if (!usdWallet) {
+        // Create USD Wallet if doesn't exist
+        usdWallet = await models.USDWallet.create({
+          userId: withdrawal.userId,
+          balanceINR: 0,
+          balanceUSD: 0,
+          lastExchangeRate: 83, // Default rate
+        });
+      }
+
+      const exchangeRate = 83;
+
+      usdWallet.balanceINR = (usdWallet.balanceINR || 0) + withdrawal.amount;
+      usdWallet.balanceUSD = usdWallet.balanceINR / exchangeRate;
+      usdWallet.totalFundedINR = (usdWallet.totalFundedINR || 0) + withdrawal.amount;
+      usdWallet.lastExchangeRate = exchangeRate;
+      await usdWallet.save();
+
+      await models.USDWalletTransaction.create({
+        userId: withdrawal.userId,
+        type: 'credit',
+        amountINR: withdrawal.amount,
+        amountUSD: withdrawal.amount / exchangeRate,
+        exchangeRate,
+        description: `Withdrawal approved - credited from ${withdrawal.walletType === 'mainWallet' ? 'Prime Wallet' : 'Task Wallet'}`,
+        referenceType: 'admin_fund',
+        referenceId: withdrawal._id,
+        balanceAfterINR: usdWallet.balanceINR,
+        balanceAfterUSD: usdWallet.balanceUSD,
+      });
+
+      withdrawal.status = "completed";
+      withdrawal.transactionId = transactionId || "USD_WALLET_CREDIT";
+      withdrawal.remarks = remarks || "Amount credited to USD Wallet";
+      await withdrawal.save();
+
+      return JsonResponse(res, { 
+        status: "success",
+        statusCode: 200,
+        title: "Withdrawal",
+        message: `₹${withdrawal.amount} has been credited to user's USD Wallet ($${(withdrawal.amount / exchangeRate).toFixed(2)}).`,
+        data: { 
+          withdrawal,
+          usdWalletBalance: {
+            balanceINR: usdWallet.balanceINR,
+            balanceUSD: usdWallet.balanceUSD,
+          }
+        },
+      });
+    }
+
+    // Regular INR withdrawal - just mark as completed
     withdrawal.status = "completed";
     withdrawal.transactionId = transactionId;
     withdrawal.remarks = remarks;

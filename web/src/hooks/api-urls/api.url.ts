@@ -103,3 +103,16 @@ export const luckyDrawUrls = {
   ADMIN_DETAILS: luckydrawPrefix + "/admin/details/:drawId",
 };
 
+const usdWithdrawalPrefix = "/usd-withdrawal";
+
+export const usdWithdrawalUrls = {
+  WALLET_INFO: usdWithdrawalPrefix + "/wallet-info",
+  CREATE_CONNECT_ACCOUNT: usdWithdrawalPrefix + "/create-connect-account",
+  CHECK_CONNECT_STATUS: usdWithdrawalPrefix + "/check-connect-status",
+  CREATE_WITHDRAWAL: usdWithdrawalPrefix + "/create",
+  WITHDRAWAL_HISTORY: usdWithdrawalPrefix + "/history",
+  TRANSACTION_HISTORY: usdWithdrawalPrefix + "/transactions",
+  // Binance endpoints
+  WITHDRAWAL_METHODS: usdWithdrawalPrefix + "/withdrawal-methods",
+  SAVE_BINANCE_WALLET: usdWithdrawalPrefix + "/binance-wallet",
+};

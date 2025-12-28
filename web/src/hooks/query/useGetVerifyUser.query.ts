@@ -21,6 +21,7 @@ interface UserResponse {
   userLevel: number;
   levelName: string;
   isActive: boolean;
+  isUSDUser:boolean;
   isVerified: boolean;
   referralCode?: string;
   totalReferrals: number;

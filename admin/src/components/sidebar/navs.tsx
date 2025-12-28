@@ -9,6 +9,8 @@ import {
   IconCash,
   IconWallet,
   IconCurrencyRupee,
+  IconCurrencyDollar,
+  IconAdjustmentsDollar,
 } from "@tabler/icons-react";
 import { ROUTES } from "../../enum/routes";
 
@@ -26,6 +28,8 @@ export const navs: NavProps[] = [
   { icon: IconTrophy, label: "Levels", to: ROUTES.LEVELS },
   { icon: IconCash, label: "Recharge", to: ROUTES.RECHARGE },
   { icon: IconWallet, label: "Withdrawals", to: ROUTES.WITHDRAWAL },
+  { icon: IconCurrencyDollar, label: "USD Withdrawals", to: ROUTES.USD_WITHDRAWAL },
+  { icon: IconAdjustmentsDollar, label: "USD Settings", to: ROUTES.USD_WITHDRAWAL_SETTINGS },
   {
     icon: IconWallet,
     label: "Withdrawals-config",

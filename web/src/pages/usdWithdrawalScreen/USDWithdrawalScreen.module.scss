@@ -1,0 +1,287 @@
+.container {
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 1rem;
+  background-color: #fafafa;
+  min-height: 100vh;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #1a1a1a;
+}
+
+.card {
+  margin-bottom: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.walletCard {
+  background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%);
+  color: #fff;
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+}
+
+.walletHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.walletTitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.balanceSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.balanceItem {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.balanceLabel {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.5rem;
+}
+
+.balanceValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.inrBalance {
+  color: #ffd43b;
+}
+
+.usdBalance {
+  color: #69db7c;
+}
+
+.exchangeRate {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.onboardingCard {
+  background: linear-gradient(135deg, #3b5bdb 0%, #5c7cfa 100%);
+  color: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.onboardingTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.onboardingDesc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.stripeBtn {
+  background: #fff;
+  color: #3b5bdb;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+  }
+}
+
+.statusCard {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.statusIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.statusPending {
+  background: #fff3bf;
+  color: #fab005;
+}
+
+.statusComplete {
+  background: #d3f9d8;
+  color: #40c057;
+}
+
+.amountGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.amountCard {
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    background-color: #e7f5ff;
+    border-color: #d0ebff;
+    transform: translateY(-2px);
+  }
+}
+
+.amountSelected {
+  background-color: #1a4731;
+  border-color: #2d6a4f;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(26, 71, 49, 0.3);
+
+  p,
+  span {
+    color: #fff !important;
+  }
+}
+
+.amountDisabled {
+  background-color: #f1f3f5;
+  color: #adb5bd;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.historyItem {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f8f9fa;
+  }
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.historyAmount {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.historyDate {
+  font-size: 0.75rem;
+  color: #868e96;
+}
+
+.historyDetails {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.noDataCard {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #868e96;
+}
+
+.noDataIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.tabsContainer {
+  margin-top: 1.5rem;
+}
+
+.withdrawBtn {
+  background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%);
+  font-weight: 600;
+  padding: 0.875rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 71, 49, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.infoAlert {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}

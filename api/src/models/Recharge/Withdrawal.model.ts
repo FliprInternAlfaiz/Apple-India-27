@@ -5,13 +5,14 @@ export interface IWithdrawal extends Document {
   userId: mongoose.Types.ObjectId;
   walletType: 'mainWallet' | 'commissionWallet';
   amount: number;
-  bankAccountId: mongoose.Types.ObjectId;
-  accountHolderName: string;
-  bankName: string;
-  accountNumber: string;
-  ifscCode: string;
-  accountType: 'savings' | 'current' | 'qr';
+  bankAccountId?: mongoose.Types.ObjectId; // Optional for USD users
+  accountHolderName?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  accountType?: 'savings' | 'current' | 'qr';
   qrCodeImage?: string; // Path to QR code image if QR payment
+  isUSDWithdrawal?: boolean; // True if this is a USD user withdrawal (goes to USD Wallet)
   status: 'pending' | 'processing' | 'completed' | 'rejected';
   transactionId?: string;
   remarks?: string;
@@ -41,23 +42,23 @@ const WithdrawalSchema: Schema = new Schema(
     bankAccountId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'BankAccount',
-      required: true,
+      required: false, // Optional for USD users
     },
     accountHolderName: {
       type: String,
-      required: true,
+      required: false, // Optional for USD users
     },
     bankName: {
       type: String,
-      required: true,
+      required: false, // Optional for USD users
     },
     accountNumber: {
       type: String,
-      required: true,
+      required: false, // Optional for USD users
     },
     ifscCode: {
       type: String,
-      required: true,
+      required: false, // Optional for USD users
       uppercase: true,
     },
     accountType: {
@@ -68,6 +69,11 @@ const WithdrawalSchema: Schema = new Schema(
     qrCodeImage: {
       type: String,
       default: null,
+    },
+    isUSDWithdrawal: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     status: {
       type: String,

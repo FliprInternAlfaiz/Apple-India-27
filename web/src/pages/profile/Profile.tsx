@@ -9,6 +9,7 @@ import {
   Loader,
   Center,
   Tooltip,
+  Badge,
 } from "@mantine/core";
 import {
   FaBuilding,
@@ -19,6 +20,7 @@ import {
   FaDownload,
   FaSignOutAlt,
   FaEdit,
+  FaDollarSign,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -159,6 +161,10 @@ const Profile: React.FC = () => {
 
   const handleRecharge = () => navigate("/recharge");
   const handleWithdrawal = () => navigate("/withdrawal");
+  const handleUSDWithdrawal = () => navigate("/usd-withdrawal");
+
+  // Check if user is USD enabled
+  const isUSDUser = userData?.isUSDUser || false;
 
   if (isLoading || isLoggedIn === "loading") {
     return (
@@ -380,6 +386,28 @@ const Profile: React.FC = () => {
               Withdrawal
             </Button>
           </Flex>
+          
+          {/* USD Withdrawal Option for USD Users */}
+          {isUSDUser && (
+            <Button
+              fullWidth
+              mt="md"
+              onClick={handleUSDWithdrawal}
+              leftSection={<FaDollarSign />}
+              style={{
+                background: "linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%)",
+                color: "#fff",
+                fontWeight: 600,
+                borderRadius: "100px",
+                border: "none",
+              }}
+            >
+              USD Withdrawal
+              <Badge ml="xs" color="green" variant="light" size="xs">
+                New
+              </Badge>
+            </Button>
+          )}
         </Box>
 
         {/* Menu Items */}

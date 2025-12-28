@@ -33,6 +33,8 @@ interface UserData {
   totalTasksCompleted: number;
   todayTasksCompleted: number;
 
+  isUSDUser:boolean;
+
   // Level
   userLevel: number;
   levelName: string;

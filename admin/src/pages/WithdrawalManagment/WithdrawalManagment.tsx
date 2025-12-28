@@ -20,6 +20,7 @@ import {
   Grid,
   CopyButton,
   Image,
+  ThemeIcon,
 } from "@mantine/core";
 import {
   FiSearch,
@@ -31,6 +32,7 @@ import {
   FiEye,
   FiCopy,
 } from "react-icons/fi";
+import { FaWallet } from "react-icons/fa";
 import { notifications } from "@mantine/notifications";
 import {
   useAllWithdrawals,
@@ -91,7 +93,11 @@ const WithdrawalManagement = () => {
   const confirmApprove = async () => {
     if (!selectedWithdrawal) return;
 
-    if (!transactionId) {
+    // Check if this is a USD user withdrawal (no bank account, goes to USD Wallet)
+    const isUSDWithdrawal = selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal;
+
+    // For non-USD withdrawals, transaction ID is required
+    if (!isUSDWithdrawal && !transactionId) {
       notifications.show({
         title: "Validation Error",
         message: "Please enter transaction ID",
@@ -104,13 +110,15 @@ const WithdrawalManagement = () => {
     try {
       await approveWithdrawalMutation.mutateAsync({
         withdrawalId: selectedWithdrawal._id,
-        transactionId,
-        remarks: remarks || "Payment processed successfully",
+        transactionId: isUSDWithdrawal ? "USD_WALLET_CREDIT" : transactionId,
+        remarks: remarks || (isUSDWithdrawal ? "Amount credited to USD Wallet" : "Payment processed successfully"),
       });
 
       notifications.show({
         title: "Success",
-        message: "Withdrawal approved successfully",
+        message: isUSDWithdrawal 
+          ? "Amount credited to user's USD Wallet successfully" 
+          : "Withdrawal approved successfully",
         color: "green",
         icon: <FiCheckCircle />,
       });
@@ -261,7 +269,11 @@ const WithdrawalManagement = () => {
       <Table.Td>
         <div>
           <Text size="sm">{withdrawal.bankName}</Text>
-          {withdrawal.accountType === 'qr' ? (
+          {withdrawal.bankName === "USD Wallet" || withdrawal.isUSDWithdrawal ? (
+            <Badge size="xs" color="green" leftSection={<FaWallet size={10} />}>
+              USD Wallet Transfer
+            </Badge>
+          ) : withdrawal.accountType === 'qr' ? (
             <Badge size="xs" color="violet">QR Payment</Badge>
           ) : (
             <Text size="xs" c="dimmed">
@@ -526,121 +538,184 @@ const WithdrawalManagement = () => {
       >
         {selectedWithdrawal && (
           <Flex direction="column" gap="md">
-            <Alert
-              icon={<FiCheckCircle />}
-              title="Confirm Approval"
-              color="green"
-            >
-              Process payment to user's {selectedWithdrawal.accountType === 'qr' ? 'QR code' : 'bank account'}
-            </Alert>
-
-            <Card withBorder>
-              <Text size="sm" fw={500} mb="xs">
-                Payment Details:
-              </Text>
-
-              {selectedWithdrawal.accountType === 'qr' && selectedWithdrawal.qrCodeImage && (
-                <Card withBorder p="md" mb="md" style={{ backgroundColor: '#f8f9fa' }}>
-                  <Text size="sm" fw={600} mb="sm" ta="center">
-                    Scan QR Code to Pay
+            {/* Check if USD Withdrawal */}
+            {(selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal) ? (
+              <>
+                {/* USD User - Credit to USD Wallet */}
+                <Alert
+                  icon={<FaWallet />}
+                  title="USD Wallet Credit"
+                  color="blue"
+                >
+                  <Text size="sm">
+                    This user is USD-enabled. Approval will credit the amount to their <strong>USD Wallet</strong>.
                   </Text>
-                  <Flex justify="center" mb="sm">
-                    <Image
-                      src={`${process.env.REACT_APP_API_URL}/${selectedWithdrawal.qrCodeImage}`}
-                      alt="Payment QR Code"
-                      width={250}
-                      height={250}
-                      radius="md"
-                    />
+                  <Text size="xs" c="dimmed" mt="xs">
+                    No actual payment is made at this step. User can withdraw from their USD Wallet via Stripe later.
+                  </Text>
+                </Alert>
+
+                <Card withBorder p="md">
+                  <Flex align="center" gap="md" mb="md">
+                    <ThemeIcon size={50} radius="xl" color="green" variant="light">
+                      <FaWallet size={24} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="lg" fw={700}>₹{selectedWithdrawal.amount}</Text>
+                      <Text size="sm" c="dimmed">Will be credited to USD Wallet</Text>
+                    </div>
                   </Flex>
-                  <Alert color="blue" icon={<FiAlertCircle />}>
-                    <Text size="xs">
-                      Scan this QR code using any UPI app to make the payment. After successful payment, enter the transaction ID below.
-                    </Text>
-                  </Alert>
+
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">User</Text>
+                    <Text size="sm" fw={500}>{selectedWithdrawal.userId?.name || selectedWithdrawal.accountHolderName}</Text>
+                  </Group>
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" c="dimmed">Source Wallet</Text>
+                    <Badge color={selectedWithdrawal.walletType === "mainWallet" ? "blue" : "green"}>
+                      {selectedWithdrawal.walletType === "mainWallet" ? "Main Wallet" : "Commission Wallet"}
+                    </Badge>
+                  </Group>
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">Destination</Text>
+                    <Badge color="cyan" leftSection={<FaWallet size={10} />}>USD Wallet</Badge>
+                  </Group>
                 </Card>
-              )}
 
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  Account Holder
-                </Text>
-                <Text size="sm">{selectedWithdrawal.accountHolderName}</Text>
-              </Group>
-              <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed">
-                  {selectedWithdrawal.accountType === 'qr' ? 'Payment Name' : 'Bank Name'}
-                </Text>
-                <Text size="sm">{selectedWithdrawal.bankName}</Text>
-              </Group>
-              
-              {selectedWithdrawal.accountType !== 'qr' && (
-                <>
+                <Alert color="green" variant="light" icon={<FiAlertCircle />}>
+                  <Text size="xs">
+                    <strong>Flow:</strong> Upon approval, ₹{selectedWithdrawal.amount} will be added to user's USD Wallet balance. 
+                    The user can then withdraw this amount via Stripe to their connected bank account.
+                  </Text>
+                </Alert>
+
+                <Textarea
+                  label="Remarks (Optional)"
+                  placeholder="Amount credited to USD Wallet"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                />
+              </>
+            ) : (
+              <>
+                {/* Regular INR User - Bank/QR Payment */}
+                <Alert
+                  icon={<FiCheckCircle />}
+                  title="Confirm Approval"
+                  color="green"
+                >
+                  Process payment to user's {selectedWithdrawal.accountType === 'qr' ? 'QR code' : 'bank account'}
+                </Alert>
+
+                <Card withBorder>
+                  <Text size="sm" fw={500} mb="xs">
+                    Payment Details:
+                  </Text>
+
+                  {selectedWithdrawal.accountType === 'qr' && selectedWithdrawal.qrCodeImage && (
+                    <Card withBorder p="md" mb="md" style={{ backgroundColor: '#f8f9fa' }}>
+                      <Text size="sm" fw={600} mb="sm" ta="center">
+                        Scan QR Code to Pay
+                      </Text>
+                      <Flex justify="center" mb="sm">
+                        <Image
+                          src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${selectedWithdrawal.qrCodeImage}`}
+                          alt="Payment QR Code"
+                          width={250}
+                          height={250}
+                          radius="md"
+                        />
+                      </Flex>
+                      <Alert color="blue" icon={<FiAlertCircle />}>
+                        <Text size="xs">
+                          Scan this QR code using any UPI app to make the payment. After successful payment, enter the transaction ID below.
+                        </Text>
+                      </Alert>
+                    </Card>
+                  )}
+
                   <Group justify="space-between" mb="xs">
                     <Text size="sm" c="dimmed">
-                      Account Number
+                      Account Holder
                     </Text>
-                    <Group gap="xs">
-                      <Text size="sm">{selectedWithdrawal.accountNumber}</Text>
-                      <CopyButton value={selectedWithdrawal.accountNumber}>
-                        {({ copied, copy }) => (
-                          <ActionIcon
-                            color={copied ? "teal" : "gray"}
-                            onClick={copy}
-                            size="sm"
-                          >
-                            <FiCopy size={12} />
-                          </ActionIcon>
-                        )}
-                      </CopyButton>
-                    </Group>
+                    <Text size="sm">{selectedWithdrawal.accountHolderName}</Text>
                   </Group>
                   <Group justify="space-between" mb="xs">
                     <Text size="sm" c="dimmed">
-                      IFSC Code
+                      {selectedWithdrawal.accountType === 'qr' ? 'Payment Name' : 'Bank Name'}
                     </Text>
-                    <Group gap="xs">
-                      <Text size="sm">{selectedWithdrawal.ifscCode}</Text>
-                      <CopyButton value={selectedWithdrawal.ifscCode}>
-                        {({ copied, copy }) => (
-                          <ActionIcon
-                            color={copied ? "teal" : "gray"}
-                            onClick={copy}
-                            size="sm"
-                          >
-                            <FiCopy size={12} />
-                          </ActionIcon>
-                        )}
-                      </CopyButton>
-                    </Group>
+                    <Text size="sm">{selectedWithdrawal.bankName}</Text>
                   </Group>
-                </>
-              )}
-              
-              <Group justify="space-between">
-                <Text size="sm" c="dimmed">
-                  Amount
-                </Text>
-                <Text size="sm" fw={600} c="blue">
-                  ₹{selectedWithdrawal.amount}
-                </Text>
-              </Group>
-            </Card>
+                  
+                  {selectedWithdrawal.accountType !== 'qr' && (
+                    <>
+                      <Group justify="space-between" mb="xs">
+                        <Text size="sm" c="dimmed">
+                          Account Number
+                        </Text>
+                        <Group gap="xs">
+                          <Text size="sm">{selectedWithdrawal.accountNumber}</Text>
+                          <CopyButton value={selectedWithdrawal.accountNumber}>
+                            {({ copied, copy }) => (
+                              <ActionIcon
+                                color={copied ? "teal" : "gray"}
+                                onClick={copy}
+                                size="sm"
+                              >
+                                <FiCopy size={12} />
+                              </ActionIcon>
+                            )}
+                          </CopyButton>
+                        </Group>
+                      </Group>
+                      <Group justify="space-between" mb="xs">
+                        <Text size="sm" c="dimmed">
+                          IFSC Code
+                        </Text>
+                        <Group gap="xs">
+                          <Text size="sm">{selectedWithdrawal.ifscCode}</Text>
+                          <CopyButton value={selectedWithdrawal.ifscCode}>
+                            {({ copied, copy }) => (
+                              <ActionIcon
+                                color={copied ? "teal" : "gray"}
+                                onClick={copy}
+                                size="sm"
+                              >
+                                <FiCopy size={12} />
+                              </ActionIcon>
+                            )}
+                          </CopyButton>
+                        </Group>
+                      </Group>
+                    </>
+                  )}
+                  
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">
+                      Amount
+                    </Text>
+                    <Text size="sm" fw={600} c="blue">
+                      ₹{selectedWithdrawal.amount}
+                    </Text>
+                  </Group>
+                </Card>
 
-            <TextInput
-              label="Transaction ID *"
-              placeholder="Enter transaction ID"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-              required
-            />
+                <TextInput
+                  label="Transaction ID *"
+                  placeholder="Enter transaction ID"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  required
+                />
 
-            <Textarea
-              label="Remarks (Optional)"
-              placeholder="Payment processed successfully"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-            />
+                <Textarea
+                  label="Remarks (Optional)"
+                  placeholder="Payment processed successfully"
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                />
+              </>
+            )}
 
             <Group justify="flex-end" gap="sm" mt="md">
               <Button
@@ -654,9 +729,11 @@ const WithdrawalManagement = () => {
                 color="green"
                 onClick={confirmApprove}
                 loading={approveWithdrawalMutation.isPending}
-                leftSection={<FiCheckCircle />}
+                leftSection={(selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal) ? <FaWallet /> : <FiCheckCircle />}
               >
-                Approve Withdrawal
+                {(selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal) 
+                  ? "Credit to USD Wallet" 
+                  : "Approve Withdrawal"}
               </Button>
             </Group>
           </Flex>

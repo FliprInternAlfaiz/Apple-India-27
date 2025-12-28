@@ -20,6 +20,10 @@ import {
   NumberInput,
   Textarea,
   SegmentedControl,
+  Switch,
+  Card,
+  Divider,
+  Grid,
 } from "@mantine/core";
 import {
   FiSearch,
@@ -33,6 +37,7 @@ import {
   FiTrendingUp,
   FiMinus,
   FiPlus,
+  FiDollarSign,
 } from "react-icons/fi";
 import { notifications } from "@mantine/notifications";
 import {
@@ -44,6 +49,11 @@ import {
   useAddWalletAmount,
   useDeductWalletAmount,
 } from "../../hooks/query/useAdminUsers.query";
+import {
+  useToggleUSDUser,
+  useFundUSDWallet,
+  useUSDWalletByUser,
+} from "../../hooks/query/USDWithdrawal.query";
 import classes from "./index.module.scss";
 
 const AllUsers = () => {
@@ -69,6 +79,11 @@ const AllUsers = () => {
   const [walletAmount, setWalletAmount] = useState<number>(0);
   const [deductReason, setDeductReason] = useState("");
 
+  // USD Wallet modal states
+  const [usdWalletModal, setUsdWalletModal] = useState(false);
+  const [usdFundAmount, setUsdFundAmount] = useState<number>(0);
+  const [usdFundDescription, setUsdFundDescription] = useState("");
+
   // Fetch users with filters
   const { data, isLoading, error } = useAllUsers({
     page: activePage,
@@ -88,6 +103,11 @@ const AllUsers = () => {
   const toggleStatusMutation = useToggleStatus();
   const addWalletAmountMutation = useAddWalletAmount();
   const deductWalletAmountMutation = useDeductWalletAmount();
+  const toggleUSDUserMutation = useToggleUSDUser();
+  const fundUSDWalletMutation = useFundUSDWallet();
+
+  // Fetch USD wallet when user is selected
+  const { data: usdWalletData } = useUSDWalletByUser(selectedUser?._id || "");
 
   const users = data?.users || [];
   const pagination = data?.pagination || {};
@@ -107,6 +127,75 @@ const AllUsers = () => {
     setWalletType("mainWallet");
     setWalletAmount(0);
     setDeductReason("");
+  };
+
+  // USD User Toggle Handler
+  const handleToggleUSDUser = async (user: any) => {
+    try {
+      await toggleUSDUserMutation.mutateAsync({
+        userId: user._id,
+        isUSDUser: !user.isUSDUser,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: `User ${!user.isUSDUser ? "enabled" : "disabled"} for USD withdrawals`,
+        color: "green",
+        icon: <FiCheckCircle />,
+      });
+    } catch (error: any) {
+      notifications.show({
+        title: "Error",
+        message: error.response?.data?.message || "Failed to update USD status",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+    }
+  };
+
+  // USD Wallet Modal Handler
+  const handleOpenUSDWalletModal = (user: any) => {
+    setSelectedUser(user);
+    setUsdFundAmount(0);
+    setUsdFundDescription("");
+    setUsdWalletModal(true);
+  };
+
+  // Fund USD Wallet Handler
+  const confirmFundUSDWallet = async () => {
+    if (!usdFundAmount || usdFundAmount <= 0) {
+      notifications.show({
+        title: "Invalid Amount",
+        message: "Amount must be greater than 0",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+      return;
+    }
+
+    try {
+      await fundUSDWalletMutation.mutateAsync({
+        userId: selectedUser._id,
+        amountINR: usdFundAmount,
+        description: usdFundDescription || "Admin wallet funding",
+      });
+
+      notifications.show({
+        title: "Success",
+        message: `₹${usdFundAmount} funded to ${selectedUser.name}'s USD wallet`,
+        color: "green",
+        icon: <FiCheckCircle />,
+      });
+
+      setUsdWalletModal(false);
+    } catch (error: any) {
+      notifications.show({
+        title: "Error",
+        message: error.response?.data?.message || "Failed to fund USD wallet",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+    }
   };
 
   const confirmWalletAction = async () => {
@@ -419,6 +508,30 @@ const AllUsers = () => {
         </Tooltip>
       </Table.Td>
       <Table.Td>
+        <Flex gap="xs" align="center">
+          <Tooltip label={user.isUSDUser ? "Disable USD" : "Enable USD"}>
+            <Switch
+              checked={user.isUSDUser || false}
+              onChange={() => handleToggleUSDUser(user)}
+              size="xs"
+              color="green"
+            />
+          </Tooltip>
+          {user.isUSDUser && (
+            <Tooltip label="Fund USD Wallet">
+              <ActionIcon
+                variant="light"
+                color="green"
+                size="xs"
+                onClick={() => handleOpenUSDWalletModal(user)}
+              >
+                <FiDollarSign size={12} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </Flex>
+      </Table.Td>
+      <Table.Td>
         <Group gap="xs">
           <Tooltip label="View Details">
             <ActionIcon variant="light" color="blue" size="sm">
@@ -597,13 +710,14 @@ const AllUsers = () => {
                 <Table.Th ta="center">Password</Table.Th>
                 <Table.Th ta="center">Referrals</Table.Th>
                 <Table.Th ta="center">Active</Table.Th>
+                <Table.Th ta="center">USD User</Table.Th>
                 <Table.Th ta="center">Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading ? (
                 <Table.Tr>
-                  <Table.Td colSpan={10}>
+                  <Table.Td colSpan={12}>
                     <Flex justify="center" direction="column" align="center" py="xl">
                       <Loader size="lg" />
                       <Text c="dimmed" ml="sm">
@@ -616,7 +730,7 @@ const AllUsers = () => {
                 rows
               ) : (
                 <Table.Tr>
-                  <Table.Td colSpan={10}>
+                  <Table.Td colSpan={12}>
                     <Text ta="center" c="dimmed" py="xl">
                       No users found
                     </Text>
@@ -864,6 +978,116 @@ const AllUsers = () => {
                 loading={updateAadhaarMutation.isPending}
               >
                 Update Status
+              </Button>
+            </Group>
+          </Flex>
+        )}
+      </Modal>
+
+      {/* USD Wallet Modal */}
+      <Modal
+        opened={usdWalletModal}
+        onClose={() => setUsdWalletModal(false)}
+        title="Fund USD Wallet"
+        centered
+        size="lg"
+      >
+        {selectedUser && (
+          <Flex direction="column" gap="md">
+            <Card withBorder>
+              <Text size="lg" fw={600} mb="sm">
+                User Information
+              </Text>
+              <Divider mb="sm" />
+              <Grid>
+                <Grid.Col span={6}>
+                  <Text size="xs" c="dimmed">Name</Text>
+                  <Text size="sm" fw={500}>{selectedUser.name}</Text>
+                </Grid.Col>
+                <Grid.Col span={6}>
+                  <Text size="xs" c="dimmed">Phone</Text>
+                  <Text size="sm">{selectedUser.phone}</Text>
+                </Grid.Col>
+              </Grid>
+            </Card>
+
+            {usdWalletData?.wallet && (
+              <Card withBorder>
+                <Text size="lg" fw={600} mb="sm">
+                  Current USD Wallet Balance
+                </Text>
+                <Divider mb="sm" />
+                <Grid>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Balance (INR)</Text>
+                    <Text size="lg" fw={600}>
+                      ₹{usdWalletData.wallet.balanceINR?.toLocaleString() || 0}
+                    </Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Balance (USD)</Text>
+                    <Text size="lg" fw={600} c="green">
+                      ${usdWalletData.wallet.balanceUSD?.toFixed(2) || "0.00"}
+                    </Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Total Funded</Text>
+                    <Text size="sm">
+                      ₹{usdWalletData.wallet.totalFundedINR?.toLocaleString() || 0}
+                    </Text>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Text size="xs" c="dimmed">Exchange Rate</Text>
+                    <Text size="sm">
+                      1 USD = ₹{usdWalletData.currentExchangeRate || 83}
+                    </Text>
+                  </Grid.Col>
+                </Grid>
+              </Card>
+            )}
+
+            <NumberInput
+              label="Amount to Fund (INR)"
+              placeholder="Enter amount in INR"
+              value={usdFundAmount}
+              onChange={(value) => setUsdFundAmount(Number(value))}
+              min={0}
+              step={1000}
+              prefix="₹"
+              thousandSeparator=","
+              required
+              description="This amount will be credited to user's USD wallet"
+            />
+
+            {usdFundAmount > 0 && (
+              <Alert icon={<FiDollarSign />} color="green" variant="light">
+                Equivalent USD: $
+                {(usdFundAmount / (usdWalletData?.currentExchangeRate || 83)).toFixed(2)}
+              </Alert>
+            )}
+
+            <Textarea
+              label="Description (Optional)"
+              placeholder="e.g., Monthly salary, Task reward, etc."
+              value={usdFundDescription}
+              onChange={(e) => setUsdFundDescription(e.target.value)}
+            />
+
+            <Group justify="flex-end" gap="sm" mt="md">
+              <Button
+                variant="subtle"
+                onClick={() => setUsdWalletModal(false)}
+                disabled={fundUSDWalletMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="green"
+                onClick={confirmFundUSDWallet}
+                loading={fundUSDWalletMutation.isPending}
+                leftSection={<FiDollarSign />}
+              >
+                Fund USD Wallet
               </Button>
             </Group>
           </Flex>

@@ -27,6 +27,7 @@ export interface IUser extends Document {
   isActive: boolean;
   isVerified: boolean;
   isSSO: boolean;
+  isUSDUser: boolean;
   lastActiveDate?: Date | null;
   lastIncomeResetDate: Date;
   lastMonthlyResetDate: Date;

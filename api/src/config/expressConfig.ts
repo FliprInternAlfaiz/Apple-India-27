@@ -15,6 +15,7 @@ import { luckydrawRoutes } from '../routes/luckydraw/luckydraw.route';
 import { userManagementRoutes } from '../routes/userManagement/userManagment.routes';
 import { AdminTaskRoutes } from '../routes/adminTask/adminTask.routes';
 import { WithdrawalConfigRoutes } from '../routes/withdrawalCofig/withdrawalConfig.route';
+import { USDWithdrawalRoutes } from '../routes/usdWithdrawal/usdWithdrawal.route';
 
 class ExpressConfig {
   app: express.Application;
@@ -43,6 +44,7 @@ class ExpressConfig {
       new userManagementRoutes(this.app),
       new AdminTaskRoutes(this.app),
       new WithdrawalConfigRoutes(this.app),
+      new USDWithdrawalRoutes(this.app),
     ];
 
     if (process.env.NODE_ENV !== 'test') this.configureRoutes(routes);

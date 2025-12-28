@@ -1,0 +1,38 @@
+.container {
+  padding: 1rem;
+}
+
+.header {
+  padding: 1rem;
+}
+
+.title {
+  color: #333;
+}
+
+.subtitle {
+  color: #666;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.searchInput {
+  min-width: 200px;
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.pagination {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.statsCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

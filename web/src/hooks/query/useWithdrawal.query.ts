@@ -159,7 +159,7 @@ export const useSetDefaultAccountMutation = () => {
 interface CreateWithdrawalPayload {
   walletType: string;
   amount: number;
-  bankAccountId: string;
+  bankAccountId?: string; // Optional for USD users
   withdrawalPassword: string;
 }
 

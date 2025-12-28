@@ -21,6 +21,7 @@ import {
   Image,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useSelector } from "react-redux";
 import {
   useWalletInfoQuery,
   useBankAccountsQuery,
@@ -41,7 +42,11 @@ import {
   FaUniversity,
   FaQrcode,
   FaImage,
+  FaDollarSign,
+  FaWallet,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import type { RootState } from "../../store/store";
 
 const WithdrawalScreen: React.FC = () => {
   const [selectedWallet, setSelectedWallet] = useState("mainWallet");
@@ -49,6 +54,9 @@ const WithdrawalScreen: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [withdrawalPassword, setWithdrawalPassword] = useState("");
   const [activeTab, setActiveTab] = useState<string | null>("bank");
+
+  // Check if user is USD enabled
+  const isUSDUser = useSelector((state: RootState) => state.auth?.userData?.isUSDUser) || false;
 
   const [addAccountOpened, { open: openAddAccount, close: closeAddAccount }] =
     useDisclosure(false);
@@ -288,8 +296,9 @@ const WithdrawalScreen: React.FC = () => {
 
   const handleWithdrawal = () => {
     const amount = selectedAmount;
-    if (!amount || amount < 280 || !selectedAccount || !withdrawalPassword)
-      return;
+    // For USD users, bank account is optional (money goes to USD Wallet)
+    if (!amount || amount < 280 || !withdrawalPassword) return;
+    if (!isUSDUser && !selectedAccount) return; // Only require bank account for non-USD users
 
     const selectedWalletBalance =
       selectedWallet === "mainWallet"
@@ -302,7 +311,7 @@ const WithdrawalScreen: React.FC = () => {
       {
         walletType: selectedWallet,
         amount,
-        bankAccountId: selectedAccount,
+        bankAccountId: isUSDUser ? undefined : selectedAccount, // No bank account for USD users
         withdrawalPassword,
       },
       {
@@ -385,6 +394,35 @@ const WithdrawalScreen: React.FC = () => {
 
       {isTodayAllowed && isTimeAllowed && (
         <>
+          {/* USD User Info Banner */}
+          {isUSDUser && (
+            <Alert
+              icon={<FaDollarSign />}
+              color="blue"
+              variant="light"
+              mb="md"
+              title="USD Withdrawal Mode"
+            >
+              <Text size="sm" mb="xs">
+                As a USD-enabled user, your withdrawal will be credited to your <strong>USD Wallet</strong> after admin approval.
+              </Text>
+              <Text size="sm" mb="xs">
+                You can then withdraw from your USD Wallet to your Stripe-connected bank account.
+              </Text>
+              <Link to="/usd-withdrawal" style={{ textDecoration: 'none' }}>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="blue"
+                  leftSection={<FaWallet size={12} />}
+                  mt="xs"
+                >
+                  Go to USD Wallet
+                </Button>
+              </Link>
+            </Alert>
+          )}
+
           <Card shadow="sm" p="md" radius="md" className={classes.card}>
             <Text fw={600} mb="xs">
               Select Wallet
@@ -414,7 +452,8 @@ const WithdrawalScreen: React.FC = () => {
             </Text>
           </Card>
 
-          {/* Bank Accounts & QR Codes */}
+          {/* Bank Accounts & QR Codes - Only show for non-USD users */}
+          {!isUSDUser && (
           <Card shadow="sm" p="md" radius="md" className={classes.card}>
             <Flex justify="space-between" align="center" mb="xs">
               <Text fw={600}>Withdrawal Method</Text>
@@ -511,6 +550,7 @@ const WithdrawalScreen: React.FC = () => {
               </Flex>
             )}
           </Card>
+          )}
 
           {/* Withdrawal Amount */}
           <Card shadow="sm" p="md" radius="md" className={classes.card}>
@@ -583,10 +623,13 @@ const WithdrawalScreen: React.FC = () => {
             mt="md"
             onClick={handleWithdrawal}
             loading={createWithdrawalMutation.isPending}
-            disabled={!selectedAmount || !selectedAccount || !withdrawalPassword}
+            disabled={!selectedAmount || (!isUSDUser && !selectedAccount) || !withdrawalPassword}
+            leftSection={isUSDUser ? <FaDollarSign /> : undefined}
           >
-            {`Submit Withdrawal Request ${selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""
-              }`}
+            {isUSDUser 
+              ? `Request Withdrawal to USD Wallet ${selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""}`
+              : `Submit Withdrawal Request ${selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""}`
+            }
           </Button>
         </>
       )}

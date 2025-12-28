@@ -12,6 +12,8 @@ import WithdrawalManagement from "../pages/WithdrawalManagment/WithdrawalManagme
 import PaymentMethodManagement from "../pages/PaymentMethodManagement/PaymentMethodManagement";
 import WithdrawalConfigPage from "../pages/WithdrawalConfig/WithDrawalConfigPage";
 import ConferenceNewsManagement from "../pages/conferenceNewsManagment/conferenceNewsManagement";
+import USDWithdrawalManagement from "../pages/USDWithdrawalManagement/USDWithdrawalManagement";
+import USDWithdrawalSettingsPage from "../pages/USDWithdrawalManagement/USDWithdrawalSettingsPage";
 
 export const appRouter = createBrowserRouter([
   {
@@ -45,6 +47,14 @@ export const appRouter = createBrowserRouter([
       {
         path: ROUTES.WITHDRAWAL,
         element: <WithdrawalManagement />,
+      },
+      {
+        path: ROUTES.USD_WITHDRAWAL,
+        element: <USDWithdrawalManagement />,
+      },
+      {
+        path: ROUTES.USD_WITHDRAWAL_SETTINGS,
+        element: <USDWithdrawalSettingsPage />,
       },
       {
         path: ROUTES.WITHDRAWAL_CONFIG,
