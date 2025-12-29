@@ -10,7 +10,6 @@ export const ROUTES = {
   TEAMS: "/teams",
 
   LEVELS: "/levels",
-
   RECHARGE: "/recharge",
 
   WITHDRAWAL: "/withdrawal",
