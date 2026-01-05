@@ -374,14 +374,14 @@ export const createStripeConnectAccount = async (
       return `http://${u}`;
     };
 
-    const defaultRefresh = `${process.env.WEB_URL || 'http://localhost:5174'}/usd-withdrawal?refresh=true`;
-    const defaultReturn = `${process.env.WEB_URL || 'http://localhost:5174'}/usd-withdrawal?success=true`;
+    const defaultRefresh = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/usd-withdrawal?refresh=true`;
+    const defaultReturn = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/usd-withdrawal?success=true`;
 
     const finalRefreshUrl: string = ensureProtocol(refreshUrl) || ensureProtocol(defaultRefresh) || defaultRefresh;
     const finalReturnUrl: string = ensureProtocol(returnUrl) || ensureProtocol(defaultReturn) || defaultReturn;
 
     const accountLink = await stripeService.createAccountLink(
-      accountId,
+      accountId as string,
       finalRefreshUrl,
       finalReturnUrl
     );
@@ -434,7 +434,7 @@ export const checkStripeConnectStatus = async (
     }
 
     const isOnboarded = await stripeService.isAccountOnboarded(
-      usdWallet.stripeConnectAccountId
+      usdWallet.stripeConnectAccountId as string
     );
 
     if (isOnboarded && !usdWallet.stripeOnboardingComplete) {
@@ -1357,7 +1357,7 @@ export const approveUSDWithdrawal = async (
         
         const transfer = await stripeService.createTransfer(
           amountCents,
-          usdWallet.stripeConnectAccountId,
+          usdWallet.stripeConnectAccountId as string,
           {
             withdrawalId: withdrawal._id.toString(),
             userId: withdrawal.userId.toString(),
