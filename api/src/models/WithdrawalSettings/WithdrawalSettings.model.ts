@@ -4,13 +4,14 @@ import { Schema, model, Document } from 'mongoose';
 export interface IWithdrawalSettings extends Document {
   // Payment method settings
   stripeEnabled: boolean;
-  binanceEnabled: boolean;
+  bitgetEnabled: boolean;
   
-  // Binance configuration (stored encrypted in production)
-  binanceApiKey: string;
-  binanceSecretKey: string;
-  binanceNetwork: string; // e.g., 'BSC', 'ETH', 'TRX'
-  binanceCurrency: string; // e.g., 'USDT', 'USDC', 'BUSD'
+  // Bitget configuration (stored encrypted in production)
+  bitgetApiKey: string;
+  bitgetSecretKey: string;
+  bitgetPassphrase: string; // Required for Bitget API
+  bitgetNetwork: string; // e.g., 'trc20', 'bep20', 'erc20' (lowercase for Bitget)
+  bitgetCurrency: string; // e.g., 'USDT', 'USDC'
   
   // Exchange rate settings
   usdExchangeRate: number;
@@ -22,10 +23,10 @@ export interface IWithdrawalSettings extends Document {
   
   // Fees (percentage)
   stripeFeePercent: number;
-  binanceFeePercent: number;
+  bitgetFeePercent: number;
   
   // Default method
-  defaultWithdrawalMethod: 'stripe' | 'binance';
+  defaultWithdrawalMethod: 'stripe' | 'bitget';
   
   // Admin notes
   notes: string;
@@ -39,29 +40,33 @@ const withdrawalSettingsSchema = new Schema<IWithdrawalSettings>(
   {
     stripeEnabled: {
       type: Boolean,
-      default: false, // Disabled by default, Binance enabled
+      default: false, // Disabled by default, Bitget enabled
     },
-    binanceEnabled: {
+    bitgetEnabled: {
       type: Boolean,
-      default: true, // Binance enabled by default
+      default: true, // Bitget enabled by default
     },
-    binanceApiKey: {
+    bitgetApiKey: {
       type: String,
       default: '',
     },
-    binanceSecretKey: {
+    bitgetSecretKey: {
       type: String,
       default: '',
     },
-    binanceNetwork: {
+    bitgetPassphrase: {
       type: String,
-      default: 'BSC', // Binance Smart Chain - lower fees
-      enum: ['BSC', 'ETH', 'TRX', 'SOL', 'MATIC'],
+      default: '', // Required for Bitget API authentication
     },
-    binanceCurrency: {
+    bitgetNetwork: {
+      type: String,
+      default: 'trc20', // TRC20 - lower fees (Bitget uses lowercase)
+      enum: ['trc20', 'bep20', 'erc20', 'sol', 'matic'],
+    },
+    bitgetCurrency: {
       type: String,
       default: 'USDT',
-      enum: ['USDT', 'USDC', 'BUSD'],
+      enum: ['USDT', 'USDC'],
     },
     usdExchangeRate: {
       type: Number,
@@ -83,14 +88,14 @@ const withdrawalSettingsSchema = new Schema<IWithdrawalSettings>(
       type: Number,
       default: 2.9, // Stripe standard fee
     },
-    binanceFeePercent: {
+    bitgetFeePercent: {
       type: Number,
-      default: 0.1, // Binance withdrawal fee
+      default: 0.1, // Bitget withdrawal fee
     },
     defaultWithdrawalMethod: {
       type: String,
-      enum: ['stripe', 'binance'],
-      default: 'binance', // Binance as default
+      enum: ['stripe', 'bitget'],
+      default: 'bitget', // Bitget as default
     },
     notes: {
       type: String,

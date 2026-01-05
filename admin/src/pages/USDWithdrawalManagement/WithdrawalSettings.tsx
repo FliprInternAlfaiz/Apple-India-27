@@ -27,55 +27,57 @@ import {
   FiAlertCircle,
   FiRefreshCw,
 } from "react-icons/fi";
-import { SiBinance } from "react-icons/si";
+import { RiExchangeFundsLine } from "react-icons/ri";
 import { FaStripe } from "react-icons/fa";
 import { notifications } from "@mantine/notifications";
 import {
   useWithdrawalSettings,
   useUpdateWithdrawalSettings,
-  useTestBinanceConnection,
+  useTestBitgetConnection,
 } from "../../hooks/query/USDWithdrawal.query";
 import classes from "./index.module.scss";
 
 const WithdrawalSettings = () => {
   const { data, isLoading } = useWithdrawalSettings();
   const updateSettingsMutation = useUpdateWithdrawalSettings();
-  const testBinanceMutation = useTestBinanceConnection();
+  const testBitgetMutation = useTestBitgetConnection();
 
   const [formData, setFormData] = useState({
     stripeEnabled: false,
-    binanceEnabled: true,
-    binanceApiKey: "",
-    binanceSecretKey: "",
-    binanceNetwork: "BSC",
-    binanceCurrency: "USDT",
+    bitgetEnabled: true,
+    bitgetApiKey: "",
+    bitgetSecretKey: "",
+    bitgetPassphrase: "",
+    bitgetNetwork: "trc20",
+    bitgetCurrency: "USDT",
     usdExchangeRate: 83,
     minWithdrawalINR: 0.01,
     maxWithdrawalINR: 500000,
     stripeFeePercent: 2.9,
-    binanceFeePercent: 0.1,
-    defaultWithdrawalMethod: "binance" as "stripe" | "binance",
+    bitgetFeePercent: 0.1,
+    defaultWithdrawalMethod: "bitget" as "stripe" | "bitget",
     notes: "",
   });
 
-  const [binanceConnected, setBinanceConnected] = useState<boolean | null>(null);
-  const [binanceBalance, setBinanceBalance] = useState<string | null>(null);
+  const [bitgetConnected, setBitgetConnected] = useState<boolean | null>(null);
+  const [bitgetBalance, setBitgetBalance] = useState<string | null>(null);
 
   useEffect(() => {
     if (data?.settings) {
       setFormData({
         stripeEnabled: data.settings.stripeEnabled || false,
-        binanceEnabled: data.settings.binanceEnabled || true,
-        binanceApiKey: "",
-        binanceSecretKey: "",
-        binanceNetwork: data.settings.binanceNetwork || "BSC",
-        binanceCurrency: data.settings.binanceCurrency || "USDT",
+        bitgetEnabled: data.settings.bitgetEnabled || true,
+        bitgetApiKey: "",
+        bitgetSecretKey: "",
+        bitgetPassphrase: "",
+        bitgetNetwork: data.settings.bitgetNetwork || "trc20",
+        bitgetCurrency: data.settings.bitgetCurrency || "USDT",
         usdExchangeRate: data.settings.usdExchangeRate || 83,
         minWithdrawalINR: data.settings.minWithdrawalINR || 0.01,
         maxWithdrawalINR: data.settings.maxWithdrawalINR || 500000,
         stripeFeePercent: data.settings.stripeFeePercent || 2.9,
-        binanceFeePercent: data.settings.binanceFeePercent || 0.1,
-        defaultWithdrawalMethod: data.settings.defaultWithdrawalMethod || "binance",
+        bitgetFeePercent: data.settings.bitgetFeePercent || 0.1,
+        defaultWithdrawalMethod: data.settings.defaultWithdrawalMethod || "bitget",
         notes: data.settings.notes || "",
       });
     }
@@ -85,8 +87,9 @@ const WithdrawalSettings = () => {
     try {
       const payload: any = { ...formData };
       // Only send API keys if they were entered
-      if (!payload.binanceApiKey) delete payload.binanceApiKey;
-      if (!payload.binanceSecretKey) delete payload.binanceSecretKey;
+      if (!payload.bitgetApiKey) delete payload.bitgetApiKey;
+      if (!payload.bitgetSecretKey) delete payload.bitgetSecretKey;
+      if (!payload.bitgetPassphrase) delete payload.bitgetPassphrase;
 
       await updateSettingsMutation.mutateAsync(payload);
       notifications.show({
@@ -105,24 +108,24 @@ const WithdrawalSettings = () => {
     }
   };
 
-  const handleTestBinance = async () => {
+  const handleTestBitget = async () => {
     try {
-      const result = await testBinanceMutation.mutateAsync();
-      setBinanceConnected(result.connected);
+      const result = await testBitgetMutation.mutateAsync();
+      setBitgetConnected(result.connected);
       if (result.balance) {
-        setBinanceBalance(`${result.balance.free} ${result.currency}`);
+        setBitgetBalance(`${result.balance.free} ${result.currency}`);
       }
       notifications.show({
-        title: "Binance Connected",
+        title: "Bitget Connected",
         message: `Connection successful! Balance: ${result.balance?.free || 0} ${result.currency}`,
-        color: "green",
+        color: "teal",
         icon: <FiCheckCircle />,
       });
     } catch (error: any) {
-      setBinanceConnected(false);
+      setBitgetConnected(false);
       notifications.show({
         title: "Connection Failed",
-        message: error.response?.data?.message || "Failed to connect to Binance",
+        message: error.response?.data?.message || "Failed to connect to Bitget",
         color: "red",
         icon: <FiXCircle />,
       });
@@ -147,7 +150,7 @@ const WithdrawalSettings = () => {
               USD Withdrawal Settings
             </Text>
             <Text size="sm" c="dimmed">
-              Configure Stripe and Binance withdrawal methods
+              Configure Stripe and Bitget withdrawal methods
             </Text>
           </Flex>
           <Button
@@ -195,39 +198,39 @@ const WithdrawalSettings = () => {
               </Badge>
             </Paper>
 
-            {/* Binance */}
-            <Paper withBorder p="md" bg={formData.binanceEnabled ? "yellow.0" : "gray.0"}>
+            {/* Bitget */}
+            <Paper withBorder p="md" bg={formData.bitgetEnabled ? "teal.0" : "gray.0"}>
               <Group justify="space-between" mb="sm">
                 <Group>
-                  <ThemeIcon size={40} color="yellow" variant="light">
-                    <SiBinance size={24} />
+                  <ThemeIcon size={40} color="teal" variant="light">
+                    <RiExchangeFundsLine size={24} />
                   </ThemeIcon>
                   <div>
-                    <Text fw={600}>Binance</Text>
+                    <Text fw={600}>Bitget</Text>
                     <Text size="xs" c="dimmed">Crypto USDT withdrawals</Text>
                   </div>
                 </Group>
                 <Switch
-                  checked={formData.binanceEnabled}
+                  checked={formData.bitgetEnabled}
                   onChange={(e) =>
-                    setFormData({ ...formData, binanceEnabled: e.target.checked })
+                    setFormData({ ...formData, bitgetEnabled: e.target.checked })
                   }
-                  color="yellow"
+                  color="teal"
                   size="md"
                 />
               </Group>
               <Group>
-                <Badge color={formData.binanceEnabled ? "green" : "gray"}>
-                  {formData.binanceEnabled ? "Enabled" : "Disabled"}
+                <Badge color={formData.bitgetEnabled ? "green" : "gray"}>
+                  {formData.bitgetEnabled ? "Enabled" : "Disabled"}
                 </Badge>
-                {binanceConnected !== null && (
-                  <Badge color={binanceConnected ? "green" : "red"}>
-                    {binanceConnected ? "Connected" : "Disconnected"}
+                {bitgetConnected !== null && (
+                  <Badge color={bitgetConnected ? "green" : "red"}>
+                    {bitgetConnected ? "Connected" : "Disconnected"}
                   </Badge>
                 )}
-                {binanceBalance && (
+                {bitgetBalance && (
                   <Badge color="blue" variant="light">
-                    Balance: {binanceBalance}
+                    Balance: {bitgetBalance}
                   </Badge>
                 )}
               </Group>
@@ -243,32 +246,32 @@ const WithdrawalSettings = () => {
               onChange={(value) =>
                 setFormData({
                   ...formData,
-                  defaultWithdrawalMethod: value as "stripe" | "binance",
+                  defaultWithdrawalMethod: value as "stripe" | "bitget",
                 })
               }
               data={[
-                { value: "binance", label: "Binance (Crypto)" },
+                { value: "bitget", label: "Bitget (Crypto)" },
                 { value: "stripe", label: "Stripe (Bank Transfer)" },
               ]}
             />
           </Card>
         </Grid.Col>
 
-        {/* Binance Configuration */}
+        {/* Bitget Configuration */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Card withBorder p="lg">
             <Group justify="space-between" mb="md">
               <Text size="lg" fw={600}>
-                <SiBinance style={{ marginRight: 8 }} />
-                Binance Configuration
+                <RiExchangeFundsLine style={{ marginRight: 8 }} />
+                Bitget Configuration
               </Text>
               <Tooltip label="Test connection">
                 <Button
                   variant="light"
-                  color="yellow"
+                  color="teal"
                   size="xs"
-                  onClick={handleTestBinance}
-                  loading={testBinanceMutation.isPending}
+                  onClick={handleTestBitget}
+                  loading={testBitgetMutation.isPending}
                   leftSection={<FiRefreshCw size={14} />}
                 >
                   Test Connection
@@ -276,7 +279,7 @@ const WithdrawalSettings = () => {
               </Tooltip>
             </Group>
 
-            <Alert icon={<FiAlertCircle />} color="yellow" variant="light" mb="md">
+            <Alert icon={<FiAlertCircle />} color="teal" variant="light" mb="md">
               <Text size="xs">
                 API keys are stored securely. Leave blank to keep existing keys.
               </Text>
@@ -284,20 +287,30 @@ const WithdrawalSettings = () => {
 
             <PasswordInput
               label="API Key"
-              placeholder={data?.settings?.binanceApiKeyConfigured ? "••••••••••••" : "Enter API Key"}
-              value={formData.binanceApiKey}
+              placeholder={data?.settings?.bitgetApiKeyConfigured ? "••••••••••••" : "Enter API Key"}
+              value={formData.bitgetApiKey}
               onChange={(e) =>
-                setFormData({ ...formData, binanceApiKey: e.target.value })
+                setFormData({ ...formData, bitgetApiKey: e.target.value })
               }
               mb="sm"
             />
 
             <PasswordInput
               label="Secret Key"
-              placeholder={data?.settings?.binanceApiKeyConfigured ? "••••••••••••" : "Enter Secret Key"}
-              value={formData.binanceSecretKey}
+              placeholder={data?.settings?.bitgetApiKeyConfigured ? "••••••••••••" : "Enter Secret Key"}
+              value={formData.bitgetSecretKey}
               onChange={(e) =>
-                setFormData({ ...formData, binanceSecretKey: e.target.value })
+                setFormData({ ...formData, bitgetSecretKey: e.target.value })
+              }
+              mb="sm"
+            />
+
+            <PasswordInput
+              label="Passphrase"
+              placeholder={data?.settings?.bitgetApiKeyConfigured ? "••••••••••••" : "Enter Passphrase"}
+              value={formData.bitgetPassphrase}
+              onChange={(e) =>
+                setFormData({ ...formData, bitgetPassphrase: e.target.value })
               }
               mb="sm"
             />
@@ -306,30 +319,29 @@ const WithdrawalSettings = () => {
               <Grid.Col span={6}>
                 <Select
                   label="Network"
-                  value={formData.binanceNetwork}
+                  value={formData.bitgetNetwork}
                   onChange={(value) =>
-                    setFormData({ ...formData, binanceNetwork: value || "BSC" })
+                    setFormData({ ...formData, bitgetNetwork: value || "trc20" })
                   }
                   data={[
-                    { value: "BSC", label: "BSC (BEP20)" },
-                    { value: "ETH", label: "Ethereum (ERC20)" },
-                    { value: "TRX", label: "Tron (TRC20)" },
-                    { value: "MATIC", label: "Polygon" },
-                    { value: "SOL", label: "Solana" },
+                    { value: "trc20", label: "Tron (TRC20)" },
+                    { value: "bep20", label: "BSC (BEP20)" },
+                    { value: "erc20", label: "Ethereum (ERC20)" },
+                    { value: "matic", label: "Polygon" },
+                    { value: "sol", label: "Solana" },
                   ]}
                 />
               </Grid.Col>
               <Grid.Col span={6}>
                 <Select
                   label="Currency"
-                  value={formData.binanceCurrency}
+                  value={formData.bitgetCurrency}
                   onChange={(value) =>
-                    setFormData({ ...formData, binanceCurrency: value || "USDT" })
+                    setFormData({ ...formData, bitgetCurrency: value || "USDT" })
                   }
                   data={[
                     { value: "USDT", label: "USDT" },
                     { value: "USDC", label: "USDC" },
-                    { value: "BUSD", label: "BUSD" },
                   ]}
                 />
               </Grid.Col>
@@ -408,11 +420,11 @@ const WithdrawalSettings = () => {
             />
 
             <NumberInput
-              label="Binance Fee (%)"
-              description="Fee percentage for Binance withdrawals"
-              value={formData.binanceFeePercent}
+              label="Bitget Fee (%)"
+              description="Fee percentage for Bitget withdrawals"
+              value={formData.bitgetFeePercent}
               onChange={(value) =>
-                setFormData({ ...formData, binanceFeePercent: Number(value) || 0.1 })
+                setFormData({ ...formData, bitgetFeePercent: Number(value) || 0.1 })
               }
               min={0}
               max={100}
@@ -423,8 +435,8 @@ const WithdrawalSettings = () => {
 
             <Alert icon={<FiAlertCircle />} color="blue" variant="light" mt="md">
               <Text size="xs">
-                Note: Binance also charges network fees which vary by blockchain.
-                BSC has the lowest fees (~$0.30).
+                Note: Bitget also charges network fees which vary by blockchain.
+                TRC20 has the lowest fees (~$1).
               </Text>
             </Alert>
           </Card>
@@ -446,14 +458,14 @@ const WithdrawalSettings = () => {
 
       {/* Current Status */}
       <Alert
-        icon={formData.binanceEnabled ? <SiBinance /> : <FaStripe />}
-        color={formData.binanceEnabled ? "yellow" : "violet"}
+        icon={formData.bitgetEnabled ? <RiExchangeFundsLine /> : <FaStripe />}
+        color={formData.bitgetEnabled ? "teal" : "violet"}
         title="Current Active Method"
       >
         <Text size="sm">
-          <strong>{formData.binanceEnabled ? "Binance (Crypto)" : "Stripe (Bank Transfer)"}</strong> is currently the primary withdrawal method.
-          {formData.binanceEnabled && (
-            <> Users will receive <strong>{formData.binanceCurrency}</strong> on <strong>{formData.binanceNetwork}</strong> network.</>
+          <strong>{formData.bitgetEnabled ? "Bitget (Crypto)" : "Stripe (Bank Transfer)"}</strong> is currently the primary withdrawal method.
+          {formData.bitgetEnabled && (
+            <> Users will receive <strong>{formData.bitgetCurrency}</strong> on <strong>{formData.bitgetNetwork}</strong> network.</>
           )}
         </Text>
       </Alert>

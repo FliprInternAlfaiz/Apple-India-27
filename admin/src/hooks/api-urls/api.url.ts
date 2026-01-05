@@ -96,12 +96,12 @@ export const usdWithdrawalUrls = {
     `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/approve`,
   REJECT_USD_WITHDRAWAL: (withdrawalId: string) =>
     `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/reject`,
-  // New Binance/Settings endpoints
+  // Bitget/Settings endpoints
   GET_SETTINGS: usdWithdrawalPrefix + "/settings",
   UPDATE_SETTINGS: usdWithdrawalPrefix + "/settings",
-  TEST_BINANCE: usdWithdrawalPrefix + "/test-binance",
-  BINANCE_STATUS: (withdrawalId: string) =>
-    `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/binance-status`,
+  TEST_BITGET: usdWithdrawalPrefix + "/test-bitget",
+  BITGET_STATUS: (withdrawalId: string) =>
+    `${usdWithdrawalPrefix}/withdrawals/${withdrawalId}/bitget-status`,
 };
 
 export const conferenceNewsUrls = {

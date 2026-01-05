@@ -32,14 +32,14 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { FaStripe } from "react-icons/fa";
-import { SiBinance } from "react-icons/si";
+import { RiExchangeFundsLine } from "react-icons/ri";
 import { notifications } from "@mantine/notifications";
 import {
   useAllUSDWithdrawals,
   useApproveUSDWithdrawal,
   useRejectUSDWithdrawal,
   useWithdrawalSettings,
-  useBinanceBalance,
+  useBitgetBalance,
 } from "../../hooks/query/USDWithdrawal.query";
 import classes from "./index.module.scss";
 
@@ -66,13 +66,13 @@ const USDWithdrawalManagement = () => {
   const approveUSDWithdrawalMutation = useApproveUSDWithdrawal();
   const rejectUSDWithdrawalMutation = useRejectUSDWithdrawal();
   const { data: settingsData } = useWithdrawalSettings();
-  const { data: binanceBalanceData, isLoading: binanceLoading, refetch: refetchBinanceBalance } = useBinanceBalance();
+  const { data: bitgetBalanceData, isLoading: bitgetLoading, refetch: refetchBitgetBalance } = useBitgetBalance();
 
   const withdrawals = data?.withdrawals || [];
   const pagination = data?.pagination || {};
   const statistics = data?.statistics || {};
 
-  const currentMethod = settingsData?.settings?.binanceEnabled ? "binance" : "stripe";
+  const currentMethod = settingsData?.settings?.bitgetEnabled ? "bitget" : "stripe";
 
   const handleView = (withdrawal: any) => {
     setSelectedWithdrawal(withdrawal);
@@ -97,10 +97,10 @@ const USDWithdrawalManagement = () => {
     try {
       await approveUSDWithdrawalMutation.mutateAsync({
         withdrawalId: selectedWithdrawal._id,
-        remarks: remarks || `Approved and processed via ${selectedWithdrawal.withdrawalMethod === 'binance' ? 'Binance' : 'Stripe'}`,
+        remarks: remarks || `Approved and processed via ${selectedWithdrawal.withdrawalMethod === 'bitget' ? 'Bitget' : 'Stripe'}`,
       });
 
-      const method = selectedWithdrawal.withdrawalMethod === 'binance' ? 'Binance (Crypto)' : 'Stripe';
+      const method = selectedWithdrawal.withdrawalMethod === 'bitget' ? 'Bitget (Crypto)' : 'Stripe';
       notifications.show({
         title: "Success",
         message: `USD withdrawal approved and processed via ${method}!`,
@@ -172,10 +172,10 @@ const USDWithdrawalManagement = () => {
   };
 
   const getMethodBadge = (method: string) => {
-    if (method === "binance") {
+    if (method === "bitget") {
       return (
-        <Badge color="yellow" size="sm" leftSection={<SiBinance size={10} />}>
-          Binance
+        <Badge color="teal" size="sm" leftSection={<RiExchangeFundsLine size={10} />}>
+          Bitget
         </Badge>
       );
     }
@@ -195,14 +195,6 @@ const USDWithdrawalManagement = () => {
       minute: "2-digit",
     });
   };
-
-  if (isLoading) {
-    return (
-      <Flex justify="center" align="center" style={{ height: "400px" }}>
-        <Loader size="lg" />
-      </Flex>
-    );
-  }
 
   if (error) {
     return (
@@ -251,8 +243,8 @@ const USDWithdrawalManagement = () => {
       <Table.Td>{getStatusBadge(withdrawal.status)}</Table.Td>
       <Table.Td>
         <Text size="xs" c="dimmed" style={{ fontFamily: "monospace" }}>
-          {withdrawal.withdrawalMethod === "binance" 
-            ? (withdrawal.binanceTxHash ? withdrawal.binanceTxHash.slice(-12) : withdrawal.binanceWithdrawId || "-")
+          {withdrawal.withdrawalMethod === "bitget"
+            ? (withdrawal.bitgetTxHash ? withdrawal.bitgetTxHash.slice(-12) : withdrawal.bitgetWithdrawId || "-")
             : (withdrawal.stripeTransferId ? withdrawal.stripeTransferId.slice(-12) : "-")}
         </Text>
       </Table.Td>
@@ -270,7 +262,7 @@ const USDWithdrawalManagement = () => {
           </Tooltip>
           {withdrawal.status === "pending" && (
             <>
-              <Tooltip label={`Approve & Process via ${withdrawal.withdrawalMethod === 'binance' ? 'Binance' : 'Stripe'}`}>
+              <Tooltip label={`Approve & Process via ${withdrawal.withdrawalMethod === 'bitget' ? 'Bitget' : 'Stripe'}`}>
                 <ActionIcon
                   variant="light"
                   color="green"
@@ -299,25 +291,25 @@ const USDWithdrawalManagement = () => {
 
   return (
     <Flex direction="column" gap="md" className={classes.container}>
-      {/* Binance Balance Card */}
-      {settingsData?.settings?.binanceEnabled && (
-        <Paper p="md" shadow="xs" withBorder style={{ borderColor: '#F0B90B', borderWidth: 2 }}>
+      {/* Bitget Balance Card */}
+      {settingsData?.settings?.bitgetEnabled && (
+        <Paper p="md" shadow="xs" withBorder style={{ borderColor: '#00D4AA', borderWidth: 2 }}>
           <Group justify="space-between">
             <Group>
-              <SiBinance size={32} color="#F0B90B" />
+              <RiExchangeFundsLine size={32} color="#00D4AA" />
               <div>
-                <Text size="sm" c="dimmed">Admin Binance Account Balance</Text>
+                <Text size="sm" c="dimmed">Admin Bitget Account Balance</Text>
                 <Group gap="xs" align="baseline">
-                  {binanceLoading ? (
-                    <Loader size="sm" color="yellow" />
-                  ) : binanceBalanceData?.connected ? (
+                  {bitgetLoading ? (
+                    <Loader size="sm" color="teal" />
+                  ) : bitgetBalanceData?.connected ? (
                     <>
-                      <Text size="xl" fw={700} c="#F0B90B">
-                        {binanceBalanceData.balance?.free || '0.00'} {binanceBalanceData.currency || 'USDT'}
+                      <Text size="xl" fw={700} c="#00D4AA">
+                        {bitgetBalanceData.balance?.free || '0.00'} {bitgetBalanceData.currency || 'USDT'}
                       </Text>
-                      {binanceBalanceData.balance?.locked && Number(binanceBalanceData.balance.locked) > 0 && (
+                      {bitgetBalanceData.balance?.locked && Number(bitgetBalanceData.balance.locked) > 0 && (
                         <Text size="sm" c="dimmed">
-                          (Locked: {binanceBalanceData.balance.locked})
+                          (Locked: {bitgetBalanceData.balance.locked})
                         </Text>
                       )}
                     </>
@@ -325,16 +317,16 @@ const USDWithdrawalManagement = () => {
                     <Text size="sm" c="red">Not Connected</Text>
                   )}
                 </Group>
-                <Text size="xs" c="dimmed">Network: {binanceBalanceData?.network || settingsData?.settings?.binanceNetwork || 'BSC'}</Text>
+                <Text size="xs" c="dimmed">Network: {bitgetBalanceData?.network || settingsData?.settings?.bitgetNetwork || 'TRC20'}</Text>
               </div>
             </Group>
             <Tooltip label="Refresh Balance">
-              <ActionIcon 
-                variant="light" 
-                color="yellow" 
-                size="lg" 
-                onClick={() => refetchBinanceBalance()}
-                loading={binanceLoading}
+              <ActionIcon
+                variant="light"
+                color="teal"
+                size="lg"
+                onClick={() => refetchBitgetBalance()}
+                loading={bitgetLoading}
               >
                 <FiRefreshCw size={18} />
               </ActionIcon>
@@ -419,19 +411,19 @@ const USDWithdrawalManagement = () => {
               USD Withdrawal Management
             </Text>
             <Text size="sm" c="dimmed" className={classes.subtitle}>
-              Approve or reject USD withdrawals - Funds transfer via {currentMethod === 'binance' ? 'Binance (Crypto)' : 'Stripe'}
+              Approve or reject USD withdrawals - Funds transfer via {currentMethod === 'bitget' ? 'Bitget (Crypto)' : 'Stripe'}
             </Text>
           </Flex>
           <Group>
-            <Badge 
-              color={settingsData?.settings?.binanceEnabled ? "green" : "gray"} 
+            <Badge
+              color={settingsData?.settings?.bitgetEnabled ? "green" : "gray"}
               size="lg"
-              leftSection={<SiBinance size={14} />}
+              leftSection={<RiExchangeFundsLine size={14} />}
             >
-              Binance {settingsData?.settings?.binanceEnabled ? "ON" : "OFF"}
+              Bitget {settingsData?.settings?.bitgetEnabled ? "ON" : "OFF"}
             </Badge>
-            <Badge 
-              color={settingsData?.settings?.stripeEnabled ? "green" : "gray"} 
+            <Badge
+              color={settingsData?.settings?.stripeEnabled ? "green" : "gray"}
               size="lg"
               leftSection={<FaStripe size={14} />}
             >
@@ -469,13 +461,13 @@ const USDWithdrawalManagement = () => {
         </Group>
       </Paper>
 
-      <Alert icon={currentMethod === 'binance' ? <SiBinance /> : <FaStripe />} color={currentMethod === 'binance' ? "yellow" : "violet"} variant="light">
+      <Alert icon={currentMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaStripe />} color={currentMethod === 'bitget' ? "teal" : "violet"} variant="light">
         <Text size="sm" fw={500}>
-          ⚠️ USD withdrawals require admin approval before processing via {currentMethod === 'binance' ? 'Binance (Crypto)' : 'Stripe'}.
+          ⚠️ USD withdrawals require admin approval before processing via {currentMethod === 'bitget' ? 'Bitget (Crypto)' : 'Stripe'}.
         </Text>
         <Text size="xs" c="dimmed" mt="xs">
-          {currentMethod === 'binance' 
-            ? `When you approve a withdrawal, USDT will be transferred from your Binance account to the user's wallet address on ${settingsData?.settings?.binanceNetwork || 'BSC'} network.`
+          {currentMethod === 'bitget'
+            ? `When you approve a withdrawal, USDT will be transferred from your Bitget account to the user's wallet address on ${settingsData?.settings?.bitgetNetwork || 'TRC20'} network.`
             : "When you approve a withdrawal, funds will be transferred from your platform's Stripe account to the user's connected Stripe account."}
           Make sure your platform has sufficient balance.
         </Text>
@@ -498,7 +490,23 @@ const USDWithdrawalManagement = () => {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {rows.length > 0 ? (
+              {isLoading ? (
+                <Table.Tr>
+                  <Table.Td colSpan={8}>
+                    <Flex
+                      justify="center"
+                      direction="column"
+                      align="center"
+                      py="xl"
+                    >
+                      <Loader size="lg" />
+                      <Text c="dimmed" ml="sm">
+                        Loading Withdrawal Data...
+                      </Text>
+                    </Flex>
+                  </Table.Td>
+                </Table.Tr>
+              ) : rows.length > 0 ? (
                 rows
               ) : (
                 <Table.Tr>
@@ -534,15 +542,15 @@ const USDWithdrawalManagement = () => {
       >
         {selectedWithdrawal && (
           <Flex direction="column" gap="md">
-            <Alert 
-              icon={selectedWithdrawal.withdrawalMethod === 'binance' ? <SiBinance /> : <FaStripe />} 
-              color={selectedWithdrawal.withdrawalMethod === 'binance' ? "yellow" : "violet"} 
-              title={selectedWithdrawal.withdrawalMethod === 'binance' ? "Binance Transfer Confirmation" : "Stripe Transfer Confirmation"}
+            <Alert
+              icon={selectedWithdrawal.withdrawalMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaStripe />}
+              color={selectedWithdrawal.withdrawalMethod === 'bitget' ? "teal" : "violet"}
+              title={selectedWithdrawal.withdrawalMethod === 'bitget' ? "Bitget Transfer Confirmation" : "Stripe Transfer Confirmation"}
             >
               <Text size="sm">
-                Approving this withdrawal will <strong>immediately transfer funds</strong> 
-                {selectedWithdrawal.withdrawalMethod === 'binance' 
-                  ? ` (${settingsData?.settings?.binanceCurrency || 'USDT'}) from your Binance account to the user's wallet address.`
+                Approving this withdrawal will <strong>immediately transfer funds</strong>
+                {selectedWithdrawal.withdrawalMethod === 'bitget'
+                  ? ` (${settingsData?.settings?.bitgetCurrency || 'USDT'}) from your Bitget account to the user's wallet address.`
                   : " from your platform's Stripe account to the user's connected Stripe account."}
               </Text>
             </Alert>
@@ -583,17 +591,17 @@ const USDWithdrawalManagement = () => {
                   <Text size="xs" c="dimmed">Requested At</Text>
                   <Text size="sm">{formatDate(selectedWithdrawal.createdAt)}</Text>
                 </Grid.Col>
-                {selectedWithdrawal.withdrawalMethod === 'binance' && selectedWithdrawal.binanceWalletAddress && (
+                {selectedWithdrawal.withdrawalMethod === 'bitget' && selectedWithdrawal.bitgetWalletAddress && (
                   <>
                     <Grid.Col span={12}>
                       <Text size="xs" c="dimmed">Wallet Address</Text>
                       <Text size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                        {selectedWithdrawal.binanceWalletAddress}
+                        {selectedWithdrawal.bitgetWalletAddress}
                       </Text>
                     </Grid.Col>
                     <Grid.Col span={6}>
                       <Text size="xs" c="dimmed">Network</Text>
-                      <Badge color="yellow" size="sm">{selectedWithdrawal.binanceNetwork || 'BSC'}</Badge>
+                      <Badge color="teal" size="sm">{selectedWithdrawal.bitgetNetwork || 'TRC20'}</Badge>
                     </Grid.Col>
                   </>
                 )}
@@ -625,10 +633,10 @@ const USDWithdrawalManagement = () => {
                 color="green"
                 onClick={confirmApprove}
                 loading={approveUSDWithdrawalMutation.isPending}
-                leftSection={selectedWithdrawal.withdrawalMethod === 'binance' ? <SiBinance /> : <FaStripe />}
+                leftSection={selectedWithdrawal.withdrawalMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaStripe />}
               >
-                {selectedWithdrawal.withdrawalMethod === 'binance' 
-                  ? 'Approve & Transfer via Binance'
+                {selectedWithdrawal.withdrawalMethod === 'bitget'
+                  ? 'Approve & Transfer via Bitget'
                   : 'Approve & Transfer via Stripe'}
               </Button>
             </Group>
@@ -788,62 +796,62 @@ const USDWithdrawalManagement = () => {
               </Card>
             )}
 
-            {selectedWithdrawal.withdrawalMethod === 'binance' && (
+            {selectedWithdrawal.withdrawalMethod === 'bitget' && (
               <Card withBorder>
                 <Text size="lg" fw={600} mb="sm">
-                  <SiBinance style={{ marginRight: 8 }} />
-                  Binance Details
+                  <RiExchangeFundsLine style={{ marginRight: 8 }} />
+                  Bitget Details
                 </Text>
                 <Divider mb="sm" />
                 <Grid>
-                  {selectedWithdrawal.binanceWalletAddress && (
+                  {selectedWithdrawal.bitgetWalletAddress && (
                     <Grid.Col span={12}>
                       <Text size="xs" c="dimmed">Wallet Address</Text>
                       <Text size="sm" fw={500} style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                        {selectedWithdrawal.binanceWalletAddress}
+                        {selectedWithdrawal.bitgetWalletAddress}
                       </Text>
                     </Grid.Col>
                   )}
                   <Grid.Col span={4}>
                     <Text size="xs" c="dimmed">Network</Text>
-                    <Badge color="yellow" size="sm">
-                      {selectedWithdrawal.binanceNetwork || 'BSC'}
+                    <Badge color="teal" size="sm">
+                      {selectedWithdrawal.bitgetNetwork || 'TRC20'}
                     </Badge>
                   </Grid.Col>
                   <Grid.Col span={4}>
                     <Text size="xs" c="dimmed">Currency</Text>
                     <Badge color="blue" size="sm">
-                      {selectedWithdrawal.binanceCurrency || 'USDT'}
+                      {selectedWithdrawal.bitgetCurrency || 'USDT'}
                     </Badge>
                   </Grid.Col>
-                  {selectedWithdrawal.binanceStatus && (
+                  {selectedWithdrawal.bitgetStatus && (
                     <Grid.Col span={4}>
-                      <Text size="xs" c="dimmed">Binance Status</Text>
-                      <Badge color={selectedWithdrawal.binanceStatus === 'completed' ? 'green' : 'yellow'} size="sm">
-                        {selectedWithdrawal.binanceStatus}
+                      <Text size="xs" c="dimmed">Bitget Status</Text>
+                      <Badge color={selectedWithdrawal.bitgetStatus === 'completed' ? 'green' : 'teal'} size="sm">
+                        {selectedWithdrawal.bitgetStatus}
                       </Badge>
                     </Grid.Col>
                   )}
-                  {selectedWithdrawal.binanceWithdrawId && (
+                  {selectedWithdrawal.bitgetWithdrawId && (
                     <Grid.Col span={6}>
                       <Text size="xs" c="dimmed">Withdraw ID</Text>
                       <Text size="xs" style={{ fontFamily: "monospace" }}>
-                        {selectedWithdrawal.binanceWithdrawId}
+                        {selectedWithdrawal.bitgetWithdrawId}
                       </Text>
                     </Grid.Col>
                   )}
-                  {selectedWithdrawal.binanceTxHash && (
+                  {selectedWithdrawal.bitgetTxHash && (
                     <Grid.Col span={12}>
                       <Text size="xs" c="dimmed">Transaction Hash</Text>
                       <Text size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                        {selectedWithdrawal.binanceTxHash}
+                        {selectedWithdrawal.bitgetTxHash}
                       </Text>
                     </Grid.Col>
                   )}
-                  {selectedWithdrawal.binanceFee && (
+                  {selectedWithdrawal.bitgetFee && (
                     <Grid.Col span={6}>
                       <Text size="xs" c="dimmed">Network Fee</Text>
-                      <Text size="sm">{selectedWithdrawal.binanceFee} {selectedWithdrawal.binanceCurrency || 'USDT'}</Text>
+                      <Text size="sm">{selectedWithdrawal.bitgetFee} {selectedWithdrawal.bitgetCurrency || 'USDT'}</Text>
                     </Grid.Col>
                   )}
                   {selectedWithdrawal.processedAt && (

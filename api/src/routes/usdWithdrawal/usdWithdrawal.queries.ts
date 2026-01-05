@@ -6,7 +6,7 @@ import usdWithdrawalController from '../../controllers/usdWithdrawalControllers/
 const {
   // User endpoints
   getUSDWalletInfo,
-  saveBinanceWalletAddress,
+  saveBitgetWalletAddress,
   getWithdrawalMethods,
   createStripeConnectAccount,
   checkStripeConnectStatus,
@@ -16,14 +16,14 @@ const {
   // Admin endpoints
   getWithdrawalSettingsAdmin,
   updateWithdrawalSettings,
-  testBinanceConnection,
+  testBitgetConnection,
   toggleUSDUserStatus,
   fundUSDWallet,
   getAllUSDWithdrawals,
   approveUSDWithdrawal,
   rejectUSDWithdrawal,
   getUSDWalletByUserId,
-  checkBinanceWithdrawalStatus,
+  checkBitgetWithdrawalStatus,
 } = usdWithdrawalController;
 
 export default (router: Router) => {
@@ -50,11 +50,18 @@ export default (router: Router) => {
     getWithdrawalMethods
   );
 
-  // Save Binance wallet address
+  // Save Bitget wallet address
+  router.post(
+    '/bitget-wallet',
+    commonsMiddleware.checkUserAuth,
+    saveBitgetWalletAddress
+  );
+
+  // Save wallet address (alias for backward compatibility)
   router.post(
     '/binance-wallet',
     commonsMiddleware.checkUserAuth,
-    saveBinanceWalletAddress
+    saveBitgetWalletAddress
   );
 
   // Create Stripe Connect account
@@ -122,11 +129,18 @@ export default (router: Router) => {
     updateWithdrawalSettings
   );
 
-  // Test Binance connection
+  // Test Bitget connection
+  router.get(
+    '/admin/test-bitget',
+    commonsMiddleware.checkAdminAuth,
+    testBitgetConnection
+  );
+
+  // Test connection (alias for backward compatibility)
   router.get(
     '/admin/test-binance',
     commonsMiddleware.checkAdminAuth,
-    testBinanceConnection
+    testBitgetConnection
   );
 
   // Toggle USD user status
@@ -171,11 +185,18 @@ export default (router: Router) => {
     rejectUSDWithdrawal
   );
 
-  // Check Binance withdrawal status
+  // Check Bitget withdrawal status
+  router.get(
+    '/admin/withdrawals/:withdrawalId/bitget-status',
+    commonsMiddleware.checkAdminAuth,
+    checkBitgetWithdrawalStatus
+  );
+
+  // Check withdrawal status (alias for backward compatibility)
   router.get(
     '/admin/withdrawals/:withdrawalId/binance-status',
     commonsMiddleware.checkAdminAuth,
-    checkBinanceWithdrawalStatus
+    checkBitgetWithdrawalStatus
   );
 };
     

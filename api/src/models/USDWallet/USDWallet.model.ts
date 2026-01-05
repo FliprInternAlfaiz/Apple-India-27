@@ -13,13 +13,13 @@ export interface IUSDWallet extends Document {
   stripeConnectStatus: 'not_connected' | 'pending' | 'connected' | 'restricted';
   stripeOnboardingComplete: boolean;
   
-  // Binance wallet details
-  binanceWalletAddress: string | null;
-  binanceNetwork: string | null; // BSC, ETH, TRX, etc.
-  binanceVerified: boolean;
+  // Bitget wallet details
+  bitgetWalletAddress: string | null;
+  bitgetNetwork: string | null; // trc20, bep20, erc20, etc.
+  bitgetVerified: boolean;
   
   // Preferred withdrawal method
-  preferredWithdrawalMethod: 'stripe' | 'binance' | null;
+  preferredWithdrawalMethod: 'stripe' | 'bitget' | null;
   
   lastExchangeRate: number;
   isActive: boolean;
@@ -68,23 +68,23 @@ const usdWalletSchema = new Schema<IUSDWallet>(
       type: Boolean,
       default: false,
     },
-    // Binance wallet fields
-    binanceWalletAddress: {
+    // Bitget wallet fields
+    bitgetWalletAddress: {
       type: String,
       default: null,
     },
-    binanceNetwork: {
+    bitgetNetwork: {
       type: String,
-      enum: ['BSC', 'ETH', 'TRX', 'SOL', 'MATIC', null],
+      enum: ['trc20', 'bep20', 'erc20', 'sol', 'matic', null],
       default: null,
     },
-    binanceVerified: {
+    bitgetVerified: {
       type: Boolean,
       default: false,
     },
     preferredWithdrawalMethod: {
       type: String,
-      enum: ['stripe', 'binance', null],
+      enum: ['stripe', 'bitget', null],
       default: null,
     },
     lastExchangeRate: {
@@ -102,7 +102,7 @@ const usdWalletSchema = new Schema<IUSDWallet>(
 // Index for faster queries
 usdWalletSchema.index({ userId: 1 });
 usdWalletSchema.index({ stripeConnectAccountId: 1 });
-usdWalletSchema.index({ binanceWalletAddress: 1 });
+usdWalletSchema.index({ bitgetWalletAddress: 1 });
 
 const USDWalletModel = model<IUSDWallet>('usdwallet', usdWalletSchema);
 

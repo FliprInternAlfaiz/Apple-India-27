@@ -186,35 +186,35 @@ export const useCreateUSDWithdrawal = () => {
   });
 };
 
-// ================== Binance Functions ==================
+// ================== Bitget Functions ==================
 
-// Save Binance Wallet Address
-interface SaveBinanceWalletPayload {
-  binanceWalletAddress: string;
-  binanceNetwork: string;
+// Save Bitget Wallet Address
+interface SaveBitgetWalletPayload {
+  bitgetWalletAddress: string;
+  bitgetNetwork: string;
 }
 
-const saveBinanceWalletAddress = async (payload: SaveBinanceWalletPayload) => {
+const saveBitgetWalletAddress = async (payload: SaveBitgetWalletPayload) => {
   const response = await request({
-    url: usdWithdrawalUrls.SAVE_BINANCE_WALLET,
+    url: usdWithdrawalUrls.SAVE_BITGET_WALLET,
     method: "POST",
     data: {
-      walletAddress: payload.binanceWalletAddress,
-      network: payload.binanceNetwork,
+      walletAddress: payload.bitgetWalletAddress,
+      network: payload.bitgetNetwork,
     },
   });
   return response?.data;
 };
 
-export const useSaveBinanceWallet = () => {
+export const useSaveBitgetWallet = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: saveBinanceWalletAddress,
+    mutationFn: saveBitgetWalletAddress,
     onSuccess: (data) => {
       notifications.show({
         title: "Success",
-        message: data?.message || "Binance wallet address saved successfully",
+        message: data?.message || "Bitget wallet address saved successfully",
         color: "green",
       });
       queryClient.invalidateQueries({ queryKey: ["usdWalletInfo"] });
@@ -223,7 +223,7 @@ export const useSaveBinanceWallet = () => {
     onError: (error: any) => {
       notifications.show({
         title: "Error",
-        message: error?.response?.data?.message || "Failed to save Binance wallet address",
+        message: error?.response?.data?.message || "Failed to save Bitget wallet address",
         color: "red",
       });
     },
@@ -233,7 +233,7 @@ export const useSaveBinanceWallet = () => {
 // Create USD Withdrawal with method selection
 interface CreateUSDWithdrawalWithMethodPayload {
   amountINR: number;
-  withdrawalMethod?: 'stripe' | 'binance';
+  withdrawalMethod?: 'stripe' | 'bitget';
 }
 
 const createUSDWithdrawalWithMethod = async (payload: CreateUSDWithdrawalWithMethodPayload) => {

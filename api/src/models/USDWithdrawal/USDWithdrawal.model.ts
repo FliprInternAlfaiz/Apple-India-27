@@ -9,21 +9,21 @@ export interface IUSDWithdrawal extends Document {
   source?: 'usd_wallet' | 'main_wallet';
   
   // Withdrawal method
-  withdrawalMethod: 'stripe' | 'binance';
+  withdrawalMethod: 'stripe' | 'bitget';
   
   // Stripe fields
   stripePayoutId: string | null;
   stripeTransferId: string | null;
   stripePayoutStatus: string | null;
   
-  // Binance fields
-  binanceWithdrawId: string | null;
-  binanceWalletAddress: string | null;
-  binanceNetwork: string | null;
-  binanceCurrency: string | null;
-  binanceTxHash: string | null;
-  binanceStatus: string | null;
-  binanceFee: number;
+  // Bitget fields
+  bitgetWithdrawId: string | null;
+  bitgetWalletAddress: string | null;
+  bitgetNetwork: string | null;
+  bitgetCurrency: string | null;
+  bitgetTxHash: string | null;
+  bitgetStatus: string | null;
+  bitgetFee: number;
   
   status: 'pending' | 'processing' | 'completed' | 'rejected' | 'failed';
   rejectionReason: string | null;
@@ -58,8 +58,8 @@ const usdWithdrawalSchema = new Schema<IUSDWithdrawal>(
     // Withdrawal method
     withdrawalMethod: {
       type: String,
-      enum: ['stripe', 'binance'],
-      default: 'binance',
+      enum: ['stripe', 'bitget'],
+      default: 'bitget',
     },
     // Stripe fields
     stripePayoutId: {
@@ -74,32 +74,32 @@ const usdWithdrawalSchema = new Schema<IUSDWithdrawal>(
       type: String,
       default: null,
     },
-    // Binance fields
-    binanceWithdrawId: {
+    // Bitget fields
+    bitgetWithdrawId: {
       type: String,
       default: null,
     },
-    binanceWalletAddress: {
+    bitgetWalletAddress: {
       type: String,
       default: null,
     },
-    binanceNetwork: {
+    bitgetNetwork: {
       type: String,
       default: null,
     },
-    binanceCurrency: {
+    bitgetCurrency: {
       type: String,
       default: null,
     },
-    binanceTxHash: {
+    bitgetTxHash: {
       type: String,
       default: null,
     },
-    binanceStatus: {
+    bitgetStatus: {
       type: String,
       default: null,
     },
-    binanceFee: {
+    bitgetFee: {
       type: Number,
       default: 0,
     },

@@ -222,14 +222,6 @@ const WithdrawalManagement = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <Flex justify="center" align="center" style={{ height: "400px" }}>
-        <Loader size="lg" />
-      </Flex>
-    );
-  }
-
   if (error) {
     return (
       <Alert icon={<FiAlertCircle />} title="Error" color="red">

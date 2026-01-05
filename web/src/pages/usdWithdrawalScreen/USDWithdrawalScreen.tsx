@@ -28,7 +28,7 @@ import {
   useUSDTransactionHistory,
   useCreateStripeConnectAccount,
   useWithdrawalMethods,
-  useSaveBinanceWallet,
+  useSaveBitgetWallet,
   useCreateUSDWithdrawalWithMethod,
 } from "../../hooks/query/useUSDWithdrawal.query";
 import classes from "./USDWithdrawalScreen.module.scss";
@@ -46,18 +46,18 @@ import {
   FaPlus,
   FaMinus,
 } from "react-icons/fa";
-import { SiBinance } from "react-icons/si";
+import { RiExchangeFundsLine } from "react-icons/ri";
 import { notifications } from "@mantine/notifications";
 
 const USDWithdrawalScreen: React.FC = () => {
   const [withdrawalModal, setWithdrawalModal] = useState(false);
-  const [binanceWalletModal, setBinanceWalletModal] = useState(false);
+  const [bitgetWalletModal, setBitgetWalletModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState<number | "">(0);
   const [historyPage, setHistoryPage] = useState(1);
   const [transactionPage, setTransactionPage] = useState(1);
-  const [binanceAddress, setBinanceAddress] = useState("");
-  const [binanceNetwork, setBinanceNetwork] = useState("BSC");
-  const [selectedMethod, setSelectedMethod] = useState<string>("binance");
+  const [bitgetAddress, setBitgetAddress] = useState("");
+  const [bitgetNetwork, setBitgetNetwork] = useState("trc20");
+  const [selectedMethod, setSelectedMethod] = useState<string>("bitget");
 
   // Fetch data
   const { data: walletData, isLoading: walletLoading } = useUSDWalletInfo();
@@ -69,30 +69,46 @@ const USDWithdrawalScreen: React.FC = () => {
   // Mutations
   const createConnectMutation = useCreateStripeConnectAccount();
   const createWithdrawalMutation = useCreateUSDWithdrawalWithMethod();
-  const saveBinanceWalletMutation = useSaveBinanceWallet();
+  const saveBitgetWalletMutation = useSaveBitgetWallet();
 
   const predefinedAmounts = [1, 10, 100, 500, 1000, 5000];
+
+  // Bitget minimum withdrawal amounts per network (from Bitget API - all networks require 10 USDT)
+  const bitgetMinimums: Record<string, number> = {
+    'trc20': 10,        // TRC20 minimum 10 USDT (fee: 1.5 USDT)
+    'bep20': 10,        // BEP20 minimum 10 USDT (fee: 0.15 USDT)
+    'erc20': 10,        // ERC20 minimum 10 USDT (fee: 1.6 USDT)
+    'polygon': 10,      // Polygon minimum 10 USDT (fee: 0.2 USDT)
+    'arbitrumone': 10,  // Arbitrum minimum 10 USDT (fee: 0.15 USDT)
+    'arbitrum': 10,     // Arbitrum alias
+    'optimism': 10,     // Optimism minimum 10 USDT (fee: 0.15 USDT)
+    'sol': 10,          // Solana minimum 10 USDT (fee: 1 USDT)
+    'ton': 10,          // TON minimum 10 USDT (fee: 0.15 USDT)
+    'aptos': 10,        // Aptos minimum 10 USDT (fee: 0.03 USDT)
+    'avaxc-chain': 10,  // AVAX minimum 10 USDT (fee: 0.11 USDT)
+    'morph': 10,        // Morph minimum 10 USDT (fee: 0.1 USDT)
+  };
 
   const wallet = walletData?.wallet;
   const exchangeRate = walletData?.currentExchangeRate || 83;
   const isOnboarded = connectStatus?.isOnboarded || false;
   const connectAccount = connectStatus?.stripeAccountId;
   
-  // Binance settings
-  const binanceEnabled = methodsData?.methods?.binance?.enabled || true;
+  // Bitget settings
+  const bitgetEnabled = methodsData?.methods?.bitget?.enabled || true;
   const stripeEnabled = methodsData?.methods?.stripe?.enabled || false;
-  const binanceSettings = methodsData?.methods?.binance || {};
+  const bitgetSettings = methodsData?.methods?.bitget || {};
   
-  // Check if user has saved Binance wallet
-  const hasBinanceWallet = wallet?.binanceWalletAddress && wallet?.binanceVerified;
+  // Check if user has saved Bitget wallet
+  const hasBitgetWallet = wallet?.bitgetWalletAddress && wallet?.bitgetVerified;
 
   const handleStripeOnboarding = () => {
     const returnUrl = window.location.origin + "/usd-withdrawal";
     createConnectMutation.mutate(returnUrl);
   };
 
-  const handleSaveBinanceWallet = () => {
-    if (!binanceAddress.trim()) {
+  const handleSaveBitgetWallet = () => {
+    if (!bitgetAddress.trim()) {
       notifications.show({
         title: "Error",
         message: "Please enter a valid wallet address",
@@ -101,12 +117,12 @@ const USDWithdrawalScreen: React.FC = () => {
       return;
     }
 
-    saveBinanceWalletMutation.mutate(
-      { binanceWalletAddress: binanceAddress, binanceNetwork },
+    saveBitgetWalletMutation.mutate(
+      { bitgetWalletAddress: bitgetAddress, bitgetNetwork },
       {
         onSuccess: () => {
-          setBinanceWalletModal(false);
-          setBinanceAddress("");
+          setBitgetWalletModal(false);
+          setBitgetAddress("");
         },
       }
     );
@@ -132,10 +148,10 @@ const USDWithdrawalScreen: React.FC = () => {
     }
 
     // Check if the selected method is available
-    if (selectedMethod === "binance" && !hasBinanceWallet) {
+    if (selectedMethod === "bitget" && !hasBitgetWallet) {
       notifications.show({
         title: "Error",
-        message: "Please add your Binance wallet address first",
+        message: "Please add your Bitget wallet address first",
         color: "red",
       });
       return;
@@ -150,8 +166,25 @@ const USDWithdrawalScreen: React.FC = () => {
       return;
     }
 
+    // Check Bitget minimum withdrawal amount
+    if (selectedMethod === "bitget") {
+      const network = wallet?.bitgetNetwork || 'trc20';
+      const minUSD = bitgetMinimums[network.toLowerCase()] || 10;
+      const minINR = Math.ceil(minUSD * exchangeRate * 1.01); // Add 1% buffer for fees
+      const amountUSD = Number(withdrawAmount) / exchangeRate;
+      
+      if (amountUSD < minUSD) {
+        notifications.show({
+          title: "Minimum Not Met",
+          message: `Bitget ${network.toUpperCase()} requires minimum $${minUSD} USDT. Please withdraw at least ₹${minINR.toLocaleString()} (current: $${amountUSD.toFixed(2)})`,
+          color: "red",
+        });
+        return;
+      }
+    }
+
     createWithdrawalMutation.mutate(
-      { amountINR: Number(withdrawAmount), withdrawalMethod: selectedMethod as 'stripe' | 'binance' },
+      { amountINR: Number(withdrawAmount), withdrawalMethod: selectedMethod as 'stripe' | 'bitget' },
       {
         onSuccess: () => {
           setWithdrawalModal(false);
@@ -179,10 +212,10 @@ const USDWithdrawalScreen: React.FC = () => {
   };
 
   const getMethodBadge = (method: string) => {
-    if (method === "binance") {
+    if (method === "bitget") {
       return (
-        <Badge color="yellow" leftSection={<SiBinance size={10} />} size="xs">
-          Binance
+        <Badge color="teal" leftSection={<RiExchangeFundsLine size={10} />} size="xs">
+          Bitget
         </Badge>
       );
     }
@@ -267,9 +300,9 @@ const USDWithdrawalScreen: React.FC = () => {
             USD Wallet Balance
           </Text>
           <Group gap="xs">
-            {binanceEnabled && hasBinanceWallet && (
-              <Badge color="yellow" variant="light" size="sm" leftSection={<SiBinance size={10} />}>
-                Binance Ready
+            {bitgetEnabled && hasBitgetWallet && (
+              <Badge color="teal" variant="light" size="sm" leftSection={<RiExchangeFundsLine size={10} />}>
+                Bitget Ready
               </Badge>
             )}
             {stripeEnabled && isOnboarded && (
@@ -301,45 +334,45 @@ const USDWithdrawalScreen: React.FC = () => {
         </Text>
       </div>
 
-      {/* Binance Wallet Setup - Show if Binance is enabled and no wallet saved */}
-      {binanceEnabled && !hasBinanceWallet && (
-        <div className={classes.onboardingCard} style={{ background: "linear-gradient(135deg, #F0B90B 0%, #E6A100 100%)" }}>
-          <SiBinance size={50} style={{ marginBottom: 16, color: "#1E2329" }} />
-          <Text className={classes.onboardingTitle} style={{ color: "#1E2329" }}>
-            Add Your Binance Wallet
+      {/* Bitget Wallet Setup - Show if Bitget is enabled and no wallet saved */}
+      {bitgetEnabled && !hasBitgetWallet && (
+        <div className={classes.onboardingCard} style={{ background: "linear-gradient(135deg, #00D4AA 0%, #00B894 100%)" }}>
+          <RiExchangeFundsLine size={50} style={{ marginBottom: 16, color: "#FFFFFF" }} />
+          <Text className={classes.onboardingTitle} style={{ color: "#FFFFFF" }}>
+            Add Your Bitget Wallet
           </Text>
-          <Text className={classes.onboardingDesc} style={{ color: "#1E2329" }}>
-            Add your {binanceSettings?.network || "BSC"} wallet address to receive {binanceSettings?.currency || "USDT"} withdrawals directly to your crypto wallet.
+          <Text className={classes.onboardingDesc} style={{ color: "#FFFFFF" }}>
+            Add your {bitgetSettings?.network || "TRC20"} wallet address to receive {bitgetSettings?.currency || "USDT"} withdrawals directly to your crypto wallet.
           </Text>
           <Button
           size="md"
             className={classes.stripeBtn}
-            style={{ background: "#1E2329", color: "#F0B90B" }}
-            onClick={() => setBinanceWalletModal(true)}
-            leftSection={<SiBinance />}
+            style={{ background: "#FFFFFF", color: "#00D4AA" }}
+            onClick={() => setBitgetWalletModal(true)}
+            leftSection={<RiExchangeFundsLine />}
           >
             Add Wallet Address
           </Button>
         </div>
       )}
 
-      {/* Show saved Binance wallet */}
-      {binanceEnabled && hasBinanceWallet && (
+      {/* Show saved Bitget wallet */}
+      {bitgetEnabled && hasBitgetWallet && (
         <Card className={classes.statusCard} withBorder>
           <div className={classes.statusItem}>
-            <div className={`${classes.statusIcon}`} style={{ background: "#F0B90B20" }}>
-              <SiBinance color="#F0B90B" />
+            <div className={`${classes.statusIcon}`} style={{ background: "#00D4AA20" }}>
+              <RiExchangeFundsLine color="#00D4AA" />
             </div>
             <div style={{ flex: 1 }}>
-              <Text size="sm" fw={600}>Binance Wallet Connected</Text>
+              <Text size="sm" fw={600}>Bitget Wallet Connected</Text>
               <Text size="xs" c="dimmed" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                {wallet?.binanceWalletAddress?.slice(0, 10)}...{wallet?.binanceWalletAddress?.slice(-10)}
+                {wallet?.bitgetWalletAddress?.slice(0, 10)}...{wallet?.bitgetWalletAddress?.slice(-10)}
               </Text>
-              <Badge color="yellow" size="xs" mt="xs">
-                {wallet?.binanceNetwork || "BSC"} Network
+              <Badge color="teal" size="xs" mt="xs">
+                {wallet?.bitgetNetwork || "TRC20"} Network
               </Badge>
             </div>
-            <Button size="xs" variant="light" color="yellow" onClick={() => setBinanceWalletModal(true)}>
+            <Button size="xs" variant="light" color="teal" onClick={() => setBitgetWalletModal(true)}>
               Update
             </Button>
           </div>
@@ -386,16 +419,16 @@ const USDWithdrawalScreen: React.FC = () => {
       )}
 
       {/* Withdrawal Action */}
-      {(hasBinanceWallet || isOnboarded) && (
+      {(hasBitgetWallet || isOnboarded) && (
         <Card className={classes.card} p="md" withBorder>
           <Text size="lg" fw={600} mb="md">
             Create Withdrawal
           </Text>
           <Alert icon={<FaInfoCircle />} color="blue" variant="light" mb="md">
             Minimum withdrawal: ₹1 | Maximum: ₹500,000 per request
-            {binanceEnabled && hasBinanceWallet && (
+            {bitgetEnabled && hasBitgetWallet && (
               <Text size="xs" mt="xs">
-                Binance withdrawals are processed in {binanceSettings?.currency || "USDT"} on {binanceSettings?.network || "BSC"} network
+                Bitget withdrawals are processed in {bitgetSettings?.currency || "USDT"} on {bitgetSettings?.network || "TRC20"} network
               </Text>
             )}
           </Alert>
@@ -405,9 +438,9 @@ const USDWithdrawalScreen: React.FC = () => {
             className={classes.withdrawBtn}
             onClick={() => setWithdrawalModal(true)}
             disabled={!wallet?.balanceINR || wallet.balanceINR < 1}
-            leftSection={binanceEnabled ? <SiBinance /> : <FaDollarSign />}
+            leftSection={bitgetEnabled ? <RiExchangeFundsLine /> : <FaDollarSign />}
           >
-            Withdraw to {binanceEnabled && hasBinanceWallet ? "Crypto Wallet" : "USD"}
+            Withdraw to {bitgetEnabled && hasBitgetWallet ? "Crypto Wallet" : "USD"}
           </Button>
         </Card>
       )}
@@ -451,9 +484,9 @@ const USDWithdrawalScreen: React.FC = () => {
                           {formatDate(item.createdAt)}
                         </Text>
                       </div>
-                      {item.withdrawalMethod === "binance" && item.binanceTxHash && (
+                      {item.withdrawalMethod === "bitget" && item.bitgetTxHash && (
                         <Text size="xs" c="dimmed" mt="xs" style={{ fontFamily: "monospace" }}>
-                          TX: {item.binanceTxHash.slice(0, 20)}...
+                          TX: {item.bitgetTxHash.slice(0, 20)}...
                         </Text>
                       )}
                       {item.rejectionReason && (
@@ -566,7 +599,7 @@ const USDWithdrawalScreen: React.FC = () => {
       >
         <Stack gap="md">
           {/* Method Selection - only show if both methods available */}
-          {binanceEnabled && stripeEnabled && hasBinanceWallet && isOnboarded && (
+          {bitgetEnabled && stripeEnabled && hasBitgetWallet && isOnboarded && (
             <div>
               <Text size="sm" fw={500} mb="xs">Withdrawal Method</Text>
               <SegmentedControl
@@ -575,11 +608,11 @@ const USDWithdrawalScreen: React.FC = () => {
                 onChange={setSelectedMethod}
                 data={[
                   { 
-                    value: 'binance', 
+                    value: 'bitget', 
                     label: (
                       <Group gap="xs" justify="center">
-                        <SiBinance size={16} />
-                        <span>Binance (Crypto)</span>
+                        <RiExchangeFundsLine size={16} />
+                        <span>Bitget (Crypto)</span>
                       </Group>
                     )
                   },
@@ -598,18 +631,22 @@ const USDWithdrawalScreen: React.FC = () => {
           )}
 
           <Alert 
-            icon={selectedMethod === 'binance' ? <SiBinance /> : <FaInfoCircle />} 
-            color={selectedMethod === 'binance' ? "yellow" : "blue"} 
+            icon={selectedMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaInfoCircle />} 
+            color={selectedMethod === 'bitget' ? "teal" : "blue"} 
             variant="light"
           >
-            {selectedMethod === 'binance' && binanceEnabled ? (
+            {selectedMethod === 'bitget' && bitgetEnabled ? (
               <>
-                Your INR will be converted to {binanceSettings?.currency || "USDT"} and sent to your wallet on {binanceSettings?.network || "BSC"} network.
-                {wallet?.binanceWalletAddress && (
+                Your INR will be converted to {bitgetSettings?.currency || "USDT"} and sent to your wallet on {(wallet?.bitgetNetwork || bitgetSettings?.network || "trc20").toUpperCase()} network.
+                {wallet?.bitgetWalletAddress && (
                   <Text size="xs" mt="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                    To: {wallet.binanceWalletAddress}
+                    To: {wallet.bitgetWalletAddress}
                   </Text>
                 )}
+                <Text size="xs" mt="xs" fw={600} c="orange">
+                  ⚠️ Minimum: ${bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10} USDT 
+                  (~₹{Math.ceil((bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10) * exchangeRate * 1.01).toLocaleString()})
+                </Text>
               </>
             ) : (
               "Your INR will be converted to USD at the current exchange rate and sent to your Stripe account."
@@ -621,14 +658,23 @@ const USDWithdrawalScreen: React.FC = () => {
               <Text size="sm" c="dimmed">Available Balance</Text>
               <Text size="sm" fw={600}>₹{wallet?.balanceINR?.toLocaleString() || 0}</Text>
             </Group>
-            <Group justify="space-between">
+            <Group justify="space-between" mb="xs">
               <Text size="sm" c="dimmed">Exchange Rate</Text>
               <Text size="sm" fw={600}>1 USD = ₹{exchangeRate}</Text>
             </Group>
+            {withdrawAmount && Number(withdrawAmount) > 0 && (
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">You will receive</Text>
+                <Text size="sm" fw={600} c={Number(withdrawAmount) / exchangeRate >= (bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10) ? "green" : "red"}>
+                  ~${(Number(withdrawAmount) / exchangeRate).toFixed(2)} USDT
+                </Text>
+              </Group>
+            )}
           </Paper>
 
           <NumberInput
             label="Amount (INR)"
+            description={selectedMethod === 'bitget' ? `Min: ₹${Math.ceil((bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10) * exchangeRate * 1.01).toLocaleString()} (~$${bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10} USDT)` : undefined}
             placeholder="Enter amount to withdraw"
             value={withdrawAmount}
             onChange={(val) => setWithdrawAmount(val as number)}
@@ -639,6 +685,7 @@ const USDWithdrawalScreen: React.FC = () => {
             thousandSeparator=","
             size="md"
             decimalScale={2}
+            error={selectedMethod === 'bitget' && withdrawAmount && Number(withdrawAmount) / exchangeRate < (bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10) ? `Amount below minimum ($${bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10} USDT)` : undefined}
           />
 
           <Text size="sm" fw={500} c="dimmed">
@@ -664,12 +711,12 @@ const USDWithdrawalScreen: React.FC = () => {
           </div>
 
           {withdrawAmount && Number(withdrawAmount) > 0 && (
-            <Paper withBorder p="md" radius="md" bg={selectedMethod === 'binance' ? "yellow.0" : "green.0"}>
+            <Paper withBorder p="md" radius="md" bg={selectedMethod === 'bitget' ? "teal.0" : "green.0"}>
               <Group justify="space-between">
                 <Text size="sm" fw={500}>You will receive (approx)</Text>
-                <Text size="lg" fw={700} c={selectedMethod === 'binance' ? "yellow.8" : "green"}>
-                  {selectedMethod === 'binance' 
-                    ? `${(Number(withdrawAmount) / exchangeRate).toFixed(2)} ${binanceSettings?.currency || "USDT"}`
+                <Text size="lg" fw={700} c={selectedMethod === 'bitget' ? "teal.8" : "green"}>
+                  {selectedMethod === 'bitget' 
+                    ? `${(Number(withdrawAmount) / exchangeRate).toFixed(2)} ${bitgetSettings?.currency || "USDT"}`
                     : `$${(Number(withdrawAmount) / exchangeRate).toFixed(2)} USD`
                   }
                 </Text>
@@ -695,57 +742,57 @@ const USDWithdrawalScreen: React.FC = () => {
               onClick={handleWithdraw}
               loading={createWithdrawalMutation.isPending}
               disabled={!withdrawAmount || Number(withdrawAmount) < 1}
-              leftSection={selectedMethod === 'binance' ? <SiBinance /> : <FaDollarSign />}
-              style={selectedMethod === 'binance' ? { background: "#F0B90B", color: "#1E2329" } : undefined}
+              leftSection={selectedMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaDollarSign />}
+              style={selectedMethod === 'bitget' ? { background: "#00D4AA", color: "#FFFFFF" } : undefined}
             >
-              Withdraw via {selectedMethod === 'binance' ? 'Binance' : 'Stripe'}
+              Withdraw via {selectedMethod === 'bitget' ? 'Bitget' : 'Stripe'}
             </Button>
           </Group>
         </Stack>
       </Modal>
 
-      {/* Binance Wallet Modal */}
+      {/* Bitget Wallet Modal */}
       <Modal
-        opened={binanceWalletModal}
-        onClose={() => setBinanceWalletModal(false)}
-        title="Add Binance Wallet Address"
+        opened={bitgetWalletModal}
+        onClose={() => setBitgetWalletModal(false)}
+        title="Add Bitget Wallet Address"
         centered
         size="md"
       >
         <Stack gap="md">
-          <Alert icon={<SiBinance />} color="yellow" variant="light">
+          <Alert icon={<RiExchangeFundsLine />} color="teal" variant="light">
             <Text size="sm">
-              Enter your {binanceSettings?.currency || "USDT"} wallet address. Make sure it supports the {binanceSettings?.network || "BSC"} network.
+              Enter your {bitgetSettings?.currency || "USDT"} wallet address. Make sure it supports the {bitgetSettings?.network || "TRC20"} network.
             </Text>
           </Alert>
 
           <Select
             label="Network"
             description="Select the blockchain network for receiving funds"
-            value={binanceNetwork}
-            onChange={(val) => setBinanceNetwork(val || "BSC")}
+            value={bitgetNetwork}
+            onChange={(val) => setBitgetNetwork(val || "trc20")}
             data={[
-              { value: "BSC", label: "BSC (BEP20) - Lowest Fees" },
-              { value: "ETH", label: "Ethereum (ERC20)" },
-              { value: "TRX", label: "Tron (TRC20)" },
-              { value: "MATIC", label: "Polygon" },
-              { value: "SOL", label: "Solana" },
+              { value: "trc20", label: "Tron (TRC20) - Lowest Fees" },
+              { value: "bep20", label: "BSC (BEP20)" },
+              { value: "erc20", label: "Ethereum (ERC20)" },
+              { value: "matic", label: "Polygon" },
+              { value: "sol", label: "Solana" },
             ]}
           />
 
           <TextInput
             label="Wallet Address"
             placeholder="Enter your wallet address"
-            value={binanceAddress}
-            onChange={(e) => setBinanceAddress(e.target.value)}
+            value={bitgetAddress}
+            onChange={(e) => setBitgetAddress(e.target.value)}
             description="Double-check your address. Incorrect addresses may result in lost funds."
           />
 
-          {wallet?.binanceWalletAddress && (
+          {wallet?.bitgetWalletAddress && (
             <Paper withBorder p="sm" radius="md" bg="gray.0">
               <Text size="xs" c="dimmed">Current Address:</Text>
               <Text size="xs" style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                {wallet.binanceWalletAddress}
+                {wallet.bitgetWalletAddress}
               </Text>
             </Paper>
           )}
@@ -762,19 +809,19 @@ const USDWithdrawalScreen: React.FC = () => {
             <Button
               size="md"
               variant="light"
-              onClick={() => setBinanceWalletModal(false)}
-              disabled={saveBinanceWalletMutation.isPending}
+              onClick={() => setBitgetWalletModal(false)}
+              disabled={saveBitgetWalletMutation.isPending}
               radius="md"
             >
               Cancel
             </Button>
             <Button
               size="md"
-              onClick={handleSaveBinanceWallet}
-              loading={saveBinanceWalletMutation.isPending}
-              disabled={!binanceAddress.trim()}
-              leftSection={<SiBinance />}
-              style={{ background: "#F0B90B", color: "#1E2329" }}
+              onClick={handleSaveBitgetWallet}
+              loading={saveBitgetWalletMutation.isPending}
+              disabled={!bitgetAddress.trim()}
+              leftSection={<RiExchangeFundsLine />}
+              style={{ background: "#00D4AA", color: "#FFFFFF" }}
             >
               Save Wallet
             </Button>

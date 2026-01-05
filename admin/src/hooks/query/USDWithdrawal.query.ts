@@ -197,17 +197,18 @@ export const useWithdrawalSettings = () =>
 // Update withdrawal settings
 interface UpdateSettingsPayload {
   stripeEnabled?: boolean;
-  binanceEnabled?: boolean;
-  binanceApiKey?: string;
-  binanceSecretKey?: string;
-  binanceNetwork?: string;
-  binanceCurrency?: string;
+  bitgetEnabled?: boolean;
+  bitgetApiKey?: string;
+  bitgetSecretKey?: string;
+  bitgetPassphrase?: string;
+  bitgetNetwork?: string;
+  bitgetCurrency?: string;
   usdExchangeRate?: number;
   minWithdrawalINR?: number;
   maxWithdrawalINR?: number;
   stripeFeePercent?: number;
-  binanceFeePercent?: number;
-  defaultWithdrawalMethod?: 'stripe' | 'binance';
+  bitgetFeePercent?: number;
+  defaultWithdrawalMethod?: 'stripe' | 'bitget';
   notes?: string;
 }
 
@@ -232,41 +233,41 @@ export const useUpdateWithdrawalSettings = () => {
   });
 };
 
-// Test Binance connection
-const testBinanceConnection = async () => {
+// Test Bitget connection
+const testBitgetConnection = async () => {
   const response = await request({
-    url: usdWithdrawalUrls.TEST_BINANCE,
+    url: usdWithdrawalUrls.TEST_BITGET,
     method: "GET",
   });
   return response.data;
 };
 
-export const useTestBinanceConnection = () => {
+export const useTestBitgetConnection = () => {
   return useMutation({
-    mutationFn: testBinanceConnection,
+    mutationFn: testBitgetConnection,
   });
 };
 
-// Fetch Binance Balance (uses test-binance endpoint)
-export const useBinanceBalance = () =>
+// Fetch Bitget Balance (uses test-bitget endpoint)
+export const useBitgetBalance = () =>
   useQuery({
-    queryKey: ["binance-balance"],
-    queryFn: testBinanceConnection,
+    queryKey: ["bitget-balance"],
+    queryFn: testBitgetConnection,
     staleTime: 30 * 1000, // 30s
     refetchInterval: 60 * 1000, // Refresh every minute
   });
 
-// Check Binance withdrawal status
-const checkBinanceStatus = async (withdrawalId: string) => {
+// Check Bitget withdrawal status
+const checkBitgetStatus = async (withdrawalId: string) => {
   const response = await request({
-    url: usdWithdrawalUrls.BINANCE_STATUS(withdrawalId),
+    url: usdWithdrawalUrls.BITGET_STATUS(withdrawalId),
     method: "GET",
   });
   return response.data;
 };
 
-export const useCheckBinanceStatus = () => {
+export const useCheckBitgetStatus = () => {
   return useMutation({
-    mutationFn: checkBinanceStatus,
+    mutationFn: checkBitgetStatus,
   });
 };

@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import commonsUtils from '../../utils';
 import models from '../../models';
 import stripeService from '../../services/stripe.service';
-import binanceService, { BinanceService } from '../../services/binance.service';
+import bitgetService, { BitgetService } from '../../services/bitget.service';
 
 const { JsonResponse } = commonsUtils;
 
@@ -18,12 +18,13 @@ const getWithdrawalSettings = async () => {
   if (!settings) {
     settings = await models.WithdrawalSettings.create({
       stripeEnabled: false,
-      binanceEnabled: true,
-      binanceApiKey: process.env.BINANCE_API_KEY || '',
-      binanceSecretKey: process.env.BINANCE_SECRET_KEY || '',
-      binanceNetwork: 'BSC',
-      binanceCurrency: 'USDT',
-      defaultWithdrawalMethod: 'binance',
+      bitgetEnabled: true,
+      bitgetApiKey: process.env.BITGET_API_KEY || '',
+      bitgetSecretKey: process.env.BITGET_SECRET_KEY || '',
+      bitgetPassphrase: process.env.BITGET_PASSPHRASE || '',
+      bitgetNetwork: 'trc20', // Bitget uses lowercase chain names
+      bitgetCurrency: 'USDT',
+      defaultWithdrawalMethod: 'bitget',
     });
   }
   
@@ -31,18 +32,19 @@ const getWithdrawalSettings = async () => {
 };
 
 /**
- * Get Binance service with updated credentials from settings
+ * Get Bitget service with updated credentials from settings
  * Prioritizes .env values if they exist, otherwise uses database settings
  */
-const getBinanceServiceWithSettings = async () => {
+const getBitgetServiceWithSettings = async () => {
   const settings = await getWithdrawalSettings();
   
   // Use .env values if available, otherwise fall back to database settings
-  const apiKey = process.env.BINANCE_API_KEY || settings.binanceApiKey;
-  const secretKey = process.env.BINANCE_SECRET_KEY || settings.binanceSecretKey;
+  const apiKey = process.env.BITGET_API_KEY || settings.bitgetApiKey;
+  const secretKey = process.env.BITGET_SECRET_KEY || settings.bitgetSecretKey;
+  const passphrase = process.env.BITGET_PASSPHRASE || settings.bitgetPassphrase;
   
-  const binance = new BinanceService(apiKey, secretKey);
-  return { binance, settings };
+  const bitget = new BitgetService(apiKey, secretKey, passphrase);
+  return { bitget, settings };
 };
 
 /**
@@ -122,10 +124,10 @@ export const getUSDWalletInfo = async (
           // Stripe details
           stripeConnectStatus: usdWallet.stripeConnectStatus,
           stripeOnboardingComplete: usdWallet.stripeOnboardingComplete,
-          // Binance details
-          binanceWalletAddress: usdWallet.binanceWalletAddress,
-          binanceNetwork: usdWallet.binanceNetwork,
-          binanceVerified: usdWallet.binanceVerified,
+          // Bitget details
+          bitgetWalletAddress: usdWallet.bitgetWalletAddress,
+          bitgetNetwork: usdWallet.bitgetNetwork,
+          bitgetVerified: usdWallet.bitgetVerified,
           // Preferred method
           preferredWithdrawalMethod: usdWallet.preferredWithdrawalMethod,
         },
@@ -134,10 +136,10 @@ export const getUSDWalletInfo = async (
         // Enabled methods
         withdrawalMethods: {
           stripeEnabled: settings.stripeEnabled,
-          binanceEnabled: settings.binanceEnabled,
+          bitgetEnabled: settings.bitgetEnabled,
           defaultMethod: settings.defaultWithdrawalMethod,
-          binanceNetwork: settings.binanceNetwork,
-          binanceCurrency: settings.binanceCurrency,
+          bitgetNetwork: settings.bitgetNetwork,
+          bitgetCurrency: settings.bitgetCurrency,
         },
       },
     });
@@ -153,9 +155,9 @@ export const getUSDWalletInfo = async (
 };
 
 /**
- * Save/Update Binance Wallet Address
+ * Save/Update Bitget Wallet Address
  */
-export const saveBinanceWalletAddress = async (
+export const saveBitgetWalletAddress = async (
   req: Request,
   res: Response,
   __: NextFunction
@@ -169,21 +171,21 @@ export const saveBinanceWalletAddress = async (
         status: 'error',
         statusCode: 400,
         message: 'Wallet address is required.',
-        title: 'Binance Wallet',
+        title: 'Bitget Wallet',
       });
     }
 
     const settings = await getWithdrawalSettings();
-    const selectedNetwork = network || settings.binanceNetwork || 'BSC';
+    const selectedNetwork = network || settings.bitgetNetwork || 'trc20';
 
     // Validate address format
-    const isValidAddress = binanceService.validateAddress(walletAddress, selectedNetwork);
+    const isValidAddress = bitgetService.validateAddress(walletAddress, selectedNetwork);
     if (!isValidAddress) {
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
         message: `Invalid wallet address format for ${selectedNetwork} network.`,
-        title: 'Binance Wallet',
+        title: 'Bitget Wallet',
       });
     }
 
@@ -193,7 +195,7 @@ export const saveBinanceWalletAddress = async (
         status: 'error',
         statusCode: 403,
         message: 'You are not enabled for USD withdrawals.',
-        title: 'Binance Wallet',
+        title: 'Bitget Wallet',
       });
     }
 
@@ -206,30 +208,30 @@ export const saveBinanceWalletAddress = async (
       });
     }
 
-    usdWallet.binanceWalletAddress = walletAddress;
-    usdWallet.binanceNetwork = selectedNetwork;
-    usdWallet.binanceVerified = true;
-    usdWallet.preferredWithdrawalMethod = 'binance';
+    usdWallet.bitgetWalletAddress = walletAddress;
+    usdWallet.bitgetNetwork = selectedNetwork;
+    usdWallet.bitgetVerified = true;
+    usdWallet.preferredWithdrawalMethod = 'bitget';
     await usdWallet.save();
 
     return JsonResponse(res, {
       status: 'success',
       statusCode: 200,
-      title: 'Binance Wallet',
-      message: 'Binance wallet address saved successfully.',
+      title: 'Bitget Wallet',
+      message: 'Bitget wallet address saved successfully.',
       data: {
-        binanceWalletAddress: usdWallet.binanceWalletAddress,
-        binanceNetwork: usdWallet.binanceNetwork,
-        binanceVerified: usdWallet.binanceVerified,
+        bitgetWalletAddress: usdWallet.bitgetWalletAddress,
+        bitgetNetwork: usdWallet.bitgetNetwork,
+        bitgetVerified: usdWallet.bitgetVerified,
       },
     });
   } catch (error) {
-    console.error('Error saving Binance wallet address:', error);
+    console.error('Error saving Bitget wallet address:', error);
     return JsonResponse(res, {
       status: 'error',
       statusCode: 500,
       message: 'An error occurred while saving wallet address.',
-      title: 'Binance Wallet',
+      title: 'Bitget Wallet',
     });
   }
 };
@@ -262,18 +264,18 @@ export const getWithdrawalMethods = async (
       });
     }
     
-    // Check Binance
-    if (settings.binanceEnabled) {
+    // Check Bitget
+    if (settings.bitgetEnabled) {
       methods.push({
-        method: 'binance',
-        name: `Binance (${settings.binanceCurrency} - ${settings.binanceNetwork})`,
+        method: 'bitget',
+        name: `Bitget (${settings.bitgetCurrency} - ${settings.bitgetNetwork})`,
         enabled: true,
-        configured: usdWallet?.binanceVerified || false,
-        walletAddress: usdWallet?.binanceWalletAddress || null,
-        network: settings.binanceNetwork,
-        currency: settings.binanceCurrency,
-        fee: `${settings.binanceFeePercent}%`,
-        description: `Withdraw ${settings.binanceCurrency} to your crypto wallet`,
+        configured: usdWallet?.bitgetVerified || false,
+        walletAddress: usdWallet?.bitgetWalletAddress || null,
+        network: settings.bitgetNetwork,
+        currency: settings.bitgetCurrency,
+        fee: `${settings.bitgetFeePercent}%`,
+        description: `Withdraw ${settings.bitgetCurrency} to your crypto wallet`,
       });
     }
 
@@ -317,7 +319,7 @@ export const createStripeConnectAccount = async (
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
-        message: 'Stripe withdrawals are currently disabled. Please use Binance.',
+        message: 'Stripe withdrawals are currently disabled. Please use Bitget.',
         title: 'Stripe Connect',
       });
     }
@@ -465,7 +467,7 @@ export const checkStripeConnectStatus = async (
 
 /**
  * Create USD Withdrawal Request
- * Supports both Stripe and Binance based on settings
+ * Supports both Stripe and Bitget based on settings
  */
 export const createUSDWithdrawal = async (
   req: Request,
@@ -519,11 +521,11 @@ export const createUSDWithdrawal = async (
       });
     }
 
-    if (selectedMethod === 'binance' && !settings.binanceEnabled) {
+    if (selectedMethod === 'bitget' && !settings.bitgetEnabled) {
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
-        message: 'Binance withdrawals are currently disabled.',
+        message: 'Bitget withdrawals are currently disabled.',
         title: 'USD Withdrawal',
       });
     }
@@ -538,12 +540,12 @@ export const createUSDWithdrawal = async (
           title: 'USD Withdrawal',
         });
       }
-    } else if (selectedMethod === 'binance') {
-      if (!usdWallet.binanceWalletAddress || !usdWallet.binanceVerified) {
+    } else if (selectedMethod === 'bitget') {
+      if (!usdWallet.bitgetWalletAddress || !usdWallet.bitgetVerified) {
         return JsonResponse(res, {
           status: 'error',
           statusCode: 400,
-          message: 'Please add and verify your Binance wallet address first.',
+          message: 'Please add and verify your Bitget wallet address first.',
           title: 'USD Withdrawal',
         });
       }
@@ -584,6 +586,49 @@ export const createUSDWithdrawal = async (
       });
     }
 
+    // Check Bitget minimum withdrawal amount (in USD)
+    if (selectedMethod === 'bitget') {
+      const network = usdWallet?.bitgetNetwork || settings.bitgetNetwork || 'trc20';
+      
+      // Bitget minimum withdrawal amounts per network (from Bitget API - all networks require 10 USDT)
+      const bitgetMinimums: Record<string, number> = {
+        'trc20': 10,        // TRC20 minimum 10 USDT (fee: 1.5 USDT)
+        'bep20': 10,        // BEP20 minimum 10 USDT (fee: 0.15 USDT)
+        'erc20': 10,        // ERC20 minimum 10 USDT (fee: 1.6 USDT)
+        'polygon': 10,      // Polygon minimum 10 USDT (fee: 0.2 USDT)
+        'arbitrumone': 10,  // Arbitrum minimum 10 USDT (fee: 0.15 USDT)
+        'arbitrum': 10,     // Arbitrum alias
+        'optimism': 10,     // Optimism minimum 10 USDT (fee: 0.15 USDT)
+        'sol': 10,          // Solana minimum 10 USDT (fee: 1 USDT)
+        'ton': 10,          // TON minimum 10 USDT (fee: 0.15 USDT)
+        'aptos': 10,        // Aptos minimum 10 USDT (fee: 0.03 USDT)
+        'avaxc-chain': 10,  // AVAX minimum 10 USDT (fee: 0.11 USDT)
+        'morph': 10,        // Morph minimum 10 USDT (fee: 0.1 USDT)
+      };
+      
+      const minBitgetUSD = bitgetMinimums[network.toLowerCase()] || 10;
+      const minBitgetINR = minBitgetUSD * exchangeRate;
+      
+      // Account for platform fee (e.g., 0.1%)
+      const feePercent = settings.bitgetFeePercent || 0.1;
+      const netAmountUSD = amountUSD - (amountUSD * feePercent / 100);
+      
+      if (netAmountUSD < minBitgetUSD) {
+        return JsonResponse(res, {
+          status: 'error',
+          statusCode: 400,
+          message: `Withdrawal amount is below Bitget's minimum. After fees, you would withdraw $${netAmountUSD.toFixed(2)} USDT, but ${network.toUpperCase()} network requires minimum $${minBitgetUSD} USDT. Please withdraw at least ₹${Math.ceil(minBitgetINR * 1.01)} (~$${minBitgetUSD} + fees).`,
+          title: 'USD Withdrawal',
+          data: {
+            minAmountUSD: minBitgetUSD,
+            minAmountINR: Math.ceil(minBitgetINR * 1.01),
+            currentAmountUSD: netAmountUSD,
+            network: network,
+          }
+        });
+      }
+    }
+
     // Create withdrawal request
     const withdrawalData: any = {
       userId,
@@ -595,10 +640,10 @@ export const createUSDWithdrawal = async (
     };
 
     // Add method-specific data
-    if (selectedMethod === 'binance') {
-      withdrawalData.binanceWalletAddress = usdWallet.binanceWalletAddress;
-      withdrawalData.binanceNetwork = usdWallet.binanceNetwork || settings.binanceNetwork;
-      withdrawalData.binanceCurrency = settings.binanceCurrency;
+    if (selectedMethod === 'bitget') {
+      withdrawalData.bitgetWalletAddress = usdWallet.bitgetWalletAddress;
+      withdrawalData.bitgetNetwork = usdWallet.bitgetNetwork || settings.bitgetNetwork;
+      withdrawalData.bitgetCurrency = settings.bitgetCurrency;
     }
 
     const withdrawal = await models.USDWithdrawal.create(withdrawalData) as any;
@@ -779,18 +824,18 @@ export const getWithdrawalSettingsAdmin = async (
       data: {
         settings: {
           stripeEnabled: settings.stripeEnabled,
-          binanceEnabled: settings.binanceEnabled,
-          binanceNetwork: settings.binanceNetwork,
-          binanceCurrency: settings.binanceCurrency,
+          bitgetEnabled: settings.bitgetEnabled,
+          bitgetNetwork: settings.bitgetNetwork,
+          bitgetCurrency: settings.bitgetCurrency,
           usdExchangeRate: settings.usdExchangeRate,
           minWithdrawalINR: settings.minWithdrawalINR,
           maxWithdrawalINR: settings.maxWithdrawalINR,
           stripeFeePercent: settings.stripeFeePercent,
-          binanceFeePercent: settings.binanceFeePercent,
+          bitgetFeePercent: settings.bitgetFeePercent,
           defaultWithdrawalMethod: settings.defaultWithdrawalMethod,
           notes: settings.notes,
           // Don't expose API keys fully
-          binanceApiKeyConfigured: !!settings.binanceApiKey,
+          bitgetApiKeyConfigured: !!settings.bitgetApiKey,
         },
       },
     });
@@ -817,16 +862,17 @@ export const updateWithdrawalSettings = async (
     const adminId = res.locals.adminId;
     const {
       stripeEnabled,
-      binanceEnabled,
-      binanceApiKey,
-      binanceSecretKey,
-      binanceNetwork,
-      binanceCurrency,
+      bitgetEnabled,
+      bitgetApiKey,
+      bitgetSecretKey,
+      bitgetPassphrase,
+      bitgetNetwork,
+      bitgetCurrency,
       usdExchangeRate,
       minWithdrawalINR,
       maxWithdrawalINR,
       stripeFeePercent,
-      binanceFeePercent,
+      bitgetFeePercent,
       defaultWithdrawalMethod,
       notes,
     } = req.body;
@@ -839,16 +885,17 @@ export const updateWithdrawalSettings = async (
 
     // Update fields if provided
     if (typeof stripeEnabled === 'boolean') settings.stripeEnabled = stripeEnabled;
-    if (typeof binanceEnabled === 'boolean') settings.binanceEnabled = binanceEnabled;
-    if (binanceApiKey) settings.binanceApiKey = binanceApiKey;
-    if (binanceSecretKey) settings.binanceSecretKey = binanceSecretKey;
-    if (binanceNetwork) settings.binanceNetwork = binanceNetwork;
-    if (binanceCurrency) settings.binanceCurrency = binanceCurrency;
+    if (typeof bitgetEnabled === 'boolean') settings.bitgetEnabled = bitgetEnabled;
+    if (bitgetApiKey) settings.bitgetApiKey = bitgetApiKey;
+    if (bitgetSecretKey) settings.bitgetSecretKey = bitgetSecretKey;
+    if (bitgetPassphrase) settings.bitgetPassphrase = bitgetPassphrase;
+    if (bitgetNetwork) settings.bitgetNetwork = bitgetNetwork;
+    if (bitgetCurrency) settings.bitgetCurrency = bitgetCurrency;
     if (usdExchangeRate) settings.usdExchangeRate = usdExchangeRate;
     if (minWithdrawalINR) settings.minWithdrawalINR = minWithdrawalINR;
     if (maxWithdrawalINR) settings.maxWithdrawalINR = maxWithdrawalINR;
     if (stripeFeePercent !== undefined) settings.stripeFeePercent = stripeFeePercent;
-    if (binanceFeePercent !== undefined) settings.binanceFeePercent = binanceFeePercent;
+    if (bitgetFeePercent !== undefined) settings.bitgetFeePercent = bitgetFeePercent;
     if (defaultWithdrawalMethod) settings.defaultWithdrawalMethod = defaultWithdrawalMethod;
     if (notes !== undefined) settings.notes = notes;
     
@@ -863,9 +910,9 @@ export const updateWithdrawalSettings = async (
       data: {
         settings: {
           stripeEnabled: settings.stripeEnabled,
-          binanceEnabled: settings.binanceEnabled,
-          binanceNetwork: settings.binanceNetwork,
-          binanceCurrency: settings.binanceCurrency,
+          bitgetEnabled: settings.bitgetEnabled,
+          bitgetNetwork: settings.bitgetNetwork,
+          bitgetCurrency: settings.bitgetCurrency,
           usdExchangeRate: settings.usdExchangeRate,
           defaultWithdrawalMethod: settings.defaultWithdrawalMethod,
         },
@@ -883,23 +930,27 @@ export const updateWithdrawalSettings = async (
 };
 
 /**
- * Test Binance Connection (Admin)
+ * Test Bitget Connection (Admin)
  */
-export const testBinanceConnection = async (
+export const testBitgetConnection = async (
   req: Request,
   res: Response,
   __: NextFunction
 ) => {
   try {
-    const { binance, settings } = await getBinanceServiceWithSettings();
+    const { bitget, settings } = await getBitgetServiceWithSettings();
     
-    // Check if API key is configured
-    if (!settings.binanceApiKey || !settings.binanceSecretKey) {
+    // Check if API key is configured (check both .env and database settings)
+    const apiKey = process.env.BITGET_API_KEY || settings.bitgetApiKey;
+    const secretKey = process.env.BITGET_SECRET_KEY || settings.bitgetSecretKey;
+    const passphrase = process.env.BITGET_PASSPHRASE || settings.bitgetPassphrase;
+    
+    if (!apiKey || !secretKey || !passphrase) {
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
-        message: 'Binance API credentials are not configured. Please add your API key and secret key in settings.',
-        title: 'Binance Connection',
+        message: 'Bitget API credentials are not configured. Please add your API key, secret key, and passphrase in settings.',
+        title: 'Bitget Connection',
         data: {
           connected: false,
           error: 'NO_CREDENTIALS',
@@ -907,53 +958,78 @@ export const testBinanceConnection = async (
       });
     }
     
+    // Get server's public IP first
+    let serverIP = 'Unknown';
+    try {
+      serverIP = await bitget.getServerPublicIP();
+    } catch (ipError) {
+      console.error('Failed to get server IP:', ipError);
+    }
+
     // Try to get account balances to test connection
-    const balances = await binance.getAccountBalances();
-    const usdtBalance = balances.find((b: any) => b.coin === settings.binanceCurrency);
+    const balances = await bitget.getAccountBalances();
+    // V2 API uses 'coin' field instead of 'coinName'
+    const usdtBalance = balances.find((b: any) => 
+      b.coin?.toUpperCase() === settings.bitgetCurrency?.toUpperCase() || 
+      b.coinName?.toUpperCase() === settings.bitgetCurrency?.toUpperCase()
+    );
 
     return JsonResponse(res, {
       status: 'success',
       statusCode: 200,
-      title: 'Binance Connection',
-      message: 'Binance connection successful.',
+      title: 'Bitget Connection',
+      message: 'Bitget connection successful.',
       data: {
         connected: true,
-        currency: settings.binanceCurrency,
-        network: settings.binanceNetwork,
+        serverIP,
+        currency: settings.bitgetCurrency,
+        network: settings.bitgetNetwork,
         balance: usdtBalance ? {
-          free: usdtBalance.free,
-          locked: usdtBalance.locked,
+          available: usdtBalance.available,
+          frozen: usdtBalance.frozen,
+          locked: usdtBalance.lock,
+          free: usdtBalance.available, // Alias for frontend compatibility
         } : null,
       },
     });
   } catch (error: any) {
-    console.error('Binance connection test failed:', error);
+    console.error('Bitget connection test failed:', error);
+    
+    // Try to get server IP even on error
+    let serverIP = 'Unknown';
+    try {
+      const { bitget } = await getBitgetServiceWithSettings();
+      serverIP = await bitget.getServerPublicIP();
+    } catch (ipError) {
+      console.error('Failed to get server IP on error:', ipError);
+    }
     
     // Extract meaningful error message
     let errorMessage = error.message || 'Unknown error';
     const errorCode = error.code;
     
-    // Map Binance error codes to user-friendly messages
-    if (errorCode === -2008) {
-      errorMessage = 'Invalid API Key. Please check your Binance API key is correct and active.';
-    } else if (errorCode === -2015) {
-      errorMessage = 'Invalid API Key or IP not whitelisted. Please check your API permissions and IP whitelist.';
-    } else if (errorCode === -1022) {
-      errorMessage = 'Invalid signature. Please check your Secret Key is correct.';
-    } else if (errorCode === -1021) {
+    // Map Bitget error codes to user-friendly messages
+    if (errorCode === '40009') {
+      errorMessage = 'Invalid API Key. Please check your Bitget API key is correct and active.';
+    } else if (errorCode === '40018') {
+      errorMessage = `IP not whitelisted. Your server IP is ${serverIP}. Please add this IP to your Bitget API whitelist.`;
+    } else if (errorCode === '40014' || errorCode === '40015') {
+      errorMessage = 'Invalid signature. Please check your Secret Key and Passphrase are correct.';
+    } else if (errorCode === '40016') {
       errorMessage = 'Timestamp error. Please check your server time is synchronized.';
-    } else if (errorCode === -1002) {
+    } else if (errorCode === '40012' || errorCode === '40013') {
       errorMessage = 'Unauthorized. API key does not have required permissions.';
     }
     
     return JsonResponse(res, {
       status: 'error',
       statusCode: 400,
-      message: `Binance connection failed: ${errorMessage}`,
-      title: 'Binance Connection',
+      message: `Bitget connection failed: ${errorMessage}`,
+      title: 'Bitget Connection',
       data: {
         connected: false,
         errorCode: errorCode,
+        serverIP,
       },
     });
   }
@@ -1180,7 +1256,7 @@ export const getAllUSDWithdrawals = async (
       totalCount: stats.reduce((acc, s) => acc + s.count, 0),
       byMethod: {
         stripe: stats.filter((s) => s._id.method === 'stripe').reduce((acc, s) => acc + s.count, 0),
-        binance: stats.filter((s) => s._id.method === 'binance').reduce((acc, s) => acc + s.count, 0),
+        bitget: stats.filter((s) => s._id.method === 'bitget').reduce((acc, s) => acc + s.count, 0),
       },
     };
 
@@ -1203,7 +1279,7 @@ export const getAllUSDWithdrawals = async (
         statistics,
         settings: {
           stripeEnabled: settings.stripeEnabled,
-          binanceEnabled: settings.binanceEnabled,
+          bitgetEnabled: settings.bitgetEnabled,
           defaultMethod: settings.defaultWithdrawalMethod,
         },
       },
@@ -1220,7 +1296,7 @@ export const getAllUSDWithdrawals = async (
 };
 
 /**
- * Approve USD Withdrawal (Admin) - Process via Stripe or Binance
+ * Approve USD Withdrawal (Admin) - Process via Stripe or Bitget
  */
 export const approveUSDWithdrawal = async (
   req: Request,
@@ -1318,34 +1394,37 @@ export const approveUSDWithdrawal = async (
         // Handle Stripe error - refund to wallet
         return await handleWithdrawalFailure(res, withdrawal, usdWallet, adminId, stripeError, 'Stripe');
       }
-    } else if (withdrawalMethod === 'binance') {
-      // ===== BINANCE WITHDRAWAL =====
-      if (!settings.binanceEnabled) {
+    } else if (withdrawalMethod === 'bitget') {
+      // ===== BITGET WITHDRAWAL =====
+      if (!settings.bitgetEnabled) {
         return JsonResponse(res, {
           status: 'error',
           statusCode: 400,
-          message: 'Binance withdrawals are currently disabled.',
+          message: 'Bitget withdrawals are currently disabled.',
           title: 'Approve USD Withdrawal',
         });
       }
 
-      const walletAddress = withdrawal.binanceWalletAddress || usdWallet?.binanceWalletAddress;
+      const walletAddress = withdrawal.bitgetWalletAddress || usdWallet?.bitgetWalletAddress;
       if (!walletAddress) {
         return JsonResponse(res, {
           status: 'error',
           statusCode: 400,
-          message: 'User does not have a Binance wallet address configured.',
+          message: 'User does not have a Bitget wallet address configured.',
           title: 'Approve USD Withdrawal',
         });
       }
 
       try {
-        const { binance } = await getBinanceServiceWithSettings();
-        const network = withdrawal.binanceNetwork || settings.binanceNetwork;
-        const currency = withdrawal.binanceCurrency || settings.binanceCurrency;
+        const { bitget } = await getBitgetServiceWithSettings();
+        const network = withdrawal.bitgetNetwork || settings.bitgetNetwork;
+        const currency = withdrawal.bitgetCurrency || settings.bitgetCurrency;
+
+        // Map network to Bitget chain format
+        const chain = bitget.mapNetworkToBitgetChain(network);
 
         // Validate address
-        if (!binance.validateAddress(walletAddress, network)) {
+        if (!bitget.validateAddress(walletAddress, chain)) {
           return JsonResponse(res, {
             status: 'error',
             statusCode: 400,
@@ -1355,26 +1434,27 @@ export const approveUSDWithdrawal = async (
         }
 
         // Calculate fee
-        const feePercent = settings.binanceFeePercent || 0.1;
+        const feePercent = settings.bitgetFeePercent || 0.1;
         const fee = (withdrawal.amountUSD * feePercent) / 100;
         const netAmount = withdrawal.amountUSD - fee;
 
-        console.log(`Processing Binance withdrawal: ${netAmount} ${currency} to ${walletAddress} on ${network}`);
+        console.log(`Processing Bitget withdrawal: ${netAmount} ${currency} to ${walletAddress} on ${chain}`);
 
-        // Execute Binance withdrawal
-        const withdrawResult = await binance.withdraw({
+        // Execute Bitget withdrawal
+        const withdrawResult = await bitget.withdraw({
           coin: currency,
-          network: network,
+          chain: chain,
           address: walletAddress,
           amount: netAmount,
-          withdrawOrderId: withdrawal._id.toString(),
+          clientOid: withdrawal._id.toString(),
+          remark: `Withdrawal-${withdrawal._id.toString().substring(0, 8)}`,
         });
 
         withdrawal.status = 'completed';
-        withdrawal.binanceWithdrawId = withdrawResult.id;
-        withdrawal.binanceStatus = 'processing';
-        withdrawal.binanceFee = fee;
-        withdrawal.adminRemarks = remarks || `Approved and processed via Binance (${currency} on ${network})`;
+        withdrawal.bitgetWithdrawId = withdrawResult.orderId;
+        withdrawal.bitgetStatus = 'processing';
+        withdrawal.bitgetFee = fee;
+        withdrawal.adminRemarks = remarks || `Approved and processed via Bitget (${currency} on ${chain})`;
         withdrawal.processedAt = new Date();
         withdrawal.processedBy = adminId;
         await withdrawal.save();
@@ -1389,23 +1469,23 @@ export const approveUSDWithdrawal = async (
           status: 'success',
           statusCode: 200,
           title: 'Approve USD Withdrawal',
-          message: `Withdrawal approved and processed via Binance. ${netAmount} ${currency} sent to wallet.`,
+          message: `Withdrawal approved and processed via Bitget. ${netAmount} ${currency} sent to wallet.`,
           data: {
             withdrawal: {
               _id: withdrawal._id,
               status: withdrawal.status,
-              binanceWithdrawId: withdrawal.binanceWithdrawId,
-              withdrawalMethod: 'binance',
+              bitgetWithdrawId: withdrawal.bitgetWithdrawId,
+              withdrawalMethod: 'bitget',
               amountSent: netAmount,
               fee: fee,
               currency: currency,
-              network: network,
+              network: chain,
             },
           },
         });
-      } catch (binanceError: any) {
-        // Handle Binance error - refund to wallet
-        return await handleWithdrawalFailure(res, withdrawal, usdWallet, adminId, binanceError, 'Binance');
+      } catch (bitgetError: any) {
+        // Handle Bitget error - refund to wallet
+        return await handleWithdrawalFailure(res, withdrawal, usdWallet, adminId, bitgetError, 'Bitget');
       }
     } else {
       return JsonResponse(res, {
@@ -1488,13 +1568,13 @@ const handleWithdrawalFailure = async (
     } else if (error.code === 'account_invalid') {
       errorMessage = 'User\'s Stripe Connect account is invalid. Amount refunded to wallet.';
     }
-  } else if (provider === 'Binance') {
+  } else if (provider === 'Bitget') {
     if (error.code === -4026) {
-      errorMessage = 'Binance: Insufficient balance. Please ensure your Binance account has sufficient funds.';
+      errorMessage = 'Bitget: Insufficient balance. Please ensure your Bitget account has sufficient funds.';
     } else if (error.code === -1002) {
-      errorMessage = 'Binance: Invalid API key. Please check your API credentials.';
+      errorMessage = 'Bitget: Invalid API key. Please check your API credentials.';
     } else if (error.code === -2015) {
-      errorMessage = 'Binance: Invalid API key or IP not whitelisted.';
+      errorMessage = 'Bitget: Invalid API key or IP not whitelisted.';
     }
   }
 
@@ -1649,9 +1729,9 @@ export const getUSDWalletByUserId = async (
               totalWithdrawnUSD: usdWallet.totalWithdrawnUSD,
               stripeConnectStatus: usdWallet.stripeConnectStatus,
               stripeOnboardingComplete: usdWallet.stripeOnboardingComplete,
-              binanceWalletAddress: usdWallet.binanceWalletAddress,
-              binanceNetwork: usdWallet.binanceNetwork,
-              binanceVerified: usdWallet.binanceVerified,
+              bitgetWalletAddress: usdWallet.bitgetWalletAddress,
+              bitgetNetwork: usdWallet.bitgetNetwork,
+              bitgetVerified: usdWallet.bitgetVerified,
               preferredWithdrawalMethod: usdWallet.preferredWithdrawalMethod,
             }
           : null,
@@ -1670,9 +1750,9 @@ export const getUSDWalletByUserId = async (
 };
 
 /**
- * Check Binance Withdrawal Status (Admin)
+ * Check Bitget Withdrawal Status (Admin)
  */
-export const checkBinanceWithdrawalStatus = async (
+export const checkBitgetWithdrawalStatus = async (
   req: Request,
   res: Response,
   __: NextFunction
@@ -1686,27 +1766,27 @@ export const checkBinanceWithdrawalStatus = async (
         status: 'error',
         statusCode: 404,
         message: 'Withdrawal not found.',
-        title: 'Binance Withdrawal Status',
+        title: 'Bitget Withdrawal Status',
       });
     }
 
-    if (!withdrawal.binanceWithdrawId) {
+    if (!withdrawal.bitgetWithdrawId) {
       return JsonResponse(res, {
         status: 'error',
         statusCode: 400,
-        message: 'This is not a Binance withdrawal or has not been processed yet.',
-        title: 'Binance Withdrawal Status',
+        message: 'This is not a Bitget withdrawal or has not been processed yet.',
+        title: 'Bitget Withdrawal Status',
       });
     }
 
-    const { binance } = await getBinanceServiceWithSettings();
-    const status = await binance.getWithdrawStatus(withdrawal.binanceWithdrawId);
+    const { bitget } = await getBitgetServiceWithSettings();
+    const status = await bitget.getWithdrawStatus(withdrawal.bitgetWithdrawId);
 
     if (status) {
       // Update withdrawal with latest status
-      withdrawal.binanceStatus = status.status;
+      withdrawal.bitgetStatus = status.status;
       if (status.txId) {
-        withdrawal.binanceTxHash = status.txId;
+        withdrawal.bitgetTxHash = status.txId;
       }
       await withdrawal.save();
     }
@@ -1714,24 +1794,24 @@ export const checkBinanceWithdrawalStatus = async (
     return JsonResponse(res, {
       status: 'success',
       statusCode: 200,
-      title: 'Binance Withdrawal Status',
+      title: 'Bitget Withdrawal Status',
       message: 'Status retrieved successfully.',
       data: {
         withdrawalId: withdrawal._id,
-        binanceWithdrawId: withdrawal.binanceWithdrawId,
-        binanceStatus: status?.status || withdrawal.binanceStatus,
-        txHash: status?.txId || withdrawal.binanceTxHash,
-        network: withdrawal.binanceNetwork,
-        currency: withdrawal.binanceCurrency,
+        bitgetWithdrawId: withdrawal.bitgetWithdrawId,
+        bitgetStatus: status?.status || withdrawal.bitgetStatus,
+        txHash: status?.txId || withdrawal.bitgetTxHash,
+        network: withdrawal.bitgetNetwork,
+        currency: withdrawal.bitgetCurrency,
       },
     });
   } catch (error) {
-    console.error('Error checking Binance withdrawal status:', error);
+    console.error('Error checking Bitget withdrawal status:', error);
     return JsonResponse(res, {
       status: 'error',
       statusCode: 500,
       message: 'An error occurred while checking withdrawal status.',
-      title: 'Binance Withdrawal Status',
+      title: 'Bitget Withdrawal Status',
     });
   }
 };
@@ -1739,7 +1819,7 @@ export const checkBinanceWithdrawalStatus = async (
 export default {
   // User endpoints
   getUSDWalletInfo,
-  saveBinanceWalletAddress,
+  saveBitgetWalletAddress,
   getWithdrawalMethods,
   createStripeConnectAccount,
   checkStripeConnectStatus,
@@ -1749,12 +1829,12 @@ export default {
   // Admin endpoints
   getWithdrawalSettingsAdmin,
   updateWithdrawalSettings,
-  testBinanceConnection,
+  testBitgetConnection,
   toggleUSDUserStatus,
   fundUSDWallet,
   getAllUSDWithdrawals,
   approveUSDWithdrawal,
   rejectUSDWithdrawal,
   getUSDWalletByUserId,
-  checkBinanceWithdrawalStatus,
+  checkBitgetWithdrawalStatus,
 };

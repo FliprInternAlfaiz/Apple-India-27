@@ -112,7 +112,7 @@ export const usdWithdrawalUrls = {
   CREATE_WITHDRAWAL: usdWithdrawalPrefix + "/create",
   WITHDRAWAL_HISTORY: usdWithdrawalPrefix + "/history",
   TRANSACTION_HISTORY: usdWithdrawalPrefix + "/transactions",
-  // Binance endpoints
+  // Bitget endpoints
   WITHDRAWAL_METHODS: usdWithdrawalPrefix + "/withdrawal-methods",
-  SAVE_BINANCE_WALLET: usdWithdrawalPrefix + "/binance-wallet",
+  SAVE_BITGET_WALLET: usdWithdrawalPrefix + "/bitget-wallet",
 };
