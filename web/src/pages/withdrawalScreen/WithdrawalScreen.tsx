@@ -55,7 +55,6 @@ const WithdrawalScreen: React.FC = () => {
   const [withdrawalPassword, setWithdrawalPassword] = useState("");
   const [activeTab, setActiveTab] = useState<string | null>("bank");
 
-  // Check if user is USD enabled
   const isUSDUser = useSelector((state: RootState) => state.auth?.userData?.isUSDUser) || false;
 
   const [addAccountOpened, { open: openAddAccount, close: closeAddAccount }] =
@@ -81,7 +80,7 @@ const WithdrawalScreen: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const predefinedAmounts = [
-    280, 750, 1080, 2100, 3500, 12000, 21500, 36000, 55000, 108000, 150000,
+    280, 750, 1080, 2100, 3500, 55000, 108000, 150000,
   ];
 
   const {

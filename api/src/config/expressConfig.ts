@@ -104,6 +104,7 @@ class ExpressConfig {
 
   private staticServe() {
     this.app.use('/uploads', express.static('uploads'));
+    this.app.use('/api/uploads', express.static('uploads'));
   }
 }
 

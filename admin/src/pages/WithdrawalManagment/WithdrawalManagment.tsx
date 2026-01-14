@@ -116,8 +116,8 @@ const WithdrawalManagement = () => {
 
       notifications.show({
         title: "Success",
-        message: isUSDWithdrawal 
-          ? "Amount credited to user's USD Wallet successfully" 
+        message: isUSDWithdrawal
+          ? "Amount credited to user's USD Wallet successfully"
           : "Withdrawal approved successfully",
         color: "green",
         icon: <FiCheckCircle />,
@@ -576,7 +576,7 @@ const WithdrawalManagement = () => {
 
                 <Alert color="green" variant="light" icon={<FiAlertCircle />}>
                   <Text size="xs">
-                    <strong>Flow:</strong> Upon approval, ₹{selectedWithdrawal.amount} will be added to user's USD Wallet balance. 
+                    <strong>Flow:</strong> Upon approval, ₹{selectedWithdrawal.amount} will be added to user's USD Wallet balance.
                     The user can then withdraw this amount via Stripe to their connected bank account.
                   </Text>
                 </Alert>
@@ -616,6 +616,8 @@ const WithdrawalManagement = () => {
                           width={250}
                           height={250}
                           radius="md"
+                          fit="contain"
+
                         />
                       </Flex>
                       <Alert color="blue" icon={<FiAlertCircle />}>
@@ -638,7 +640,7 @@ const WithdrawalManagement = () => {
                     </Text>
                     <Text size="sm">{selectedWithdrawal.bankName}</Text>
                   </Group>
-                  
+
                   {selectedWithdrawal.accountType !== 'qr' && (
                     <>
                       <Group justify="space-between" mb="xs">
@@ -681,7 +683,7 @@ const WithdrawalManagement = () => {
                       </Group>
                     </>
                   )}
-                  
+
                   <Group justify="space-between">
                     <Text size="sm" c="dimmed">
                       Amount
@@ -723,8 +725,8 @@ const WithdrawalManagement = () => {
                 loading={approveWithdrawalMutation.isPending}
                 leftSection={(selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal) ? <FaWallet /> : <FiCheckCircle />}
               >
-                {(selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal) 
-                  ? "Credit to USD Wallet" 
+                {(selectedWithdrawal.bankName === "USD Wallet" || selectedWithdrawal.isUSDWithdrawal)
+                  ? "Credit to USD Wallet"
                   : "Approve Withdrawal"}
               </Button>
             </Group>
@@ -871,7 +873,7 @@ const WithdrawalManagement = () => {
                 <Text size="lg" fw={600} mb="md">
                   QR Code Payment Details
                 </Text>
-                
+
                 <Group justify="space-between" mb="xs">
                   <Text size="sm" c="dimmed">
                     Payment Name
@@ -891,9 +893,10 @@ const WithdrawalManagement = () => {
                 <Text size="sm" fw={500} mb="sm" ta="center">QR Code:</Text>
                 <Flex justify="center">
                   <Image
-                    src={`${process.env.REACT_APP_API_URL}/${selectedWithdrawal.qrCodeImage}`}
+                    src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${selectedWithdrawal.qrCodeImage}`}
                     alt="Payment QR Code"
                     width={200}
+                    fit="contain"
                     height={200}
                     radius="md"
                   />
