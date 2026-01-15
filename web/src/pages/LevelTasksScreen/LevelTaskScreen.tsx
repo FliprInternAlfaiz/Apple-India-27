@@ -54,7 +54,7 @@ interface UserLevel {
 }
 
 const LevelTasksScreen: React.FC = () => {
-  const { data, isLoading, isError, refetch } = useGetAllLevelsQuery(); 
+  const { data, isLoading, isError, refetch } = useGetAllLevelsQuery();
   const levels: Level[] = data?.levels ?? [];
   const fetchedUserLevel: UserLevel | null = data?.userLevel ?? null;
   const upgradeMutation = useUpgradeUserLevelMutation();
@@ -113,8 +113,8 @@ const LevelTasksScreen: React.FC = () => {
 
   if (isLoading)
     return (
-       <Center h="100vh">
-        <Loader color="blue" size="lg" />
+      <Center h="100vh">
+        <Loader color="2d1b4e" size="lg" />
       </Center>
     );
 
@@ -127,7 +127,7 @@ const LevelTasksScreen: React.FC = () => {
 
   if (!currentLevel)
     return (
-      <Alert color="blue" title="Info">
+      <Alert color="2d1b4e" title="Info">
         No levels available.
       </Alert>
     );
@@ -160,7 +160,7 @@ const LevelTasksScreen: React.FC = () => {
                     </Text>
                     {level.isCurrent && <Badge color="green">Current</Badge>}
                     {!level.isUnlocked && <Badge color="red">Locked</Badge>}
-                    {canUserPurchase(level) && <Badge color="blue">Available</Badge>}
+                    {canUserPurchase(level) && <Badge color="2d1b4e">Available</Badge>}
                   </Flex>
 
                   <Flex justify="space-between" align="flex-end" mb="md">
@@ -201,9 +201,8 @@ const LevelTasksScreen: React.FC = () => {
             <Carousel.Slide key={level._id}>
               <Box
                 onClick={() => setActiveLevelIndex(index)}
-                className={`${classes.levelIndicator} ${
-                  activeLevelIndex === index ? classes.activeIndicator : ""
-                }`}
+                className={`${classes.levelIndicator} ${activeLevelIndex === index ? classes.activeIndicator : ""
+                  }`}
               >
                 {activeLevelIndex === index ? (
                   <FaStar size={16} />
@@ -278,11 +277,10 @@ const LevelTasksScreen: React.FC = () => {
             <Flex
               key={index}
               justify="space-between"
-              className={`${classes.tableRow} ${
-                index < currentLevel.invitations.length - 1
-                  ? classes.tableRowBorder
-                  : ""
-              }`}
+              className={`${classes.tableRow} ${index < currentLevel.invitations.length - 1
+                ? classes.tableRowBorder
+                : ""
+                }`}
             >
               <Text size="xs" className={classes.flex2}>
                 {inv.method}
@@ -302,7 +300,7 @@ const LevelTasksScreen: React.FC = () => {
           <Button
             fullWidth
             mt="md"
-            color="blue"
+            color="#2d1b4e"
             size="lg"
             loading={upgradeMutation.isPending}
             onClick={() => handlePurchaseClick(currentLevel)}
@@ -317,8 +315,8 @@ const LevelTasksScreen: React.FC = () => {
           <Alert icon={<AlertCircle size={16} />} color="orange" mt="md">
             {userLevel && userLevel.mainWallet < currentLevel.target
               ? `Insufficient balance. You need ₹${(
-                  currentLevel.target - userLevel.mainWallet
-                ).toLocaleString()} more. Please Recharge`
+                currentLevel.target - userLevel.mainWallet
+              ).toLocaleString()} more. Please Recharge`
               : "Level already unlocked or current."}
           </Alert>
         )}
@@ -408,12 +406,13 @@ const LevelTasksScreen: React.FC = () => {
                 variant="outline"
                 fullWidth
                 onClick={() => setShowPurchaseModal(false)}
+                color="#2d1b4e"
               >
                 Cancel
               </Button>
               <Button
                 fullWidth
-                color="blue"
+                color="#2d1b4e"
                 loading={upgradeMutation.isPending}
                 onClick={handleConfirmPurchase}
               >

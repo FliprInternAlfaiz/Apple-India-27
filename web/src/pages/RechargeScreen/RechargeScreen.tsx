@@ -163,7 +163,7 @@ const RechargeScreen: React.FC = () => {
 
     return (
       <Card shadow="sm" p="md" radius="md" mb="lg">
-        <Progress value={progress} color="blue" size="sm" mb="xs" />
+        <Progress value={progress} color="2d1b4e" size="sm" mb="xs" />
         <Flex justify="space-between">
           {steps.map((s) => (
             <Text
@@ -231,6 +231,7 @@ const RechargeScreen: React.FC = () => {
         size="lg"
         onClick={handleAmountNext}
         disabled={!getSelectedAmount() || getSelectedAmount() <= 0}
+        color="#2d1b4e"
         rightSection={<FaArrowRight />}
       >
         {getSelectedAmount() > 0
@@ -254,6 +255,7 @@ const RechargeScreen: React.FC = () => {
             variant="subtle"
             size="xs"
             onClick={() => setCurrentStep(RechargeStep.SELECT_AMOUNT)}
+            color="#2d1b4e"
           >
             Change
           </Button>
@@ -267,7 +269,7 @@ const RechargeScreen: React.FC = () => {
         </Text>
 
         {paymentMethods.length === 0 ? (
-          <Alert color="blue" icon={<FaInfoCircle />}>
+          <Alert color="2d1b4e" icon={<FaInfoCircle />}>
             No payment methods available. Please contact support.
           </Alert>
         ) : (
@@ -330,6 +332,7 @@ const RechargeScreen: React.FC = () => {
         <Button
           variant="outline"
           size="lg"
+          color="#2d1b4e"
           onClick={() => setCurrentStep(RechargeStep.SELECT_AMOUNT)}
         >
           Back
@@ -338,6 +341,7 @@ const RechargeScreen: React.FC = () => {
           size="lg"
           onClick={handlePaymentMethodNext}
           disabled={!selectedPaymentMethod}
+          color="#2d1b4e"
           loading={createOrderMutation.isPending}
           rightSection={<FaArrowRight />}
         >
@@ -368,7 +372,7 @@ const RechargeScreen: React.FC = () => {
 
     return (
       <Stack gap="md">
-        <Alert color="blue" icon={<FaInfoCircle />}>
+        <Alert color="2d1b4e" icon={<FaInfoCircle />}>
           Complete the payment using the details below
         </Alert>
 
@@ -395,80 +399,80 @@ const RechargeScreen: React.FC = () => {
           </Flex>
         </Card>
 
-      {/* 🔹 QR or Bank / UPI Info */}
-<Card withBorder p="md">
-  <Text size="sm" fw={600} mb="md" c="dimmed">
-    PAYMENT DETAILS
-  </Text>
+        {/* 🔹 QR or Bank / UPI Info */}
+        <Card withBorder p="md">
+          <Text size="sm" fw={600} mb="md" c="dimmed">
+            PAYMENT DETAILS
+          </Text>
 
-  {/* ✅ Case 1: UPI / QR Payment */}
-  {method?.methodType === "upi" && qrCodeSrc ? (
-    <Flex justify="center" align="center" direction="column" gap="xs">
-      <Image
-        src={qrCodeSrc}
-        alt="Payment QR Code"
-        width={260}
-        height={260}
-        fit="contain"
-        style={{
-          border: "2px solid #228be6",
-          borderRadius: 8,
-        }}
-      />
-      {method?.upiId && (
-        <Text size="sm" mt="sm" fw={600}>
-          UPI ID: <Text span c="blue">{method.upiId}</Text>
-        </Text>
-      )}
-      <Alert
-        color="green"
-        icon={<FaCheckCircle />}
-        style={{ width: "100%" }}
-      >
-        <Text size="sm" fw={500}>
-          Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
-        </Text>
-        <Text size="xs" c="dimmed">
-          Scan this QR code or use the UPI ID above to complete payment.
-        </Text>
-      </Alert>
-    </Flex>
-  ) : method?.methodType === "bank" ? (
-    /* ✅ Case 2: Bank Transfer */
-    <Stack gap="xs">
-      <Flex justify="space-between">
-        <Text fw={500}>Account Holder:</Text>
-        <Text c="blue">{method?.accountName || "N/A"}</Text>
-      </Flex>
-      <Flex justify="space-between">
-        <Text fw={500}>Account Number:</Text>
-        <Text c="blue">{method?.accountNumber || "N/A"}</Text>
-      </Flex>
-      <Flex justify="space-between">
-        <Text fw={500}>Bank Name:</Text>
-        <Text c="blue">{method?.bankName || "N/A"}</Text>
-      </Flex>
-      <Flex justify="space-between">
-        <Text fw={500}>IFSC Code:</Text>
-        <Text c="blue">{method?.ifscCode || "N/A"}</Text>
-      </Flex>
+          {/* ✅ Case 1: UPI / QR Payment */}
+          {method?.methodType === "upi" && qrCodeSrc ? (
+            <Flex justify="center" align="center" direction="column" gap="xs">
+              <Image
+                src={qrCodeSrc}
+                alt="Payment QR Code"
+                width={260}
+                height={260}
+                fit="contain"
+                style={{
+                  border: "2px solid #228be6",
+                  borderRadius: 8,
+                }}
+              />
+              {method?.upiId && (
+                <Text size="sm" mt="sm" fw={600}>
+                  UPI ID: <Text span c="blue">{method.upiId}</Text>
+                </Text>
+              )}
+              <Alert
+                color="green"
+                icon={<FaCheckCircle />}
+                style={{ width: "100%" }}
+              >
+                <Text size="sm" fw={500}>
+                  Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Scan this QR code or use the UPI ID above to complete payment.
+                </Text>
+              </Alert>
+            </Flex>
+          ) : method?.methodType === "bank" ? (
+            /* ✅ Case 2: Bank Transfer */
+            <Stack gap="xs">
+              <Flex justify="space-between">
+                <Text fw={500}>Account Holder:</Text>
+                <Text c="blue">{method?.accountName || "N/A"}</Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text fw={500}>Account Number:</Text>
+                <Text c="blue">{method?.accountNumber || "N/A"}</Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text fw={500}>Bank Name:</Text>
+                <Text c="blue">{method?.bankName || "N/A"}</Text>
+              </Flex>
+              <Flex justify="space-between">
+                <Text fw={500}>IFSC Code:</Text>
+                <Text c="blue">{method?.ifscCode || "N/A"}</Text>
+              </Flex>
 
-      <Alert color="green" icon={<FaCheckCircle />}>
-        <Text size="sm" fw={500}>
-          Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
-        </Text>
-        <Text size="xs" c="dimmed">
-          Use the above details to transfer via your banking app or net banking.
-        </Text>
-      </Alert>
-    </Stack>
-  ) : (
-    /* Fallback: No Payment Info */
-    <Alert color="yellow" icon={<FaInfoCircle />}>
-      Payment details not available for this method. Please contact support.
-    </Alert>
-  )}
-</Card>
+              <Alert color="green" icon={<FaCheckCircle />}>
+                <Text size="sm" fw={500}>
+                  Amount: ₹{paymentDetails.amount?.toLocaleString?.() || 0}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Use the above details to transfer via your banking app or net banking.
+                </Text>
+              </Alert>
+            </Stack>
+          ) : (
+            /* Fallback: No Payment Info */
+            <Alert color="yellow" icon={<FaInfoCircle />}>
+              Payment details not available for this method. Please contact support.
+            </Alert>
+          )}
+        </Card>
 
 
         {/* 🔹 Submit Section */}
@@ -482,6 +486,8 @@ const RechargeScreen: React.FC = () => {
             w="40%"
             variant="outline"
             size="md"
+            color="#2d1b4e"
+
             onClick={() => setCurrentStep(RechargeStep.SELECT_PAYMENT)}
           >
             Back
@@ -490,6 +496,7 @@ const RechargeScreen: React.FC = () => {
             size="md"
             onClick={handleProceedToUTR}
             rightSection={<FaArrowRight />}
+            color="#2d1b4e"
           >
             I Have Completed Payment
           </Button>
@@ -552,7 +559,7 @@ const RechargeScreen: React.FC = () => {
         </div>
       </Card>
 
-      <Alert color="blue" icon={<FaInfoCircle />}>
+      <Alert color="2d1b4e" icon={<FaInfoCircle />}>
         Your recharge will be processed within 5-10 minutes after verification
       </Alert>
 
@@ -561,6 +568,8 @@ const RechargeScreen: React.FC = () => {
           variant="outline"
           size="lg"
           onClick={() => setCurrentStep(RechargeStep.PAYMENT_DETAILS)}
+          color="#2d1b4e"
+
         >
           Back
         </Button>
@@ -569,6 +578,8 @@ const RechargeScreen: React.FC = () => {
           onClick={handleSubmitUTR}
           disabled={!transactionId || transactionId.length < 10}
           loading={verifyPaymentMutation.isPending}
+          color="#2d1b4e"
+
         >
           Submit for Verification
         </Button>
@@ -617,7 +628,7 @@ const RechargeScreen: React.FC = () => {
         </Timeline>
       </Card>
 
-      <Alert color="blue" icon={<FaInfoCircle />} w="100%">
+      <Alert color="2d1b4e" icon={<FaInfoCircle />} w="100%">
         <Text size="sm">
           Amount: <strong>₹{paymentDetails?.amount?.toLocaleString()}</strong>
         </Text>
@@ -626,7 +637,8 @@ const RechargeScreen: React.FC = () => {
         </Text>
       </Alert>
 
-      <Button fullWidth size="lg" onClick={handleComplete}>
+      <Button fullWidth size="lg" onClick={handleComplete} color="#2d1b4e"
+      >
         Done
       </Button>
     </Stack>

@@ -24,7 +24,7 @@ const Login: React.FC = () => {
   const { mutate, isPending } = useLoginMutation();
   const dispatch = useAppDispatch();
 
-    const { refetch } = useVerifyUserQuery(); 
+  const { refetch } = useVerifyUserQuery();
 
   const handleSubmit = () => {
     if (!phone || !password) {
@@ -40,15 +40,15 @@ const Login: React.FC = () => {
       { phone, password },
       {
         onSuccess: (res: any) => {
-           dispatch(login(res.data));
+          dispatch(login(res.data));
           if (res?.status === "success") {
             showNotification({
               title: "Login Successful",
               message: "Welcome back!",
               color: "green",
             });
-             setTimeout(async () => {
-              await refetch(); 
+            setTimeout(async () => {
+              await refetch();
               navigate(ROUTES.HOMEPAGE);
             }, 400);
           } else {
@@ -82,7 +82,7 @@ const Login: React.FC = () => {
           placeholder="Eg., 7804064484"
           value={phone}
           onChange={(e) => setPhone(e.currentTarget.value)}
-              classNames={{ label: classes.label, input: classes.input }}
+          classNames={{ label: classes.label, input: classes.input }}
           mb="sm"
         />
         <PasswordInput
@@ -97,7 +97,8 @@ const Login: React.FC = () => {
           fullWidth
           loading={isPending}
           onClick={handleSubmit}
-          color="yellow"
+          color="#2d1b4e"
+          className={classes.loginButton}
         >
           Login
         </Button>

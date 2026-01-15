@@ -88,7 +88,7 @@ const Task: React.FC = () => {
   const todayIncome = stats?.todayIncome || 0;
   const rewardPerTask = stats?.rewardPerTask || 0;
   const maxDailyEarning = stats?.maxDailyEarning || 0;
-  
+
   const progressPercentage =
     dailyLimit > 0 ? (todayCompleted / dailyLimit) * 100 : 0;
 
@@ -149,7 +149,7 @@ const Task: React.FC = () => {
           <Button
             size="md"
             variant="filled"
-            color="#868e96"
+            color="#2d1b4e"
             gradient={{ from: "blue", to: "cyan" }}
             onClick={handlePurchaseLevel}
             leftSection={<ShoppingCart size={20} />}
@@ -168,7 +168,8 @@ const Task: React.FC = () => {
           <Text size="sm" mb="md">
             {"Failed to load tasks. Please try again later."}
           </Text>
-          <Button onClick={() => window.location.reload()} variant="light">
+          <Button onClick={() => window.location.reload()} variant="light" color="#2d1b4e"
+          >
             Retry
           </Button>
         </Alert>
@@ -270,8 +271,8 @@ const Task: React.FC = () => {
             p="xl"
           >
             <Text size="lg" c="gray" ta="center">
-              {todayCompleted >= dailyLimit 
-                ? "🎉 Daily limit reached! Come back tomorrow" 
+              {todayCompleted >= dailyLimit
+                ? "🎉 Daily limit reached! Come back tomorrow"
                 : "No tasks available at the moment"}
             </Text>
             <Text size="sm" c="dimmed" ta="center">
@@ -280,7 +281,8 @@ const Task: React.FC = () => {
                 : "Check back later for new tasks or upgrade your level"}
             </Text>
             {todayCompleted < dailyLimit && (
-              <Button variant="light" onClick={handlePurchaseLevel} mt="md">
+              <Button variant="light" onClick={handlePurchaseLevel} mt="md" color="#2d1b4e"
+              >
                 Upgrade Level
               </Button>
             )}

@@ -16,20 +16,21 @@ const verificationPrefix = "/verification";
 const conferenceNews = "/conferenceNews";
 
 const luckydrawPrefix = "/luckydraw"
-  
+
 export const authUrls = {
   LOGIN: authPrefix + "/login",
   SIGNUP: authPrefix + "/signup",
-  VERIFYUSER:authPrefix + "/profile",
-  LOGOUT:authPrefix + "/logout",
-  UPDATEPROFILE : authPrefix + "/update",
+  VERIFYUSER: authPrefix + "/profile",
+  LOGOUT: authPrefix + "/logout",
+  UPDATEPROFILE: authPrefix + "/update",
 };
 
 export const teamUrls = {
   TEAM_STATS: teamPrefix + "/stats",
   REFERRAL_LINK: teamPrefix + "/referral-link",
   TEAM_MEMBERS: (level: string) => `${teamPrefix}/members/${level}`,
-  REFERRAL_HISTORY : teamPrefix + "/referral-history",
+  REFERRAL_HISTORY: teamPrefix + "/referral-history",
+  MY_TEAM_REFERRALS: teamPrefix + "/my-referrals",
 };
 
 export const taskUrls = {
@@ -46,7 +47,7 @@ export const withdrawalUrls = {
   CREATE_WITHDRAWAL: withdrawalPrefix + "/create",
   WITHDRAWAL_HISTORY: withdrawalPrefix + "/history",
   SET_PASSWORD: withdrawalPrefix + "/set-password",
-   CHECK_AVAILABILITY: withdrawalPrefix + "/check-availability",
+  CHECK_AVAILABILITY: withdrawalPrefix + "/check-availability",
   WITHDRAWAL_SCHEDULE: withdrawalPrefix + "/schedule",
   QR_CODES: withdrawalPrefix + "/qr-codes",
 
@@ -54,11 +55,11 @@ export const withdrawalUrls = {
 
 export const rechargeUrls = {
   WALLET_INFO: rechargePrefix + "/wallet-info",
-  PAYMENT_METHODS: rechargePrefix +  "/payment-methods",
+  PAYMENT_METHODS: rechargePrefix + "/payment-methods",
   CREATE_ORDER: rechargePrefix + "/create-order",
   VERIFY_PAYMENT: rechargePrefix + "/verify-payment",
   HISTORY: rechargePrefix + "/history",
-  GENERATE_QR : rechargePrefix + "/generate-qr",
+  GENERATE_QR: rechargePrefix + "/generate-qr",
   APPROVE: (orderId: string) => rechargePrefix + `/admin/approve/${orderId}`,
   REJECT: (orderId: string) => rechargePrefix + `/admin/reject/${orderId}`,
 };

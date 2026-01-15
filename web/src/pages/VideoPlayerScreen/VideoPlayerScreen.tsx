@@ -17,7 +17,7 @@ const VideoPlayerScreen: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
-  
+
   // State management
   const [videoWatched, setVideoWatched] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
@@ -25,7 +25,7 @@ const VideoPlayerScreen: React.FC = () => {
   const [isProcessingReward, setIsProcessingReward] = useState(false);
   const [hasStartedWatching, setHasStartedWatching] = useState(false);
   const [rewardData, setRewardData] = useState<TCompleteTaskResponse | null>(null);
-  
+
   // Refs to track state
   const watchedSegmentsRef = useRef<Set<number>>(new Set());
   const hasAutoRewardedRef = useRef(false);
@@ -36,74 +36,74 @@ const VideoPlayerScreen: React.FC = () => {
   const task = data?.task;
 
   const handleAutoReward = useCallback(async () => {
-  if (!taskId || videoWatched || isProcessingReward || hasAutoRewardedRef.current) {
-    return;
-  }
+    if (!taskId || videoWatched || isProcessingReward || hasAutoRewardedRef.current) {
+      return;
+    }
 
-  hasAutoRewardedRef.current = true;
-  setIsProcessingReward(true);
+    hasAutoRewardedRef.current = true;
+    setIsProcessingReward(true);
 
-  try {
-    const result = await completeMutation.mutateAsync(taskId);
+    try {
+      const result = await completeMutation.mutateAsync(taskId);
 
-    // The API returns only data (no .status), so just treat any successful response as success
-    if (result && typeof result.rewardAmount !== "undefined") {
-      // ✅ Reward successfully granted or already claimed
-      setRewardData(result);
-      setVideoWatched(true);
-      setWatchProgress(100);
+      // The API returns only data (no .status), so just treat any successful response as success
+      if (result && typeof result.rewardAmount !== "undefined") {
+        // ✅ Reward successfully granted or already claimed
+        setRewardData(result);
+        setVideoWatched(true);
+        setWatchProgress(100);
 
-      // Slight delay before modal for smooth UX
-      setTimeout(() => {
+        // Slight delay before modal for smooth UX
+        setTimeout(() => {
+          setShowRewardModal(true);
+        }, 100);
+
+        notifications.show({
+          title: "🎉 Congratulations!",
+          message: `You've earned Rs ${result.rewardAmount}`,
+          color: "green",
+          icon: <BsCheckCircleFill size={18} />,
+          autoClose: 4000,
+        });
+      } else {
+        throw new Error("Unexpected reward response");
+      }
+    } catch (err: any) {
+      console.error("❌ Error claiming reward:", err);
+
+      // Handle already completed gracefully
+      const alreadyCompleted =
+        err?.response?.status === 400 &&
+        err?.response?.data?.message?.toLowerCase()?.includes("already completed");
+
+      if (alreadyCompleted) {
+        setVideoWatched(true);
         setShowRewardModal(true);
-      }, 100);
 
-      notifications.show({
-        title: "🎉 Congratulations!",
-        message: `You've earned Rs ${result.rewardAmount}`,
-        color: "green",
-        icon: <BsCheckCircleFill size={18} />,
-        autoClose: 4000,
-      });
-    } else {
-      throw new Error("Unexpected reward response");
-    }
-  } catch (err: any) {
-    console.error("❌ Error claiming reward:", err);
+        notifications.show({
+          title: "✅ Task Already Completed",
+          message: "You've already earned this reward earlier.",
+          color: "blue",
+          icon: <BsCheckCircleFill size={18} />,
+          autoClose: 4000,
+        });
+      } else {
+        // Other errors
+        setVideoWatched(false);
+        setIsProcessingReward(false);
+        hasAutoRewardedRef.current = false;
 
-    // Handle already completed gracefully
-    const alreadyCompleted =
-      err?.response?.status === 400 &&
-      err?.response?.data?.message?.toLowerCase()?.includes("already completed");
-
-    if (alreadyCompleted) {
-      setVideoWatched(true);
-      setShowRewardModal(true);
-
-      notifications.show({
-        title: "✅ Task Already Completed",
-        message: "You've already earned this reward earlier.",
-        color: "blue",
-        icon: <BsCheckCircleFill size={18} />,
-        autoClose: 4000,
-      });
-    } else {
-      // Other errors
-      setVideoWatched(false);
+        notifications.show({
+          title: "Error",
+          message: err?.message || "Failed to process reward",
+          color: "red",
+          icon: <FiX size={18} />,
+        });
+      }
+    } finally {
       setIsProcessingReward(false);
-      hasAutoRewardedRef.current = false;
-
-      notifications.show({
-        title: "Error",
-        message: err?.message || "Failed to process reward",
-        color: "red",
-        icon: <FiX size={18} />,
-      });
     }
-  } finally {
-    setIsProcessingReward(false);
-  }
-}, [taskId, videoWatched, isProcessingReward, completeMutation]);
+  }, [taskId, videoWatched, isProcessingReward, completeMutation]);
 
   // Video event handlers
   useEffect(() => {
@@ -269,6 +269,7 @@ const VideoPlayerScreen: React.FC = () => {
           mt="xl"
           size="lg"
           onClick={() => navigate("/task")}
+          color="#2d1b4e"
           leftSection={<FiArrowLeft size={20} />}
         >
           Back to Tasks
@@ -303,6 +304,7 @@ const VideoPlayerScreen: React.FC = () => {
           onClick={() => navigate("/task")}
           leftSection={<FiArrowLeft size={20} />}
           className={classes.backButton}
+          color="#2d1b4e"
         >
           Browse More Tasks
         </Button>
@@ -315,7 +317,7 @@ const VideoPlayerScreen: React.FC = () => {
   return (
     <div className={classes.videoPlayerContainer}>
       {/* Header */}
-      <CommonHeader heading={task.level}/>
+      <CommonHeader heading={task.level} />
 
       {/* Video Section */}
       <div className={classes.videoSection}>
@@ -353,8 +355,8 @@ const VideoPlayerScreen: React.FC = () => {
                   {videoWatched
                     ? "Completed!"
                     : hasStartedWatching
-                    ? "Watching..."
-                    : "Start Watching"}
+                      ? "Watching..."
+                      : "Start Watching"}
                 </Text>
               </Flex>
               <Text size="xl" fw={700} c={videoWatched ? "green" : "violet"}>
@@ -428,19 +430,19 @@ const VideoPlayerScreen: React.FC = () => {
         <div className={classes.modalContent}>
           <div className={classes.confettiBackground} />
           <div className={classes.successIconWrapper}>
-              <BsCheckCircleFill size={40} />
+            <BsCheckCircleFill size={40} />
 
-               <Text
-            size="30px"
-            fw={700}
-            ta="center"
-            className={classes.congratsText}
-          >
-            Congratulations! 🎉
-          </Text>
-            </div>
+            <Text
+              size="30px"
+              fw={700}
+              ta="center"
+              className={classes.congratsText}
+            >
+              Congratulations! 🎉
+            </Text>
+          </div>
 
-         
+
 
           <div className={classes.rewardAmountCard}>
             <Text size="sm" c="dimmed" mb={8} ta="center">
@@ -483,6 +485,7 @@ const VideoPlayerScreen: React.FC = () => {
             onClick={handleCloseRewardModal}
             className={classes.continueButton}
             mt="xl"
+            color="#2d1b4e"
           >
             Continue Earning
           </Button>

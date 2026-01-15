@@ -617,7 +617,6 @@ const WithdrawalManagement = () => {
                           height={250}
                           radius="md"
                           fit="contain"
-
                         />
                       </Flex>
                       <Alert color="blue" icon={<FiAlertCircle />}>

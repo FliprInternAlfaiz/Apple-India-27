@@ -166,7 +166,7 @@ const FinancialRecords: React.FC = () => {
           variant="pills"
           radius="md"
           defaultValue="recharge"
-          color="yellow"
+          color="#2d1b4e"
           classNames={{
             tab: classes.tabItem,
             list: classes.tabsList,
@@ -299,7 +299,7 @@ const FinancialRecords: React.FC = () => {
                             alt={ref.referredUserId?.name}
                             radius="xl"
                             size="md"
-                            color="blue"
+                            color="2d1b4e"
                           >
                             {ref.referredUserId?.name?.[0]?.toUpperCase() ||
                               "U"}

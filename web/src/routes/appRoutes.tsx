@@ -24,6 +24,8 @@ import PrivacyPolicy from "../pages/company/PrivacyPolicy";
 import IdentityVerificationScreen from "../pages/IdentityVerification/IdentityVerificationScreen";
 import ConferenceNewsScreen from "../pages/ConferenceNewsScreen/ConferenceNewsScreen";
 import LuckyDrawScreen from "../pages/luckydrawScreen/LuckyDrawScreen";
+import MyTeamReferrals from "../pages/myTeamReferrals/MyTeamReferrals";
+
 
 export const appRouter = createBrowserRouter([
   {
@@ -37,6 +39,7 @@ export const appRouter = createBrowserRouter([
           { path: "/task", element: <Task /> },
           { path: "/task/:taskId", element: <VideoPlayerScreen /> },
           { path: "/team", element: <TeamManagement /> },
+          { path: "/my-team-referrals", element: <MyTeamReferrals /> },
           { path: "/level", element: <Level /> },
           { path: "/profile", element: <Profile /> },
           { path: "/company-intro", element: <CompanyIntro /> },

@@ -342,8 +342,8 @@ const WithdrawalScreen: React.FC = () => {
       <Text className={classes.title}>Withdrawal</Text>
 
       {/* 
-        CASE 1: Not allowed today by level/day 
-      */}
+          CASE 1: Not allowed today by level/day 
+        */}
       {!isTodayAllowed && (
         <Alert
           icon={<FaLock />}
@@ -359,8 +359,8 @@ const WithdrawalScreen: React.FC = () => {
       )}
 
       {/* 
-        CASE 2: Allowed today, but currently outside of time window 
-      */}
+          CASE 2: Allowed today, but currently outside of time window 
+        */}
       {isTodayAllowed && todaySchedule && !isTimeAllowed && (
         <Alert
           icon={<FaLock />}
@@ -369,15 +369,15 @@ const WithdrawalScreen: React.FC = () => {
           mb="md"
         >
           <Text size="sm">
-             Withdrawals are currently closed. You can withdraw today between{" "}
-             <strong>{todaySchedule.startTime} - {todaySchedule.endTime}</strong>.
+            Withdrawals are currently closed. You can withdraw today between{" "}
+            <strong>{todaySchedule.startTime} - {todaySchedule.endTime}</strong>.
           </Text>
         </Alert>
       )}
 
       {/* 
-        CASE 3: Allowed Today AND Inside Time Window
-      */}
+          CASE 3: Allowed Today AND Inside Time Window
+        */}
       {isTodayAllowed && todaySchedule && isTimeAllowed && (
         <Alert
           icon={<FaCalendarAlt />}
@@ -397,7 +397,7 @@ const WithdrawalScreen: React.FC = () => {
           {isUSDUser && (
             <Alert
               icon={<FaDollarSign />}
-              color="blue"
+              color="2d1b4e"
               variant="light"
               mb="md"
               title="USD Withdrawal Mode"
@@ -412,7 +412,7 @@ const WithdrawalScreen: React.FC = () => {
                 <Button
                   size="xs"
                   variant="light"
-                  color="blue"
+                  color="#2d1b4e"
                   leftSection={<FaWallet size={12} />}
                   mt="xs"
                 >
@@ -453,109 +453,144 @@ const WithdrawalScreen: React.FC = () => {
 
           {/* Bank Accounts & QR Codes - Only show for non-USD users */}
           {!isUSDUser && (
-          <Card shadow="sm" p="md" radius="md" className={classes.card}>
-            <Flex justify="space-between" align="center" mb="xs">
-              <Text fw={600}>Withdrawal Method</Text>
-              <Button
-                size="xs"
-                leftSection={<FaPlus size={14} />}
-                onClick={openAddAccount}
-                disabled={bankAccounts.length >= 4}
-              >
-                Add Method ({bankAccounts.length}/4)
-              </Button>
-            </Flex>
+            <Card shadow="sm" p="md" radius="md" className={classes.card}>
+              <Flex justify="space-between" align="center" mb="xs">
+                <Text fw={600}>Withdrawal Method</Text>
+                <Button
+                  size="xs"
+                  leftSection={<FaPlus size={14} />}
+                  onClick={openAddAccount}
+                  color="#2d1b4e"
+                  disabled={bankAccounts.length >= 4}
+                >
+                  Add Method ({bankAccounts.length}/4)
+                </Button>
+              </Flex>
 
-            {bankAccounts.length === 0 ? (
-              <Alert color="blue" icon={<FaInfoCircle />} mt="sm">
-                No withdrawal methods added yet. Please add a bank account or QR code to proceed.
-              </Alert>
-            ) : (
-              <Flex direction="column" gap="sm">
-                {bankAccounts.map((acc: any) => (
-                  <Card
-                    key={acc._id}
-                    withBorder
-                    radius="md"
-                    p="sm"
-                    className={`${classes.bankCard} ${selectedAccount === acc._id ? classes.activeCard : ""
-                      }`}
-                    onClick={() => setSelectedAccount(acc._id)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <Flex justify="space-between" align="center">
-                      <Flex align="center" gap="md">
-                        {acc.accountType === 'qr' && acc.qrCodeImage && (
-                          <Image
-                            src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${acc.qrCodeImage}`}
-                            alt="QR Code"
-                            width={50}
-                            height={50}
-                            radius="sm"
-                          />
-                        )}
-                        <div>
-                          <Flex align="center" gap="xs">
-                            {acc.accountType === 'qr' ? (
-                              <FaQrcode size={16} />
-                            ) : (
-                              <FaUniversity size={16} />
-                            )}
-                            <Text fw={600}>{acc.bankName}</Text>
-                            {acc.isDefault && (
-                              <Badge size="xs" color="green">
-                                Default
-                              </Badge>
-                            )}
-                          </Flex>
-                          <Text size="xs" c="dimmed">
-                            {acc.accountHolderName}
-                          </Text>
-                          {acc.accountType !== 'qr' && (
-                            <Text size="xs" c="dimmed">
-                              ••••{acc.accountNumber?.slice(-4)}
-                            </Text>
+              {bankAccounts.length === 0 ? (
+                <Alert color="#2d1b4e" icon={<FaInfoCircle />} mt="sm">
+                  No withdrawal methods added yet. Please add a bank account or QR code to proceed.
+                </Alert>
+              ) : (
+                <Flex direction="column" gap="sm">
+                  {bankAccounts.map((acc: any) => (
+                    <Card
+                      key={acc._id}
+                      radius="md"
+                      withBorder
+                      p="md"
+                      className={`${classes.bankCard} ${selectedAccount === acc._id ? classes.activeCard : ""
+                        }`}
+                      onClick={() => setSelectedAccount(acc._id)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Flex align="center" justify="space-between" gap="md">
+                        {/* Left: Image/Icon + Text */}
+                        <Flex align="center" gap="md" style={{ flex: 1, minWidth: 0 }}>
+                          {acc.accountType === 'qr' && acc.qrCodeImage ? (
+                            <div style={{
+                              width: "60px",
+                              height: "60px",
+                              borderRadius: 8,
+                              flexShrink: 0,
+                              border: '1px solid #e0e0e0'
+                            }}>
+                              <Image
+                                src={`${import.meta.env.VITE_PUBLIC_BASE_URL}/${acc.qrCodeImage}`}
+                                alt="QR Code"
+                                width={60}
+                                height={60}
+                                fit="contain"
+                                radius="sm"
+                              />
+                            </div>
+                          ) : (
+                            <div style={{
+                              width: 50,
+                              height: 50,
+                              borderRadius: 8,
+                              background: 'linear-gradient(135deg, #f1f3f5 0%, #e9ecef 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              {acc.accountType === 'qr' ? (
+                                <FaQrcode size={24} color="#2d1b4e" />
+                              ) : (
+                                <FaUniversity size={22} color="#2d1b4e" />
+                              )}
+                            </div>
                           )}
-                        </div>
-                      </Flex>
 
-                      <Group gap="xs">
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteAccount(acc._id);
-                          }}
-                        >
-                          <FaRegTrashAlt size={16} />
-                        </ActionIcon>
-                        {!acc.isDefault && (
-                          <Button
-                            size="xs"
-                            variant="light"
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Flex align="center" gap="xs" mb={4}>
+                              <Text size="md" fw={600} c="#2d1b4e" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {acc.bankName}
+                              </Text>
+                              {acc.isDefault && (
+                                <Badge
+                                  color="green"
+                                  variant="filled"
+                                  size="sm"
+                                  style={{ flexShrink: 0 }}
+                                >
+                                  Default
+                                </Badge>
+                              )}
+                            </Flex>
+                            <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {acc.accountHolderName}
+                            </Text>
+                            {acc.accountType !== 'qr' && (
+                              <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }} mt={2}>
+                                ••••{acc.accountNumber?.slice(-4)}
+                              </Text>
+                            )}
+                          </div>
+                        </Flex>
+
+                        {/* Right: Action Buttons */}
+                        <Flex gap="xs" align="center" style={{ flexShrink: 0 }}>
+                          {!acc.isDefault && (
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color="#2d1b4e"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSetDefault(acc._id);
+                              }}
+                            >
+                              Set Default
+                            </Button>
+                          )}
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            size="lg"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleSetDefault(acc._id);
+                              handleDeleteAccount(acc._id);
                             }}
+                            title="Delete Account"
                           >
-                            Set Default
-                          </Button>
-                        )}
-                      </Group>
-                    </Flex>
-                  </Card>
-                ))}
-              </Flex>
-            )}
-          </Card>
+                            <FaRegTrashAlt size={16} />
+                          </ActionIcon>
+                        </Flex>
+                      </Flex>
+                    </Card>
+                  ))}
+                </Flex>
+              )}
+            </Card>
           )}
 
           {/* Withdrawal Amount */}
           <Card shadow="sm" p="md" radius="md" className={classes.card}>
             <Flex justify="space-between" align="center" mb="sm">
               <Text fw={600}>Select Withdrawal Amount</Text>
-              <Badge color="blue" variant="light" size="sm">
+              <Badge color="2d1b4e" variant="light" size="sm">
                 Balance: ₹{getSelectedWalletBalance().toLocaleString()}
               </Badge>
             </Flex>
@@ -620,12 +655,13 @@ const WithdrawalScreen: React.FC = () => {
             fullWidth
             size="lg"
             mt="md"
+            color="#2d1b4e"
             onClick={handleWithdrawal}
             loading={createWithdrawalMutation.isPending}
             disabled={!selectedAmount || (!isUSDUser && !selectedAccount) || !withdrawalPassword}
             leftSection={isUSDUser ? <FaDollarSign /> : undefined}
           >
-            {isUSDUser 
+            {isUSDUser
               ? `Request Withdrawal to USD Wallet ${selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""}`
               : `Submit Withdrawal Request ${selectedAmount ? `₹${selectedAmount.toLocaleString()}` : ""}`
             }
@@ -648,7 +684,7 @@ const WithdrawalScreen: React.FC = () => {
             </Text>
           ))}
 
-        <Alert color="blue" icon={<FaInfoCircle />} mt="md">
+        <Alert color="2d1b4e" icon={<FaInfoCircle />} mt="md">
           <Text size="sm">
             Please make the withdrawal on the corresponding date according to
             your Apple level. If you encounter any problems with withdrawals,
@@ -669,7 +705,7 @@ const WithdrawalScreen: React.FC = () => {
         centered
         size="md"
       >
-        <Tabs value={activeTab} onChange={setActiveTab}>
+        <Tabs value={activeTab} onChange={setActiveTab} color="#2d1b4e">
           <Tabs.List>
             <Tabs.Tab value="bank" leftSection={<FaUniversity size={14} />}>
               Bank Account
@@ -787,6 +823,7 @@ const WithdrawalScreen: React.FC = () => {
                 onClick={handleAddBankAccount}
                 loading={addBankMutation.isPending}
                 mt="md"
+                color="#2d1b4e"
               >
                 Add Bank Account
               </Button>
@@ -830,18 +867,20 @@ const WithdrawalScreen: React.FC = () => {
                   <Image
                     src={qrForm.qrPreview}
                     alt="QR Preview"
+                    fit="contain"
                     width={200}
                     height={200}
                     radius="md"
                   />
                 </Center>
               )}
-              <Alert color="blue" icon={<FaInfoCircle />}>
+              <Alert color="2d1b4e" icon={<FaInfoCircle />}>
                 <Text size="xs">
                   Upload a clear image of your payment QR code. This will be shown to admin for payment processing.
                 </Text>
               </Alert>
               <Button
+                color="#2d1b4e"
                 fullWidth
                 onClick={handleAddQRCode}
                 loading={addQRMutation.isPending}

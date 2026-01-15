@@ -93,12 +93,12 @@ const USDWithdrawalScreen: React.FC = () => {
   const exchangeRate = walletData?.currentExchangeRate || 83;
   const isOnboarded = connectStatus?.isOnboarded || false;
   const connectAccount = connectStatus?.stripeAccountId;
-  
+
   // Bitget settings
   const bitgetEnabled = methodsData?.methods?.bitget?.enabled || true;
   const stripeEnabled = methodsData?.methods?.stripe?.enabled || false;
   const bitgetSettings = methodsData?.methods?.bitget || {};
-  
+
   // Check if user has saved Bitget wallet
   const hasBitgetWallet = wallet?.bitgetWalletAddress && wallet?.bitgetVerified;
 
@@ -172,7 +172,7 @@ const USDWithdrawalScreen: React.FC = () => {
       const minUSD = bitgetMinimums[network.toLowerCase()] || 10;
       const minINR = Math.ceil(minUSD * exchangeRate * 1.01); // Add 1% buffer for fees
       const amountUSD = Number(withdrawAmount) / exchangeRate;
-      
+
       if (amountUSD < minUSD) {
         notifications.show({
           title: "Minimum Not Met",
@@ -345,7 +345,7 @@ const USDWithdrawalScreen: React.FC = () => {
             Add your {bitgetSettings?.network || "TRC20"} wallet address to receive {bitgetSettings?.currency || "USDT"} withdrawals directly to your crypto wallet.
           </Text>
           <Button
-          size="md"
+            size="md"
             className={classes.stripeBtn}
             style={{ background: "#FFFFFF", color: "#00D4AA" }}
             onClick={() => setBitgetWalletModal(true)}
@@ -394,6 +394,7 @@ const USDWithdrawalScreen: React.FC = () => {
             className={classes.stripeBtn}
             onClick={handleStripeOnboarding}
             loading={createConnectMutation.isPending}
+            color="#2d1b4e"
             leftSection={<FaStripe />}
           >
             {connectAccount ? "Complete Verification" : "Connect with Stripe"}
@@ -424,7 +425,7 @@ const USDWithdrawalScreen: React.FC = () => {
           <Text size="lg" fw={600} mb="md">
             Create Withdrawal
           </Text>
-          <Alert icon={<FaInfoCircle />} color="blue" variant="light" mb="md">
+          <Alert icon={<FaInfoCircle />} color="2d1b4e" variant="light" mb="md">
             Minimum withdrawal: ₹1 | Maximum: ₹500,000 per request
             {bitgetEnabled && hasBitgetWallet && (
               <Text size="xs" mt="xs">
@@ -447,7 +448,7 @@ const USDWithdrawalScreen: React.FC = () => {
 
       {/* Tabs for History */}
       <div className={classes.tabsContainer}>
-        <Tabs defaultValue="withdrawals" variant="pills">
+        <Tabs defaultValue="withdrawals" variant="pills" color="#1a4731">
           <Tabs.List grow mb="md">
             <Tabs.Tab value="withdrawals" leftSection={<FaDollarSign size={14} />}>
               Withdrawals
@@ -607,8 +608,8 @@ const USDWithdrawalScreen: React.FC = () => {
                 value={selectedMethod}
                 onChange={setSelectedMethod}
                 data={[
-                  { 
-                    value: 'bitget', 
+                  {
+                    value: 'bitget',
                     label: (
                       <Group gap="xs" justify="center">
                         <RiExchangeFundsLine size={16} />
@@ -616,8 +617,8 @@ const USDWithdrawalScreen: React.FC = () => {
                       </Group>
                     )
                   },
-                  { 
-                    value: 'stripe', 
+                  {
+                    value: 'stripe',
                     label: (
                       <Group gap="xs" justify="center">
                         <FaStripe size={16} />
@@ -630,9 +631,9 @@ const USDWithdrawalScreen: React.FC = () => {
             </div>
           )}
 
-          <Alert 
-            icon={selectedMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaInfoCircle />} 
-            color={selectedMethod === 'bitget' ? "teal" : "blue"} 
+          <Alert
+            icon={selectedMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaInfoCircle />}
+            color={selectedMethod === 'bitget' ? "teal" : "blue"}
             variant="light"
           >
             {selectedMethod === 'bitget' && bitgetEnabled ? (
@@ -644,7 +645,7 @@ const USDWithdrawalScreen: React.FC = () => {
                   </Text>
                 )}
                 <Text size="xs" mt="xs" fw={600} c="orange">
-                  ⚠️ Minimum: ${bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10} USDT 
+                  ⚠️ Minimum: ${bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10} USDT
                   (~₹{Math.ceil((bitgetMinimums[(wallet?.bitgetNetwork || 'trc20').toLowerCase()] || 10) * exchangeRate * 1.01).toLocaleString()})
                 </Text>
               </>
@@ -715,7 +716,7 @@ const USDWithdrawalScreen: React.FC = () => {
               <Group justify="space-between">
                 <Text size="sm" fw={500}>You will receive (approx)</Text>
                 <Text size="lg" fw={700} c={selectedMethod === 'bitget' ? "teal.8" : "green"}>
-                  {selectedMethod === 'bitget' 
+                  {selectedMethod === 'bitget'
                     ? `${(Number(withdrawAmount) / exchangeRate).toFixed(2)} ${bitgetSettings?.currency || "USDT"}`
                     : `$${(Number(withdrawAmount) / exchangeRate).toFixed(2)} USD`
                   }
@@ -728,22 +729,22 @@ const USDWithdrawalScreen: React.FC = () => {
 
           <Group justify="flex-end" gap="sm">
             <Button
-             size="md"
+              size="md"
               variant="light"
               onClick={() => setWithdrawalModal(false)}
               disabled={createWithdrawalMutation.isPending}
               radius="md"
+              color="#2d1b4e"
             >
               Cancel
             </Button>
             <Button
-            size="md"
+              size="md"
               className={classes.withdrawBtn}
               onClick={handleWithdraw}
               loading={createWithdrawalMutation.isPending}
               disabled={!withdrawAmount || Number(withdrawAmount) < 1}
               leftSection={selectedMethod === 'bitget' ? <RiExchangeFundsLine /> : <FaDollarSign />}
-              style={selectedMethod === 'bitget' ? { background: "#00D4AA", color: "#FFFFFF" } : undefined}
             >
               Withdraw via {selectedMethod === 'bitget' ? 'Bitget' : 'Stripe'}
             </Button>
@@ -811,6 +812,7 @@ const USDWithdrawalScreen: React.FC = () => {
               variant="light"
               onClick={() => setBitgetWalletModal(false)}
               disabled={saveBitgetWalletMutation.isPending}
+              color="#2d1b4e"
               radius="md"
             >
               Cancel

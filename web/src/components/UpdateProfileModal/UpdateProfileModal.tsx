@@ -123,7 +123,7 @@ const UpdateProfileModal: React.FC<UpdateProfileModalProps> = ({
           message: response.message || "Profile updated successfully",
           color: "green",
         });
-        
+
         // Reset selected file after successful update
         setSelectedFile(null);
         onClose();

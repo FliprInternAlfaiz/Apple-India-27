@@ -90,7 +90,7 @@ const LuckyDrawScreen: React.FC = () => {
   if (isLoading) {
     return (
       <Center h="100vh">
-        <Loader color="blue" size="lg" />
+        <Loader color="2d1b4e" size="lg" />
       </Center>
     );
   }
@@ -151,6 +151,7 @@ const LuckyDrawScreen: React.FC = () => {
                 <Image
                   src={draw.imageUrl}
                   height={200}
+                  fit="contain"
                   alt={draw.title}
                   className={classes.image}
                 />
@@ -177,7 +178,7 @@ const LuckyDrawScreen: React.FC = () => {
                   <Badge
                     leftSection={<IoPeople size={12} />}
                     variant="light"
-                    color="blue"
+                    color="2d1b4e"
                   >
                     {draw.participantCount}
                     {draw.maxParticipants
@@ -200,7 +201,7 @@ const LuckyDrawScreen: React.FC = () => {
                 <Button
                   fullWidth
                   mt="md"
-                  color="green"
+                  color="#2d1b4e"
                   variant="light"
                   onClick={(e) => {
                     e.stopPropagation();

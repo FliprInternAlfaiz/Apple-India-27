@@ -146,9 +146,9 @@ const getTeamMembersByLevel = async (req: Request, res: Response) => {
       });
     }
 
-    const teamReferrals = await models.TeamReferral.find({ 
-      userId, 
-      level 
+    const teamReferrals = await models.TeamReferral.find({
+      userId,
+      level
     })
       .populate('referredUserId', 'name phone createdAt investmentAmount currentLevel')
       .lean();
@@ -400,6 +400,100 @@ const getReferralTree = async (req: Request, res: Response) => {
   }
 };
 
+const getUserTeamReferrals = async (req: Request, res: Response) => {
+  try {
+    const userId = res.locals.userId;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      level = ""
+    } = req.query;
+
+    if (!userId) {
+      return JsonResponse(res, {
+        status: "error",
+        statusCode: 401,
+        title: "Unauthorized",
+        message: "User not authenticated",
+      });
+    }
+
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter: any = { userId };
+
+    if (level && level !== "all") {
+      filter.level = level;
+    }
+
+    let userIds: any[] = [];
+    if (search) {
+      const users = await models.User.find({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } }
+        ]
+      }).select('_id');
+
+      userIds = users.map(u => u._id);
+      filter.referredUserId = { $in: userIds };
+    }
+
+    const [referrals, totalCount] = await Promise.all([
+      models.TeamReferral.find(filter)
+        .populate('referredUserId', 'name phone picture createdAt investmentAmount currentLevel')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      models.TeamReferral.countDocuments(filter)
+    ]);
+
+    const formattedReferrals = referrals.map((ref: any) => ({
+      _id: ref._id,
+      referredUser: {
+        _id: ref.referredUserId?._id,
+        name: ref.referredUserId?.name || 'N/A',
+        phone: ref.referredUserId?.phone || 'N/A',
+        picture: ref.referredUserId?.picture,
+        joinedAt: ref.referredUserId?.createdAt,
+        investmentAmount: ref.referredUserId?.investmentAmount || 0,
+        currentLevel: ref.referredUserId?.currentLevel || 'No Level',
+      },
+      level: ref.level,
+      referralChainLength: ref.referralChain?.length || 0,
+      createdAt: ref.createdAt,
+    }));
+
+    return JsonResponse(res, {
+      status: "success",
+      statusCode: 200,
+      title: "My Team Referrals",
+      message: "Team referrals fetched successfully.",
+      data: {
+        referrals: formattedReferrals,
+        pagination: {
+          currentPage: pageNum,
+          totalPages: Math.ceil(totalCount / limitNum),
+          totalCount,
+          limit: limitNum
+        }
+      }
+    });
+  } catch (error: any) {
+    console.error("💥 Get user team referrals error:", error);
+    return JsonResponse(res, {
+      status: "error",
+      statusCode: 500,
+      title: "Server Error",
+      message: error.message || "Failed to fetch team referrals.",
+    });
+  }
+};
+
 const getTeamReferralHistory = async (req: Request, res: Response) => {
   try {
     const userId = res.locals.userId;
@@ -443,17 +537,17 @@ const getTeamReferralHistory = async (req: Request, res: Response) => {
 
     // Calculate total earnings
     const totalEarnings = await models.TeamReferralHistory.aggregate([
-      { 
-        $match: { 
-          userId: new mongoose.Types.ObjectId(userId), 
-          status: 'completed' 
-        } 
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          status: 'completed'
+        }
       },
-      { 
-        $group: { 
-          _id: null, 
-          total: { $sum: '$amount' } 
-        } 
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$amount' }
+        }
       }
     ]);
 
@@ -490,7 +584,8 @@ export default {
   getReferralLink,
   getTeamMembersByLevel,
   getTeamReferralHistory,
-  
+  getUserTeamReferrals,
+
   // Admin endpoints
   getAllTeamReferrals,
   getTeamStatistics,

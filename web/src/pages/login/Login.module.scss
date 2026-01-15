@@ -53,18 +53,17 @@
 }
 
 
-button {
+.loginButton {
   font-weight: 600;
-  background-color: #f0c93d !important;
-  color: #1a1a3e !important;
+  background-color: #1a1a3e !important;
+  color: #fff !important;
   border-radius: 10px;
   transition: 0.2s ease;
 
   &:hover {
-    background-color: #ffd84d !important;
+    background-color: #1a1a3e !important;
   }
 }
-
 @media (max-width: 480px) {
   .paper {
     padding: 1rem;

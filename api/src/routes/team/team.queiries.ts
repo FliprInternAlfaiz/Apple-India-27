@@ -10,6 +10,7 @@ const {
   getReferralTree,
   getTeamStatistics,
   getTeamReferralHistory,
+  getUserTeamReferrals,
 } = teamController;
 
 export default (router: Router) => {
@@ -25,6 +26,12 @@ export default (router: Router) => {
     '/members/:level',
     commonsMiddleware.checkUserAuth,
     getTeamMembersByLevel,
+  );
+
+  router.get(
+    '/my-referrals',
+    commonsMiddleware.checkUserAuth,
+    getUserTeamReferrals,
   );
 
   router.get(

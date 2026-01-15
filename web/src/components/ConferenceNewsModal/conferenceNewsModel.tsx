@@ -77,7 +77,7 @@ const ConferenceNewsModal: React.FC<ConferenceNewsModalProps> = ({
               <Button
                 leftSection={<FaExternalLinkAlt />}
                 onClick={handleClick}
-                color="blue"
+                color="#2d1b4e"
                 size="md"
                 fullWidth
                 radius="md"
@@ -88,7 +88,7 @@ const ConferenceNewsModal: React.FC<ConferenceNewsModalProps> = ({
             <Button
               onClick={onClose}
               variant="light"
-              color="gray"
+              color="#2d1b4e"
               size="md"
               fullWidth
               radius="md"

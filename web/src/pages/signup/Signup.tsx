@@ -22,7 +22,7 @@ const Signup: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -43,7 +43,7 @@ const Signup: React.FC = () => {
 
   const validateForm = () => {
     const { name, phone, password, confirmPassword } = formData;
-    
+
     if (!name || !phone || !password || !confirmPassword) {
       showNotification({
         title: "Validation Error",
@@ -52,7 +52,7 @@ const Signup: React.FC = () => {
       });
       return false;
     }
-    
+
     if (!/^\d{10}$/.test(phone)) {
       showNotification({
         title: "Invalid Phone",
@@ -61,7 +61,7 @@ const Signup: React.FC = () => {
       });
       return false;
     }
-    
+
     if (password.length < 6) {
       showNotification({
         title: "Weak Password",
@@ -70,7 +70,7 @@ const Signup: React.FC = () => {
       });
       return false;
     }
-    
+
     if (password !== confirmPassword) {
       showNotification({
         title: "Password Mismatch",
@@ -79,7 +79,7 @@ const Signup: React.FC = () => {
       });
       return false;
     }
-    
+
     return true;
   };
 
@@ -89,9 +89,9 @@ const Signup: React.FC = () => {
     const { name, phone, password, referralCode } = formData;
 
     signup(
-      { 
-        name, 
-        phone, 
+      {
+        name,
+        phone,
         password,
         referralCode: referralCode.trim() || undefined
       },
@@ -198,9 +198,10 @@ const Signup: React.FC = () => {
 
         <Button
           fullWidth
-          color="yellow"
+          color="#2d1b4e"
           loading={signingUp}
           onClick={handleSignup}
+          className={classes.signupButton}
         >
           Sign Up
         </Button>

@@ -193,7 +193,7 @@ const LuckyDrawModal: React.FC<LuckyDrawModalProps> = ({
               spacing="xs"
               size="sm"
               icon={
-                <ThemeIcon color="blue" size={20} radius="xl">
+                <ThemeIcon color="2d1b4e" size={20} radius="xl">
                   <IoCheckmarkCircle size={14} />
                 </ThemeIcon>
               }
@@ -211,15 +211,15 @@ const LuckyDrawModal: React.FC<LuckyDrawModalProps> = ({
         <Group grow>
           <Button
             variant="light"
-            color="gray"
+            color="#2d1b4e"
             leftSection={<IoClose size={18} />}
             onClick={onClose}
           >
             Close
           </Button>
           <Button
-            color="green"
             leftSection={<IoTrophy size={18} />}
+            color="#2d1b4e"
             onClick={() => onParticipate(draw._id)}
             loading={isParticipating}
             disabled={isSpotsFull || draw.status !== "ongoing"}
@@ -227,8 +227,8 @@ const LuckyDrawModal: React.FC<LuckyDrawModalProps> = ({
             {isSpotsFull
               ? "Spots Full"
               : draw.status !== "ongoing"
-              ? "Draw Closed"
-              : "Participate Now"}
+                ? "Draw Closed"
+                : "Participate Now"}
           </Button>
         </Group>
 

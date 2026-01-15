@@ -205,7 +205,7 @@ const IdentityVerificationScreen: React.FC = () => {
 
   const verificationStatus =
     verificationData?.data?.aadhaarVerificationStatus || "not_submitted";
-    console.log(verificationData)
+  console.log(verificationData)
   const existingAadhaar = verificationData?.data?.aadhaarNumber;
   const existingPhoto = verificationData?.data?.aadhaarPhoto;
   const isSubmitted = verificationStatus !== "not_submitted";
@@ -296,98 +296,98 @@ const IdentityVerificationScreen: React.FC = () => {
           />
 
           {/* Upload Aadhaar Photo */}
-     {/* Upload Aadhaar Photo */}
-<Box className={classes.uploadSection}>
-  <Text size="md" fw={500} mb="sm">
-    Aadhaar Card Photo
-  </Text>
+          {/* Upload Aadhaar Photo */}
+          <Box className={classes.uploadSection}>
+            <Text size="md" fw={500} mb="sm">
+              Aadhaar Card Photo
+            </Text>
 
-  {/* Show existing photo if already submitted */}
-  {existingPhoto && verificationStatus !== "rejected" ? (
-    <Paper className={classes.previewContainer} radius="md" withBorder>
-      <Image
-        src={`${import.meta.env.VITE_PUBLIC_BASE_URL || "http://localhost:5000"}${existingPhoto}`}
-        alt="Aadhaar Card"
-        fit="contain"
-        className={classes.previewImage}
-      />
-      <Alert
-        mt="md"
-        color={
-          verificationStatus === "pending"
-            ? "yellow"
-            : verificationStatus === "approved"
-            ? "green"
-            : "gray"
-        }
-        radius="md"
-        icon={
-          verificationStatus === "pending" ? (
-            <FaClock />
-          ) : verificationStatus === "approved" ? (
-            <FaCheckCircle />
-          ) : (
-            <FaIdCard />
-          )
-        }
-      >
-        {verificationStatus === "pending" && "Your Aadhaar is under review."}
-        {verificationStatus === "approved" && "Your Aadhaar is verified."}
-      </Alert>
-    </Paper>
-  ) : (
-    <>
-      {/* Show upload section if not submitted or rejected */}
-      {previewUrl ? (
-        <Paper className={classes.previewContainer} radius="md" withBorder>
-          <Image
-            src={previewUrl}
-            alt="Preview Aadhaar Card"
-            fit="contain"
-            className={classes.previewImage}
-          />
-          <Button
-            variant="light"
-            color="red"
-            size="sm"
-            mt="md"
-            onClick={() => {
-              setSelectedFile(null);
-              setPreviewUrl(null);
-              if (fileInputRef.current) fileInputRef.current.value = "";
-            }}
-          >
-            Remove Photo
-          </Button>
-        </Paper>
-      ) : (
-        <Paper
-          className={classes.uploadBox}
-          radius="md"
-          withBorder
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <FaCamera size={48} color="#228be6" />
-          <Text size="md" fw={500} mt="md">
-            Click to upload Aadhaar photo
-          </Text>
-          <Text size="sm" c="dimmed" mt="xs">
-            JPG, PNG (Max 5MB)
-          </Text>
-        </Paper>
-      )}
+            {/* Show existing photo if already submitted */}
+            {existingPhoto && verificationStatus !== "rejected" ? (
+              <Paper className={classes.previewContainer} radius="md" withBorder>
+                <Image
+                  src={`${import.meta.env.VITE_PUBLIC_BASE_URL || "http://localhost:5000"}${existingPhoto}`}
+                  alt="Aadhaar Card"
+                  fit="contain"
+                  className={classes.previewImage}
+                />
+                <Alert
+                  mt="md"
+                  color={
+                    verificationStatus === "pending"
+                      ? "yellow"
+                      : verificationStatus === "approved"
+                        ? "green"
+                        : "gray"
+                  }
+                  radius="md"
+                  icon={
+                    verificationStatus === "pending" ? (
+                      <FaClock />
+                    ) : verificationStatus === "approved" ? (
+                      <FaCheckCircle />
+                    ) : (
+                      <FaIdCard />
+                    )
+                  }
+                >
+                  {verificationStatus === "pending" && "Your Aadhaar is under review."}
+                  {verificationStatus === "approved" && "Your Aadhaar is verified."}
+                </Alert>
+              </Paper>
+            ) : (
+              <>
+                {/* Show upload section if not submitted or rejected */}
+                {previewUrl ? (
+                  <Paper className={classes.previewContainer} radius="md" withBorder>
+                    <Image
+                      src={previewUrl}
+                      alt="Preview Aadhaar Card"
+                      fit="contain"
+                      className={classes.previewImage}
+                    />
+                    <Button
+                      variant="light"
+                      size="sm"
+                      color="#2d1b4e"
+                      mt="md"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setPreviewUrl(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                    >
+                      Remove Photo
+                    </Button>
+                  </Paper>
+                ) : (
+                  <Paper
+                    className={classes.uploadBox}
+                    radius="md"
+                    withBorder
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <FaCamera size={48} color="#228be6" />
+                    <Text size="md" fw={500} mt="md">
+                      Click to upload Aadhaar photo
+                    </Text>
+                    <Text size="sm" c="dimmed" mt="xs">
+                      JPG, PNG (Max 5MB)
+                    </Text>
+                  </Paper>
+                )}
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleFileSelect}
-        disabled={isSubmitted && verificationStatus !== "rejected"}
-      />
-    </>
-  )}
-</Box>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleFileSelect}
+                  disabled={isSubmitted && verificationStatus !== "rejected"}
+                />
+              </>
+            )}
+          </Box>
 
           {/* Progress Bar */}
           {isUploading && uploadProgress > 0 && (
@@ -395,7 +395,7 @@ const IdentityVerificationScreen: React.FC = () => {
               <Text size="sm" mb="xs">
                 Uploading... {uploadProgress}%
               </Text>
-              <Progress value={uploadProgress} color="blue" animated />
+              <Progress value={uploadProgress} color="2d1b4e" animated />
             </Box>
           )}
 
@@ -404,6 +404,7 @@ const IdentityVerificationScreen: React.FC = () => {
             <Button
               fullWidth
               size="lg"
+              color="#2d1b4e"
               mt="xl"
               leftSection={<FaUpload />}
               onClick={handleSubmit}
@@ -418,7 +419,7 @@ const IdentityVerificationScreen: React.FC = () => {
             <Alert
               icon={<MdWarning size={16} />}
               title="Note"
-              color="blue"
+              color="2d1b4e"
               radius="md"
               mt="lg"
             >

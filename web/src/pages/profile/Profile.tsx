@@ -186,7 +186,7 @@ const Profile: React.FC = () => {
             onClick={() => navigate("/login")}
             style={{
               background: "linear-gradient(135deg, #f9d77e 0%, #f0b944 100%)",
-              color: "#7e6227ff",
+              color: "#fff",
             }}
           >
             Go to Login
@@ -364,7 +364,7 @@ const Profile: React.FC = () => {
               onClick={handleRecharge}
               style={{
                 background: "linear-gradient(135deg, #8FABD4 0%, #8FABD4 100%)",
-                color: "#7e6227ff",
+                color: "#fff",
                 fontWeight: 600,
                 borderRadius: "100px",
                 border: "none",
@@ -377,7 +377,7 @@ const Profile: React.FC = () => {
               onClick={handleWithdrawal}
               style={{
                 background: "linear-gradient(135deg, #8FABD4 0%, #8FABD4 100%)",
-                color: "#7e6227ff",
+                color: "#fff",
                 fontWeight: 600,
                 borderRadius: "100px",
                 border: "none",
@@ -386,7 +386,7 @@ const Profile: React.FC = () => {
               Withdrawal
             </Button>
           </Flex>
-          
+
           {/* USD Withdrawal Option for USD Users */}
           {isUSDUser && (
             <Button

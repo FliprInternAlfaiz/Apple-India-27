@@ -1,4 +1,5 @@
 import React, { useState, type JSX } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Flex,
   Text,
@@ -30,6 +31,7 @@ import {
 } from "../../hooks/query/team.query";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store/store";
+import { ArrowRightIcon } from "lucide-react";
 
 interface TeamLevel {
   level: string;
@@ -40,6 +42,7 @@ interface TeamLevel {
 }
 
 const TeamManagementScreen: React.FC = () => {
+  const navigate = useNavigate();
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
@@ -87,8 +90,8 @@ const TeamManagementScreen: React.FC = () => {
       level.level === "A"
         ? "#E5E4E2"
         : level.level === "B"
-        ? "rgb(212, 160, 23)"
-        : "#C0C0C0",
+          ? "rgb(212, 160, 23)"
+          : "#C0C0C0",
     members: level.members || [],
   }));
 
@@ -145,8 +148,8 @@ const TeamManagementScreen: React.FC = () => {
 
   if (teamLoading || referralLoading) {
     return (
-        <Center h="100vh">
-       <Loader size="lg"/>
+      <Center h="100vh">
+        <Loader size="lg" />
       </Center>
     );
   }
@@ -162,7 +165,7 @@ const TeamManagementScreen: React.FC = () => {
         <Text c="red" size="lg">
           Failed to load team data
         </Text>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
+        <Button onClick={() => window.location.reload()} color="#2d1b4e">Retry</Button>
       </Flex>
     );
   }
@@ -178,9 +181,20 @@ const TeamManagementScreen: React.FC = () => {
     <Flex className={classes.teamContainer} direction="column">
       <Container className={classes.teamInfoSection}>
         <Card className={classes.totalTeamCard} radius="lg">
-          <Text fw={600} size="xl" ta="center" mb="sm">
-            Total Team Members
-          </Text>
+          <Flex justify="space-between" align="center" mb="sm">
+            <Text fw={600} size="md">
+              Total Team Members
+            </Text>
+            <Button
+              variant="transparent"
+              size="xs"
+              color="#2d1b4e"
+              rightSection={<ArrowRightIcon size={12} />}
+              onClick={() => navigate("/my-team-referrals")}
+            >
+              View All
+            </Button>
+          </Flex>
           <Text fw={700} size="36px" ta="center" mb="md">
             {teamData.totalMembers}
           </Text>
@@ -192,8 +206,8 @@ const TeamManagementScreen: React.FC = () => {
                   userData?.teamLevel === "A"
                     ? "#7F7F7F" // Dark Platinum
                     : userData?.teamLevel === "B"
-                    ? "#B8860B" // Deep Gold
-                    : "#A9A9A9" // Dark Silver
+                      ? "#B8860B" // Deep Gold
+                      : "#A9A9A9" // Dark Silver
                 }
                 size={22}
               />
@@ -203,8 +217,8 @@ const TeamManagementScreen: React.FC = () => {
                   userData?.teamLevel === "A"
                     ? "#7F7F7F" // Dark Platinum
                     : userData?.teamLevel === "B"
-                    ? "#B8860B" // Deep Gold
-                    : "#A9A9A9" // Dark Silver
+                      ? "#B8860B" // Deep Gold
+                      : "#A9A9A9" // Dark Silver
                 }
               >
                 Your Level: {userData?.teamLevel}
@@ -216,9 +230,8 @@ const TeamManagementScreen: React.FC = () => {
             {formattedLevels.map((lvl, idx) => (
               <Card
                 key={idx}
-                className={`${classes.levelCard} ${
-                  classes["level" + lvl.level]
-                }`}
+                className={`${classes.levelCard} ${classes["level" + lvl.level]
+                  }`}
                 onClick={() => handleLevelClick(lvl.level)}
                 shadow="lg"
               >
@@ -227,8 +240,8 @@ const TeamManagementScreen: React.FC = () => {
                   {lvl.level === "A"
                     ? "Level A"
                     : lvl.level === "B"
-                    ? "Level B"
-                    : "Level C"}
+                      ? "Level B"
+                      : "Level C"}
                 </Text>
                 <Text size="sm" c="dimmed">
                   {lvl.count} {lvl.count === 1 ? "Member" : "Members"}
@@ -251,7 +264,7 @@ const TeamManagementScreen: React.FC = () => {
           <Button
             leftSection={<FaShare />}
             onClick={handleShare}
-            color="blue"
+            color="#2d1b4e"
             size="md"
           >
             Share
@@ -259,7 +272,7 @@ const TeamManagementScreen: React.FC = () => {
           <Button
             leftSection={<FaCopy />}
             variant="outline"
-            color="blue"
+            color="#2d1b4e"
             size="md"
             onClick={() =>
               handleCopy(
@@ -362,8 +375,8 @@ const TeamManagementScreen: React.FC = () => {
                         member.currentLevel === "A"
                           ? "yellow"
                           : member.currentLevel === "B"
-                          ? "gray"
-                          : "orange"
+                            ? "gray"
+                            : "orange"
                       }
                     >
                       Level {member.currentLevel}
@@ -380,7 +393,7 @@ const TeamManagementScreen: React.FC = () => {
           </Flex>
         )}
       </Modal>
-    </Flex>
+    </Flex >
   );
 };
 

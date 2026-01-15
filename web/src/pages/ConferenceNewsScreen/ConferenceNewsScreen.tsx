@@ -6,10 +6,10 @@ import { useActiveConferenceNewsQuery, useCloseConferenceNews } from "../../hook
 const ConferenceNewsModal: React.FC = () => {
   const [opened, setOpened] = useState(false);
   const [hasShownOnce, setHasShownOnce] = useState(false);
-  
+
   const { data, isLoading } = useActiveConferenceNewsQuery();
   const closeNewsMutation = useCloseConferenceNews();
-  
+
   const news = data?.data;
 
   useEffect(() => {
@@ -19,7 +19,7 @@ const ConferenceNewsModal: React.FC = () => {
         setOpened(true);
         setHasShownOnce(true);
       }, 1500); // Show after 1.5 seconds
-      
+
       return () => clearTimeout(timer);
     }
   }, [news, hasShownOnce]);
@@ -95,7 +95,7 @@ const ConferenceNewsModal: React.FC = () => {
               width: "100%",
             }}
           />
-          
+
           {/* Gradient Overlay at Bottom */}
           <Box
             style={{
@@ -124,11 +124,11 @@ const ConferenceNewsModal: React.FC = () => {
           >
             {news.title}
           </Text>
-          
+
           <Text
             size="sm"
             mb="xl"
-            style={{ 
+            style={{
               color: "rgba(255, 255, 255, 0.9)",
               lineHeight: 1.6,
             }}
@@ -160,6 +160,7 @@ const ConferenceNewsModal: React.FC = () => {
                 radius="xl"
                 rightSection={<IoOpenOutline size={18} />}
                 onClick={handleClickUrl}
+                color="#2d1b4e"
                 styles={{
                   root: {
                     fontWeight: 600,

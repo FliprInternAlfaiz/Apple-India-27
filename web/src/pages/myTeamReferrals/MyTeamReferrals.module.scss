@@ -1,0 +1,362 @@
+.pageContainer {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 0rem 0 3rem;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+// Stats Grid
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.statCard {
+  background: #fff;
+  padding: 0.625rem 0.5rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid #2d1b4e;
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.statLabel {
+  font-size: 0.688rem;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.375rem;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+// Filter Card with Tabs
+.filterCard {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.tabsRoot {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabsList {
+  border-bottom: none;
+  padding: 0 1rem;
+  background: #fafbfc;
+}
+
+.tab {
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(102, 126, 234, 0.05);
+    color: #374151;
+  }
+
+  &[data-active] {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: #fff;
+  }
+
+  &.tabA[data-active] {
+    color: #ef4444;
+    border-bottom-color: #ef4444;
+  }
+
+  &.tabB[data-active] {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+  }
+
+  &.tabC[data-active] {
+    color: #a855f7;
+    border-bottom-color: #a855f7;
+  }
+}
+
+.searchInput {
+  padding: 1rem;
+
+  input {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+
+    &:focus {
+      border-color: #667eea;
+    }
+  }
+}
+
+// Table Container
+.tableContainer {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+
+  thead {
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+
+    th {
+      padding: 1rem 1.25rem;
+      text-align: center;
+      font-size: 0.813rem;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #e5e7eb;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #f9fafb;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      color: #374151;
+      vertical-align: middle;
+      white-space: nowrap;
+      text-align: center;
+    }
+  }
+}
+
+.tableRow {
+  cursor: default;
+}
+
+.memberCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  background: linear-gradient(135deg, #2d1b4e 0%, #2d1b4e 100%);
+  color: #fff;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.memberName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.phoneText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.dateText {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.amountText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+.levelText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d1b4e;
+}
+
+.chainText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+// Empty State
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 0rem 0 2rem;
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .statCard {
+    padding: 0.625rem 0.5rem;
+  }
+
+  .statLabel {
+    font-size: 0.625rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .statValue {
+    font-size: 1.125rem;
+  }
+
+  .tabsList {
+    padding: 0 0.5rem;
+  }
+
+  .tab {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 700px;
+
+    thead th {
+      padding: 0.75rem 0.625rem;
+      font-size: 0.688rem;
+    }
+
+    tbody td {
+      padding: 0.75rem 0.625rem;
+      font-size: 0.813rem;
+    }
+  }
+
+  .memberName,
+  .phoneText,
+  .dateText,
+  .amountText,
+  .levelText,
+  .chainText {
+    font-size: 0.813rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.375rem;
+  }
+
+  .statCard {
+    padding: 0.5rem 0.375rem;
+  }
+
+  .statLabel {
+    font-size: 0.563rem;
+  }
+
+  .statValue {
+    font-size: 1rem;
+  }
+
+  .tab {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.688rem;
+  }
+
+  .table {
+    min-width: 650px;
+
+    thead th {
+      padding: 0.625rem 0.5rem;
+      font-size: 0.625rem;
+    }
+
+    tbody td {
+      padding: 0.625rem 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .memberName,
+  .phoneText,
+  .dateText,
+  .amountText,
+  .levelText,
+  .chainText {
+    font-size: 0.75rem;
+  }
+}

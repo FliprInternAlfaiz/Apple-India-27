@@ -128,3 +128,31 @@ export const useTeamMembersByLevelQuery = (level: string, enabled = false) => {
     refetchOnWindowFocus: true,
   });
 };
+
+interface MyTeamReferralsParams {
+  page?: number;
+  limit?: number;
+  level?: string;
+  search?: string;
+}
+
+const fetchMyTeamReferrals = async (params: MyTeamReferralsParams) => {
+  const response = await request({
+    url: teamUrls.MY_TEAM_REFERRALS,
+    withCredentials: true,
+    method: "GET",
+    params,
+  });
+  return response.data;
+};
+
+export const useMyTeamReferralsQuery = (params: MyTeamReferralsParams = {}) => {
+  return useQuery({
+    queryKey: ["my-team-referrals", params],
+    queryFn: () => fetchMyTeamReferrals(params),
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+};
+
