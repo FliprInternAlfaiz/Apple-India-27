@@ -1,6 +1,6 @@
 .teamContainer {
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 50%, #1a1a3e 100%);
+  background: linear-gradient(180deg, #1a1a3e 20%, #f8f8f8 90%);
 }
 
 .teamInfoSection {
@@ -62,7 +62,7 @@
 
   .managementIcon {
     font-size: 20px;
-    color: #fff; 
+    color: #fff;
     background: linear-gradient(135deg, #9fbae1 0%, #8FABD4 100%);
     border-radius: 8px;
     padding: 8px 16px;
@@ -87,7 +87,8 @@
   border-radius: 12px;
   padding: 10px;
   margin: 0px 30px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+
   .managementTitle {
     color: #222;
   }
@@ -105,7 +106,8 @@
 .referralLink {
   word-break: break-all;
   margin-bottom: 0.75rem;
-  color: #6b7280; /* dimmed */
+  color: #6b7280;
+  /* dimmed */
   font-size: 0.9rem;
 }
 
@@ -122,10 +124,12 @@
   .referralCard {
     padding: 0.75rem;
   }
+
   .referralBadge {
     font-size: 1rem;
     padding: 8px 14px;
   }
+
   .referralBtn {
     min-width: 120px;
   }

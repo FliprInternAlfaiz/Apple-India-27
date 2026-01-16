@@ -1,6 +1,7 @@
 // components/Profile/Profile.tsx
 import React, { useEffect, useState } from "react";
 import {
+  Modal,
   Box,
   Text,
   Flex,
@@ -10,6 +11,7 @@ import {
   Center,
   Tooltip,
   Badge,
+  Stack,
 } from "@mantine/core";
 import {
   FaBuilding,
@@ -21,7 +23,9 @@ import {
   FaSignOutAlt,
   FaEdit,
   FaDollarSign,
+  FaCheckCircle,
 } from "react-icons/fa";
+import manualPdf from "../../uploads/Apple_India_27_X_7.pdf";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { IMAGES } from "../../assets";
@@ -81,6 +85,11 @@ const menuItems = [
   },
   {
     icon: <FaDownload size={24} />,
+    title: "Download User Manual",
+    path: "download-manual",
+  },
+  {
+    icon: <FaDownload size={24} />,
     title: "Download App",
     path: "/download-app",
   },
@@ -96,6 +105,7 @@ const Profile: React.FC = () => {
   const { data, isLoading, isError, refetch } = useVerifyUserQuery();
   const logoutMutation = useLogoutMutation();
   const [updateModalOpened, setUpdateModalOpened] = useState(false);
+  const [downloadModalOpened, setDownloadModalOpened] = useState(false);
 
   useEffect(() => {
     if (data?.status === "success" && data.data?.user) {
@@ -152,6 +162,29 @@ const Profile: React.FC = () => {
         });
 
         navigate("/login");
+      }
+      return;
+    }
+
+    if (path === "download-manual") {
+      try {
+        const link = document.createElement("a");
+        link.href = manualPdf;
+        link.download = "Apple_India_27_X_7.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+          setDownloadModalOpened(true);
+        }, 500);
+      } catch (error) {
+        console.error("PDF Download error:", error);
+        notifications.show({
+          title: "Download Failed",
+          message: "Failed to download the user manual. Please try again.",
+          color: "red",
+        });
       }
       return;
     }
@@ -455,6 +488,84 @@ const Profile: React.FC = () => {
         onClose={() => setUpdateModalOpened(false)}
         userData={userData}
       />
+
+      {/* Download Success Modal */}
+      <Modal
+        opened={downloadModalOpened}
+        onClose={() => setDownloadModalOpened(false)}
+        centered
+        size="sm"
+        radius="xl"
+        withCloseButton={false}
+        padding={0}
+        styles={{
+          content: {
+            overflow: "hidden",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+          },
+        }}
+      >
+        <Box
+          p="xl"
+          style={{
+            background: "linear-gradient(180deg, #f8faff 0%, #ffffff 100%)",
+          }}
+        >
+          <Stack align="center" gap="lg">
+            <Box
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: "#e8f5e9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 0 25px rgba(64, 192, 87, 0.25)",
+              }}
+            >
+              <FaCheckCircle size={44} color="#40C057" />
+            </Box>
+
+            <Box>
+              <Text
+                size="xl"
+                fw={800}
+                ta="center"
+                c="#1a1a1a"
+                style={{ letterSpacing: "-0.5px", fontSize: "24px" }}
+              >
+                Success!
+              </Text>
+              <Text size="md" fw={600} ta="center" c="#4a4a4a" mt={4}>
+                User manual download completed
+              </Text>
+            </Box>
+
+            <Text size="sm" fw={400} ta="center" c="#666" px="xs" lh={1.5}>
+              Please read the user manual to understand the features and
+              maximize your experience with the app.
+            </Text>
+
+            <Button
+              fullWidth
+              size="lg"
+              onClick={() => setDownloadModalOpened(false)}
+              style={{
+                background: "linear-gradient(135deg, #8FABD4 0%, #6B8FB8 100%)",
+                borderRadius: "100px",
+                height: 52,
+                boxShadow: "0 8px 20px rgba(143, 171, 212, 0.35)",
+                fontSize: "16px",
+                fontWeight: 700,
+                border: "none",
+              }}
+            >
+              Great, thanks!
+            </Button>
+          </Stack>
+        </Box>
+      </Modal>
     </>
   );
 };

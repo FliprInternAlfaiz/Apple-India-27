@@ -1,6 +1,6 @@
 .taskContainer {
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a3e 0%, #2d1b4e 50%, #1a1a3e 100%);
+  background: linear-gradient(180deg, #1a1a3e 0%, #f8f8f8 100%);
 }
 
 .taskInfoBox {
@@ -42,7 +42,7 @@
     height: 80px;
     border-radius: 12px;
     overflow: hidden;
-    margin-right:20px ;
+    margin-right: 20px;
     flex-shrink: 0;
 
     img {
