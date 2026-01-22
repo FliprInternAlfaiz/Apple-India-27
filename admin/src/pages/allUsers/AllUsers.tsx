@@ -38,6 +38,8 @@ import {
   FiMinus,
   FiPlus,
   FiDollarSign,
+  FiArrowDownCircle,
+  FiArrowRight,
 } from "react-icons/fi";
 import { notifications } from "@mantine/notifications";
 import {
@@ -48,13 +50,23 @@ import {
   useToggleStatus,
   useAddWalletAmount,
   useDeductWalletAmount,
+  useUpdateLevel,
 } from "../../hooks/query/useAdminUsers.query";
 import {
   useToggleUSDUser,
   useFundUSDWallet,
   useUSDWalletByUser,
 } from "../../hooks/query/USDWithdrawal.query";
+import { useAllLevels } from "../../hooks/query/level.query";
 import classes from "./index.module.scss";
+
+interface Level {
+  _id: string;
+  levelNumber: number;
+  levelName: string;
+  rewardPerTask: number;
+  dailyTaskLimit: number;
+}
 
 const AllUsers = () => {
   // Filter states
@@ -71,6 +83,8 @@ const AllUsers = () => {
   const [aadhaarModal, setAadhaarModal] = useState(false);
   const [aadhaarStatus, setAadhaarStatus] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const [downgradeModal, setDowngradeModal] = useState(false);
+  const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
 
   // Wallet modal states
   const [walletModal, setWalletModal] = useState(false);
@@ -105,6 +119,11 @@ const AllUsers = () => {
   const deductWalletAmountMutation = useDeductWalletAmount();
   const toggleUSDUserMutation = useToggleUSDUser();
   const fundUSDWalletMutation = useFundUSDWallet();
+  const updateLevelMutation = useUpdateLevel();
+
+  // Fetch all levels
+  const { data: levelsData } = useAllLevels({ isActive: true });
+  const allLevels = levelsData?.levels || [];
 
   // Fetch USD wallet when user is selected
   const { data: usdWalletData } = useUSDWalletByUser(selectedUser?._id || "");
@@ -229,9 +248,8 @@ const AllUsers = () => {
 
         notifications.show({
           title: "Success",
-          message: `₹${walletAmount} added to ${selectedUser.name}'s ${
-            walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
-          }`,
+          message: `₹${walletAmount} added to ${selectedUser.name}'s ${walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
+            }`,
           color: "green",
           icon: <FiCheckCircle />,
         });
@@ -245,9 +263,8 @@ const AllUsers = () => {
 
         notifications.show({
           title: "Success",
-          message: `₹${walletAmount} deducted from ${selectedUser.name}'s ${
-            walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
-          }`,
+          message: `₹${walletAmount} deducted from ${selectedUser.name}'s ${walletType === "mainWallet" ? "Prime Wallet" : "Task Wallet"
+            }`,
           color: "green",
           icon: <FiCheckCircle />,
         });
@@ -294,6 +311,52 @@ const AllUsers = () => {
       notifications.show({
         title: "Error",
         message: error.response?.data?.message || "Failed to reset password",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+    }
+  };
+
+  const handleDowngrade = (user: any) => {
+    setSelectedUser(user);
+    setSelectedLevelId(null);
+    setDowngradeModal(true);
+  };
+
+  const confirmDowngrade = async () => {
+    if (!selectedLevelId) {
+      notifications.show({
+        title: "Selection Required",
+        message: "Please select a level to downgrade to",
+        color: "red",
+        icon: <FiXCircle />,
+      });
+      return;
+    }
+
+    const targetLevel = allLevels.find((l: Level) => l._id === selectedLevelId);
+    if (!targetLevel) return;
+
+    try {
+      await updateLevelMutation.mutateAsync({
+        userId: selectedUser._id,
+        userLevel: targetLevel.levelNumber,
+        currentLevel: targetLevel.levelName,
+        levelName: targetLevel.levelName,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: `User level downgraded successfully to ${targetLevel.levelName}`,
+        color: "green",
+        icon: <FiCheckCircle />,
+      });
+
+      setDowngradeModal(false);
+    } catch (error: any) {
+      notifications.show({
+        title: "Error",
+        message: error.response?.data?.message || "Failed to downgrade level",
         color: "red",
         icon: <FiXCircle />,
       });
@@ -531,6 +594,19 @@ const AllUsers = () => {
           )}
         </Flex>
       </Table.Td>
+      <Table.Td ta="center">
+        <Tooltip label="Downgrade Level">
+          <ActionIcon
+            variant="light"
+            color="grape"
+            size="md"
+            onClick={() => handleDowngrade(user)}
+            radius="md"
+          >
+            <FiArrowDownCircle size={16} />
+          </ActionIcon>
+        </Tooltip>
+      </Table.Td>
       <Table.Td>
         <Group gap="xs">
           <Tooltip label="View Details">
@@ -711,13 +787,14 @@ const AllUsers = () => {
                 <Table.Th ta="center">Referrals</Table.Th>
                 <Table.Th ta="center">Active</Table.Th>
                 <Table.Th ta="center">USD User</Table.Th>
+                <Table.Th ta="center">Downgrade</Table.Th>
                 <Table.Th ta="center">Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading ? (
                 <Table.Tr>
-                  <Table.Td colSpan={12}>
+                  <Table.Td colSpan={13}>
                     <Flex justify="center" direction="column" align="center" py="xl">
                       <Loader size="lg" />
                       <Text c="dimmed" ml="sm">
@@ -730,7 +807,7 @@ const AllUsers = () => {
                 rows
               ) : (
                 <Table.Tr>
-                  <Table.Td colSpan={12}>
+                  <Table.Td colSpan={13}>
                     <Text ta="center" c="dimmed" py="xl">
                       No users found
                     </Text>
@@ -803,9 +880,8 @@ const AllUsers = () => {
       <Modal
         opened={walletModal}
         onClose={() => setWalletModal(false)}
-        title={`${walletAction === "add" ? "Add" : "Deduct"} Amount ${
-          walletAction === "add" ? "to" : "from"
-        } Wallet`}
+        title={`${walletAction === "add" ? "Add" : "Deduct"} Amount ${walletAction === "add" ? "to" : "from"
+          } Wallet`}
         centered
       >
         {selectedUser && (
@@ -984,7 +1060,143 @@ const AllUsers = () => {
         )}
       </Modal>
 
-      {/* USD Wallet Modal */}
+      <Modal
+        opened={downgradeModal}
+        onClose={() => setDowngradeModal(false)}
+        title="User Account Demotion"
+        centered
+        size="lg"
+        radius="lg"
+        className={classes.professionalModal}
+      >
+        {selectedUser && (() => {
+          const lowerLevels = allLevels
+            .filter((l: Level) => l.levelNumber < (selectedUser.currentLevelNumber ?? 999))
+            .sort((a: Level, b: Level) => b.levelNumber - a.levelNumber);
+
+          const currentUserLevel = allLevels.find(
+            (l: Level) => l.levelNumber === selectedUser.currentLevelNumber
+          );
+
+          return (
+            <Flex direction="column">
+              <div className={classes.headerSection}>
+                <Group justify="space-between" align="center">
+                  <div>
+                    <Text size="lg" fw={800} c="dark.6" style={{ lineHeight: 1.2 }}>
+                      {selectedUser.name}
+                    </Text>
+                    <Text size="xs" c="dimmed" mt={2}>ACCNT REF: <Text span fw={700} c="dark.2">{selectedUser._id?.slice(-12).toUpperCase()}</Text></Text>
+                  </div>
+                  <Badge size="lg" radius="md" color="blue" variant="light" h={36} px="md">
+                    Ph: {selectedUser.phone}
+                  </Badge>
+                </Group>
+              </div>
+
+              <div className={classes.comparisonSection}>
+                <div className={`${classes.statCard} ${classes.current}`}>
+                  <h4>Active Level</h4>
+                  <Text className={classes.rankTitle}>{selectedUser.levelName || "BASIC"}</Text>
+                  <Badge size="xs" variant="filled" color="blue" radius="sm">LEVEL {selectedUser.currentLevelNumber ?? "0"}</Badge>
+
+                  <div className={classes.metricGrid}>
+                    <div className={classes.metricItem}>
+                      <span className={classes.label}>Commission</span>
+                      <span className={classes.value}>₹{currentUserLevel?.rewardPerTask ?? selectedUser.rewardPerTask ?? "0.00"}</span>
+                    </div>
+                    <div className={classes.metricItem}>
+                      <span className={classes.label}>Daily Capacity</span>
+                      <span className={classes.value}>{currentUserLevel?.dailyTaskLimit ?? selectedUser.dailyTaskLimit ?? "0"} <Text span size="xs" fw={500}>TPS</Text></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={classes.arrowIcon}>
+                  <FiArrowRight size={24} />
+                </div>
+
+                <div className={`${classes.statCard} ${classes.target}`}>
+                  <h4>Target Level</h4>
+                  {lowerLevels.length > 0 ? (
+                    <>
+                      <Select
+                        placeholder="Assign New Level"
+                        data={lowerLevels.map((l: Level) => ({ value: l._id, label: l.levelName }))}
+                        value={selectedLevelId}
+                        onChange={setSelectedLevelId}
+                        variant="filled"
+                        radius="md"
+                        size="sm"
+                      />
+
+                      {selectedLevelId ? (
+                        <>
+                          <Badge size="xs" variant="dot" color="pink" radius="sm">
+                            NEW LEVEL- {allLevels.find((l: Level) => l._id === selectedLevelId)?.levelNumber}
+                          </Badge>
+                          <div className={classes.metricGrid}>
+                            <div className={classes.metricItem}>
+                              <span className={classes.label}>New Payout</span>
+                              <span className={classes.value}>₹{allLevels.find((l: Level) => l._id === selectedLevelId)?.rewardPerTask}</span>
+                            </div>
+                            <div className={classes.metricItem}>
+                              <span className={classes.label}>New Quota</span>
+                              <span className={classes.value}>{allLevels.find((l: Level) => l._id === selectedLevelId)?.dailyTaskLimit} <Text span size="xs" fw={500}>TPS</Text></span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <Flex h={80} justify="center" align="center">
+                          <Text size="xs" c="dimmed" ta="center" px="xl">Assign target level to visualize potential revenue impact</Text>
+                        </Flex>
+                      )}
+                    </>
+                  ) : (
+                    <Flex h="100%" direction="column" justify="center" align="center" py="xl">
+                      <FiArrowDownCircle size={32} color="#dee2e6" style={{ marginBottom: '1rem' }} />
+                      <Text size="sm" fw={700} c="red.6" ta="center">No Lower Level Available</Text>
+                      <Text size="xs" c="dimmed" ta="center" mt={4}>This user is already at the base level.</Text>
+                    </Flex>
+                  )}
+                </div>
+              </div>
+
+              <Alert
+                icon={<FiAlertCircle size={20} />}
+                color="red"
+                className={classes.dangerAlert}
+                title="Irreversible Level Modification"
+                mb="lg"
+              >
+                Downgrading level overrides active investment benefits. Financial metrics and user quota will be purged and re-allocated immediately.
+              </Alert>
+
+              <Group justify="flex-end" className={classes.footerActions} gap="sm">
+                <Button
+                  variant="subtle"
+                  className={`${classes.actionButton} ${classes.secondary}`}
+                  onClick={() => setDowngradeModal(false)}
+                  size="sm"
+                >
+                  Cancel Override
+                </Button>
+                <Button
+                  className={`${classes.actionButton} ${classes.primary}`}
+                  onClick={confirmDowngrade}
+                  loading={updateLevelMutation.isPending}
+                  leftSection={<FiArrowDownCircle size={16} />}
+                  disabled={!selectedLevelId}
+                  size="sm"
+                >
+                  Commit Demotion
+                </Button>
+              </Group>
+            </Flex>
+          );
+        })()}
+      </Modal>
+
       <Modal
         opened={usdWalletModal}
         onClose={() => setUsdWalletModal(false)}

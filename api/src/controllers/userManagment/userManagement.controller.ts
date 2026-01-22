@@ -415,9 +415,15 @@ const updateUserLevel = async (
       });
     }
 
+    const levelConfig = await models.level.findOne({ levelNumber: userLevel });
+
     user.userLevel = userLevel;
+    user.currentLevelNumber = userLevel;
     user.currentLevel = currentLevel;
     user.levelName = levelName;
+    if (levelConfig) {
+      user.investmentAmount = levelConfig.investmentAmount;
+    }
     user.levelUpgradedAt = new Date();
     await user.save();
 
@@ -490,9 +496,8 @@ const addWalletAmount = async (
       status: 'success',
       statusCode: 200,
       title: 'Amount Added',
-      message: `₹${amount} added successfully to ${
-        walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
-      }.`,
+      message: `₹${amount} added successfully to ${walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
+        }.`,
       data: {
         userId: user._id,
         walletType,
@@ -575,9 +580,8 @@ const deductWalletAmount = async (
       status: 'success',
       statusCode: 200,
       title: 'Amount Deducted',
-      message: `₹${amount} deducted successfully from ${
-        walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
-      }.`,
+      message: `₹${amount} deducted successfully from ${walletType === 'mainWallet' ? 'Main Wallet' : 'Commission Wallet'
+        }.`,
       data: {
         userId: user._id,
         walletType,
