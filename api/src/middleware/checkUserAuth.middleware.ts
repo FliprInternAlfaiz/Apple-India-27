@@ -48,16 +48,20 @@ const middleware: RequestHandler = async (req, res, next) => {
     res.locals.userId = user._id;
     res.locals.user = user;
 
-    // Reset daily stats
-    const today = new Date().setHours(0, 0, 0, 0);
-    const lastReset = new Date(user.lastIncomeResetDate || new Date()).setHours(
-      0,
-      0,
-      0,
-      0,
-    );
+    const getStartOfTodayIST = (): Date => {
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+      const istTime = new Date(now.getTime() + istOffset);
+      istTime.setUTCHours(0, 0, 0, 0);
+      return new Date(istTime.getTime() - istOffset); // Convert back to UTC
+    };
 
-    if (today > lastReset) {
+    const startOfToday = getStartOfTodayIST();
+    const lastResetDate = user.lastIncomeResetDate ? new Date(user.lastIncomeResetDate) : null;
+    
+    const shouldReset = !lastResetDate || lastResetDate < startOfToday;
+
+    if (shouldReset && (user.todayIncome > 0 || user.todayTasksCompleted > 0)) {
       user.todayIncome = 0;
       user.todayTasksCompleted = 0;
       user.lastIncomeResetDate = new Date();

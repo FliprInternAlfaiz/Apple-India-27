@@ -160,7 +160,7 @@ const LevelTasksScreen: React.FC = () => {
                     </Text>
                     {level.isCurrent && <Badge color="green">Current</Badge>}
                     {!level.isUnlocked && <Badge color="red">Locked</Badge>}
-                    {canUserPurchase(level) && <Badge color="2d1b4e">Available</Badge>}
+                    {canUserPurchase(level) && <Badge color="#2d1b4e">Available</Badge>}
                   </Flex>
 
                   <Flex justify="space-between" align="flex-end" mb="md">

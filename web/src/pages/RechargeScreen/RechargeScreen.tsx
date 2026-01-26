@@ -221,14 +221,12 @@ const RechargeScreen: React.FC = () => {
           min={1}
           step={100}
           hideControls
-          size="lg"
           leftSection={<Text fw={600}>₹</Text>}
         />
       </Card>
 
       <Button
         fullWidth
-        size="lg"
         onClick={handleAmountNext}
         disabled={!getSelectedAmount() || getSelectedAmount() <= 0}
         color="#2d1b4e"
@@ -331,14 +329,12 @@ const RechargeScreen: React.FC = () => {
       <Group grow>
         <Button
           variant="outline"
-          size="lg"
           color="#2d1b4e"
           onClick={() => setCurrentStep(RechargeStep.SELECT_AMOUNT)}
         >
           Back
         </Button>
         <Button
-          size="lg"
           onClick={handlePaymentMethodNext}
           disabled={!selectedPaymentMethod}
           color="#2d1b4e"
@@ -522,7 +518,6 @@ const RechargeScreen: React.FC = () => {
           value={transactionId}
           onChange={(e) => setTransactionId(e.target.value)}
           required
-          size="lg"
           mb="md"
           description="Find this in your payment app under transaction details"
           error={
@@ -566,7 +561,6 @@ const RechargeScreen: React.FC = () => {
       <Group grow>
         <Button
           variant="outline"
-          size="lg"
           onClick={() => setCurrentStep(RechargeStep.PAYMENT_DETAILS)}
           color="#2d1b4e"
 
@@ -574,7 +568,6 @@ const RechargeScreen: React.FC = () => {
           Back
         </Button>
         <Button
-          size="lg"
           onClick={handleSubmitUTR}
           disabled={!transactionId || transactionId.length < 10}
           loading={verifyPaymentMutation.isPending}

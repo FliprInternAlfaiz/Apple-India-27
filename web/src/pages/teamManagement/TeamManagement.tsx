@@ -256,7 +256,7 @@ const TeamManagementScreen: React.FC = () => {
         <Text fw={600} size="lg" ta="center" mb="md">
           Your Referral Link
         </Text>
-        <Text ta="center" c="dimmed" mb="md" className={classes.referralLink}>
+        <Text ta="center" c="black" mb="md" className={classes.referralLink}>
           {referralData?.data?.referralLink || "Loading..."}
         </Text>
 

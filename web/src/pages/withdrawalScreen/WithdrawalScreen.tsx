@@ -653,7 +653,6 @@ const WithdrawalScreen: React.FC = () => {
           {/* Submit */}
           <Button
             fullWidth
-            size="lg"
             mt="md"
             color="#2d1b4e"
             onClick={handleWithdrawal}

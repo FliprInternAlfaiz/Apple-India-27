@@ -164,7 +164,7 @@ export const useInfiniteTasksQuery = (params?: {
     },
     getNextPageParam: (lastPage) => {
       if (lastPage?.requiresLevelPurchase) return undefined;
-      
+
       if (!lastPage?.tasks?.length) return undefined;
 
       const { currentPage, totalPages } = lastPage.pagination || {};
@@ -173,9 +173,8 @@ export const useInfiniteTasksQuery = (params?: {
       return currentPage + 1;
     },
     initialPageParam: 1,
-    staleTime: 1000 * 30, // 30 seconds for fresher data
-    refetchOnMount: true, // Refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    staleTime: 0,
+    refetchOnMount: true,
     retry: (failureCount, error: any) => {
       if (error?.response?.status === 403) return false;
       return failureCount < 2;
@@ -191,11 +190,11 @@ export const getTaskById = async (
       url: `${taskUrls.GET_TASK_BY_ID}/${taskId}`,
       method: "GET",
     });
-    
+
     if (!response?.data?.task) {
       throw new Error("Task not found");
     }
-    
+
     return response.data as TSingleTaskResponse;
   } catch (error) {
     console.error("Error fetching task:", error);
@@ -208,7 +207,7 @@ export const useTaskQuery = (taskId: string) => {
     queryKey: ["task", taskId],
     queryFn: () => getTaskById(taskId),
     enabled: !!taskId,
-    staleTime: 1000 * 30, // 30 seconds for fresher data
+    staleTime: 1000 * 5,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     retry: 2,
@@ -229,9 +228,44 @@ export const useCompleteTaskMutation = () => {
   const queryClient = useQueryClient();
   return useMutation<TCompleteTaskResponse, Error, string>({
     mutationFn: (taskId) => completeTask(taskId),
-    onSuccess: (_, taskId) => {
+    onSuccess: async (data, taskId) => {
+      // Optimistically update the query data instead of invalidating
+      queryClient.setQueryData(["task", taskId], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          task: {
+            ...old.task,
+            isCompleted: true,
+          },
+        };
+      });
+
+      // Update infinite query data optimistically
+      queryClient.setQueriesData({ queryKey: ["tasks"] }, (old: any) => {
+        if (!old?.pages) return old;
+
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            tasks: page.tasks?.map((task: any) =>
+              task._id === taskId ? { ...task, isCompleted: true } : task
+            ),
+            stats: page.stats ? {
+              ...page.stats,
+              todayCompleted: data.todayTasksCompleted,
+              remainingTasks: data.remainingTasks,
+              todayIncome: data.todayIncome,
+            } : page.stats,
+          })),
+        };
+      });
+
+      // Invalidate tasks query to force refetch
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+
+      // Refetch user profile in background
       queryClient.invalidateQueries({ queryKey: ["verifyUser"] });
     },
   });

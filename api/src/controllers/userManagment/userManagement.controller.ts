@@ -417,6 +417,8 @@ const updateUserLevel = async (
 
     const levelConfig = await models.level.findOne({ levelNumber: userLevel });
 
+    const isDowngrade = user.currentLevelNumber > userLevel;
+
     user.userLevel = userLevel;
     user.currentLevelNumber = userLevel;
     user.currentLevel = currentLevel;
@@ -425,6 +427,14 @@ const updateUserLevel = async (
       user.investmentAmount = levelConfig.investmentAmount;
     }
     user.levelUpgradedAt = new Date();
+
+    if (isDowngrade) {
+      user.mainWallet = 0;
+      user.commissionWallet = 0;
+      user.todayIncome = 0;
+      user.todayTasksCompleted = 0;
+    }
+
     await user.save();
 
     return JsonResponse(res, {

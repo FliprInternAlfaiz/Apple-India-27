@@ -403,7 +403,6 @@ const IdentityVerificationScreen: React.FC = () => {
           {(!isSubmitted || verificationStatus === "rejected") && (
             <Button
               fullWidth
-              size="lg"
               color="#2d1b4e"
               mt="xl"
               leftSection={<FaUpload />}
