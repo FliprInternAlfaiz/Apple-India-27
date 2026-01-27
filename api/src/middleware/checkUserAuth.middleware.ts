@@ -9,7 +9,6 @@ const middleware: RequestHandler = async (req, res, next) => {
   try {
     let token = req.cookies?.userAuth;
 
-    // Fallback to Authorization header (CRITICAL for iOS and cross-origin)
     if (!token) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -48,27 +47,21 @@ const middleware: RequestHandler = async (req, res, next) => {
     res.locals.userId = user._id;
     res.locals.user = user;
 
-    const getStartOfTodayIST = (): Date => {
-      const now = new Date();
-      const istOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
-      const istTime = new Date(now.getTime() + istOffset);
-      istTime.setUTCHours(0, 0, 0, 0);
-      return new Date(istTime.getTime() - istOffset); // Convert back to UTC
-    };
+    const today = new Date().setHours(0, 0, 0, 0);
+    const lastReset = new Date(user.lastIncomeResetDate || new Date()).setHours(
+      0,
+      0,
+      0,
+      0,
+    );
 
-    const startOfToday = getStartOfTodayIST();
-    const lastResetDate = user.lastIncomeResetDate ? new Date(user.lastIncomeResetDate) : null;
-    
-    const shouldReset = !lastResetDate || lastResetDate < startOfToday;
-
-    if (shouldReset && (user.todayIncome > 0 || user.todayTasksCompleted > 0)) {
+    if (today > lastReset) {
       user.todayIncome = 0;
       user.todayTasksCompleted = 0;
       user.lastIncomeResetDate = new Date();
       await user.save();
     }
 
-    // Reset monthly stats
     const currentMonth = new Date().getMonth();
     const lastMonthReset = new Date(
       user.lastMonthlyResetDate || new Date(),
@@ -80,7 +73,6 @@ const middleware: RequestHandler = async (req, res, next) => {
       await user.save();
     }
 
-    // Continue to next middleware
     next();
   } catch (err) {
     return JsonResponse(res, {
